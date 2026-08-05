@@ -66,6 +66,8 @@ Hardware            ← 장비 드라이버 (시리얼/RS-485/MODBUS)
 | `heaters/heater_bath_modbus.py` | MODBUS RTU | 항온조 히터 |
 | `collectors/collector_colosseum.py` | Serial (스텝모터) | 분획수집기 |
 | `collectors/collector_plate96.py` | Serial (Marlin G-code) | 96-well 분취기 |
+| `sensors/phase_sensor_opb.py` | Serial (CSV 스트림 115200) | **위상센서 모드 A(현행)**: OPB ADC 리그 — PC측 임계값 2상 판정 |
+| `sensors/phase_sensor_array.py` | Serial (RoboChem ASCII 9600) | **위상센서 모드 B(예비)**: 캘리브 보드 3상 판정(유색/불투명 대응) — 전환 절차는 `위상센서_OPB_배선메모.md` |
 | `factory.py` | — | 한글 드라이버명 → 영문 클래스명 매핑 |
 | `*/mock_*.py` | — | 모든 장비의 가상 테스트용 드라이버 |
 

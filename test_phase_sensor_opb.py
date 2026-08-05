@@ -127,6 +127,47 @@ check("factory 라벨 매핑",
       HardwareFactory.get_driver_type("위상센서 (OPB ADC 2ch)") == "PhaseSensorOPBADC",
       HardwareFactory.get_driver_type("위상센서 (OPB ADC 2ch)"))
 
+print("== 8. 드라이버 스왑 호환 — 동일 장치 settings 로 양쪽 모두 생성 ==")
+# @codesyncer(2026-08-05 사용자 확정): RoboChem 스택은 살려두고 라벨 변경만으로
+#   언제든 상호 전환. settings(sensors/thresholds)는 전환 시 그대로 유지되며
+#   OCB350 드라이버는 thresholds 키를 무시(무해)해야 한다.
+from hardware.sensors.phase_sensor_array import PhaseSensorArrayHW, MockPhaseSensor
+
+dev = {"name": "위상센서", "port": "Mock_Port",
+       "settings": {"sensors": {"collect": 0, "reactor_in": 1},
+                    "thresholds": {"collect": 440, "reactor_in": 717}}}
+
+
+def build_phase(dev, label):
+    """hw_manager 5-5 블록과 동일한 디스패치 (전환 무결성 검증)."""
+    p_set = dev.get("settings", {}) or {}
+    drv = HardwareFactory.get_driver_type(label)
+    if drv == "PhaseSensorOPBADC":
+        return PhaseSensorOPBADC(
+            dev["port"], sensors=p_set.get("sensors"),
+            thresholds=p_set.get("thresholds"),
+            baudrate=int(p_set.get("baudrate", 115200) or 115200),
+            name=dev["name"])
+    cls = MockPhaseSensor if drv == "MockPhaseSensor" else PhaseSensorArrayHW
+    return cls(dev["port"], sensors=p_set.get("sensors"), name=dev["name"])
+
+
+sa = build_phase(dev, "위상센서 (OPB ADC 2ch)")
+sa.connect()
+sb = build_phase(dev, "위상센서 어레이 (OCB350)")
+sb.connect()
+check("스왑: OPB 생성+연결", isinstance(sa, PhaseSensorOPBADC) and sa.is_connected)
+check("스왑: OCB350 생성+연결(thresholds 키 무해)",
+      isinstance(sb, PhaseSensorArrayHW) and sb.is_connected)
+check("스왑: 동일 센서맵 유지", sa.sensors == sb.sensors == {"collect": 0, "reactor_in": 1})
+_contract = ("read_phase", "is_liquid", "read_all", "analog", "monitor",
+             "read_event", "wait_edge", "calibrate", "stop", "disconnect")
+check("스왑: 계약 표면 동일(10개 메서드)",
+      all(hasattr(sa, x) and hasattr(sb, x) for x in _contract))
+check("스왑: 양쪽 판독 동작", sb.read_phase("collect") in
+      ("CLEAR_LIQUID", "OPAQUE_LIQUID", "GAS") and sa.read_phase("collect") in
+      ("CLEAR_LIQUID", "GAS"))
+
 print()
 print("RESULT:", "ALL PASS" if not fails else f"{len(fails)} FAIL: {fails}")
 sys.exit(1 if fails else 0)
