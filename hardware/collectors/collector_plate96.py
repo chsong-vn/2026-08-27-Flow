@@ -192,9 +192,10 @@ class Plate96Collector:
             prev = self.well_sequence[self.current_position - 1]
             same_row = (prev['plate'] == w['plate'] and prev['row_idx'] == w['row_idx'])
 
-        # LCD 표시
-        self._send_wait(f"M117 {self.rack_label} {wid} ({tube_idx}/{self.total_tubes})",
-                        wait=0.3)
+        # LCD 표시 — rack_label 은 getattr 폴백 (테스트/외부에서 __new__ 로
+        # 인스턴스를 만들어 well_sequence 만 주입하는 경로 보호)
+        _rl = getattr(self, "rack_label", "96well")
+        self._send_wait(f"M117 {_rl} {wid} ({tube_idx}/{self.total_tubes})", wait=0.3)
 
         if same_row:
             # 같은 행: Z 유지하며 XY만 이동
