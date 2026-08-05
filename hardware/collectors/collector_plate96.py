@@ -22,21 +22,27 @@ import threading
 class Plate96Collector:
     """96-well plate (Plate A 96 + Plate B 96 = 192) 분취기"""
 
-    def __init__(self):
+    def __init__(self, coords_file=None):
+        """@param coords_file: 좌표 파일명 (data/ 기준). None=기본 96-well.
+        @codesyncer-decision(2026-08-05 랙 확장): 좌표 파일만 바꾸면 다른 랙
+        (예: well_coordinates_eppendorf_5x5.json, 5×5×2=50 튜브)을 같은
+        드라이버로 구동 — 행/열/총수/Z/최대부피 전부 데이터에서 유도."""
         self.ser = None
         self.is_connected = False
         self._serial_lock = threading.Lock()  # 시리얼 경합 방지
-        self.current_position = 0       # 0=홈, 1~192=well 인덱스
-        self.total_tubes = 192          # 192개 well 호환
+        self.current_position = 0       # 0=홈, 1~N=well 인덱스
+        self.total_tubes = 192          # reload_data 에서 데이터 기반으로 갱신
         self.cumulative_steps = []      # 호환용 (Marlin은 절대좌표라 미사용)
+        self.rack_label = "96well"      # LCD/로그 표기 (rack 메타에서 갱신)
         # @codesyncer-decision: 모션 확인 플래그 (2026-07-06 감사 F2)
         # M400 무응답이면 실제 위치 불확실 → 다음 이동의 same_row Z-리프트
         # 생략을 금지 (오판 시 니들이 분주 높이로 웰 사이를 긁는 사고 방지)
         self._motion_confirmed = True
 
-        # well_coordinates.json 경로
+        # 좌표 파일 경로 (data/ 하위)
         current_dir = os.path.dirname(os.path.abspath(__file__))
-        self.coords_path = os.path.join(current_dir, 'data', 'well_coordinates.json')
+        self.coords_path = os.path.join(
+            current_dir, 'data', coords_file or 'well_coordinates.json')
         self.coords = None
         self.well_sequence = []   # snake order로 정렬된 well 리스트
 
@@ -69,11 +75,20 @@ class Plate96Collector:
         self.z_travel = zlv.get('z_travel', 29.0)
         self.z_dispense = zlv.get('z_dispense', 27.0)
 
-        # snake order: A1→A12, B12→B1, ..., 그 다음 Plate B
+        # 랙 메타 (없으면 기존 96-well 기본값 — 하위호환)
+        rack = self.coords.get('rack', {}) or {}
+        self.rack_label = rack.get('display_name', rack.get('name', '96well'))
+        self.max_volume_per_well_ml = float(
+            rack.get('max_volume_per_well_ml', 1.5) or 1.5)
+
+        # snake order: A1→A12, B12→B1, ... (행 수는 데이터에서 유도 — 랙 무관)
         self.well_sequence = []
         for plate in ['A', 'B']:
             plate_wells = [w for w in self.coords['wells'] if w['plate'] == plate]
-            for r in range(8):
+            if not plate_wells:
+                continue
+            n_rows = max(w['row_idx'] for w in plate_wells) + 1
+            for r in range(n_rows):
                 row = sorted([w for w in plate_wells if w['row_idx'] == r],
                              key=lambda w: w['col_idx'])
                 if r % 2 == 1:
@@ -84,7 +99,8 @@ class Plate96Collector:
         # 호환용 cumulative_steps (실제 사용 안 됨)
         self.cumulative_steps = list(range(self.total_tubes + 1))
         self.current_position = 0
-        print(f"[Plate96] Loaded {self.total_tubes} wells (Plate A + B, snake order)")
+        print(f"[Plate96] Loaded {self.total_tubes} wells "
+              f"({self.rack_label}, Plate A + B, snake order)")
 
     # ─────────────────────────────────────
     # 인터페이스 (ColosseumCollector 호환)
@@ -177,7 +193,8 @@ class Plate96Collector:
             same_row = (prev['plate'] == w['plate'] and prev['row_idx'] == w['row_idx'])
 
         # LCD 표시
-        self._send_wait(f"M117 96well {wid} ({tube_idx}/{self.total_tubes})", wait=0.3)
+        self._send_wait(f"M117 {self.rack_label} {wid} ({tube_idx}/{self.total_tubes})",
+                        wait=0.3)
 
         if same_row:
             # 같은 행: Z 유지하며 XY만 이동

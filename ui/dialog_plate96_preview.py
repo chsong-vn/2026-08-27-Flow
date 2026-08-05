@@ -22,14 +22,22 @@ def get_active_dark_mode():
 
 
 class _PreviewPlateGrid(QFrame):
-    """읽기 전용 8x12 Plate grid — step별 색상 시각화"""
+    """읽기 전용 Plate grid — step별 색상 시각화.
+
+    @codesyncer-decision(2026-08-05 랙 확장): 행/열을 인자로 받아 96-well(8×12)과
+      에펜도르프 랙(5×5) 등 임의 격자를 같은 위젯으로 그린다. 셀 크기는 격자가
+      작을수록 키워 시인성 유지."""
 
     CELL_SIZE = 24
 
-    def __init__(self, plate_name="A", is_dark=True, parent=None):
+    def __init__(self, plate_name="A", is_dark=True, parent=None,
+                 rows=8, cols=12):
         super().__init__(parent)
         self.plate_name = plate_name
         self.is_dark = is_dark
+        self.rows = int(rows)
+        self.cols = int(cols)
+        self.CELL_SIZE = 24 if self.cols >= 10 else 40
         self._p = DarkPalette if is_dark else LightPalette
         self.cells = {}
         self.path_segments = []
@@ -56,21 +64,21 @@ class _PreviewPlateGrid(QFrame):
         grid = QGridLayout()
         grid.setSpacing(2)
 
-        for c in range(12):
+        for c in range(self.cols):
             lbl = QLabel(str(c + 1))
             lbl.setAlignment(Qt.AlignCenter)
             lbl.setStyleSheet(
                 f"color: {p.TEXT_PRIMARY}; font-size: {T.FS_XS}; font-weight: {T.FW_BOLD};")
             grid.addWidget(lbl, 0, c + 1)
 
-        for r in range(8):
+        for r in range(self.rows):
             rl = QLabel(chr(ord('A') + r))
             rl.setAlignment(Qt.AlignCenter)
             rl.setStyleSheet(
                 f"color: {p.TEXT_PRIMARY}; font-size: {T.FS_SM}; font-weight: {T.FW_BOLD};")
             grid.addWidget(rl, r + 1, 0)
 
-            for c in range(12):
+            for c in range(self.cols):
                 cell = QLabel()
                 cell.setFixedSize(self.CELL_SIZE, self.CELL_SIZE)
                 cell.setAlignment(Qt.AlignCenter)
@@ -186,10 +194,19 @@ class Plate96PreviewDialog(QDialog):
         "#7fd97f", "#d9d93a",
     ]
 
-    def __init__(self, start_tube, step_infos, parent=None):
+    def __init__(self, start_tube, step_infos, parent=None,
+                 rows=8, cols=12, rack_label="96-Well Plate"):
+        """@param rows/cols: 랙 격자 (96-well=8×12, 에펜 랙=5×5).
+        @codesyncer-decision(2026-08-05): 서펜타인 인덱스↔웰 환산을 격자 크기로
+          매개화 — 드라이버(collector_plate96.reload_data)의 순서와 동일 규칙."""
         super().__init__(parent)
         self.setWindowFlags(self.windowFlags() & ~Qt.WindowContextHelpButtonHint)
-        self.setWindowTitle("Fluid Tracker — 96-Well Plate")
+        self.rows = int(rows)
+        self.cols = int(cols)
+        self.per_plate = self.rows * self.cols
+        self.total = self.per_plate * 2
+        self.rack_label = rack_label
+        self.setWindowTitle(f"Fluid Tracker — {rack_label}")
         self.resize(820, 620)
 
         self.start_tube = max(1, start_tube)
@@ -197,17 +214,16 @@ class Plate96PreviewDialog(QDialog):
         self.is_dark = get_active_dark_mode()
         self._init_ui()
 
-    @staticmethod
-    def snake_index_to_well(idx):
-        if not (1 <= idx <= 192):
+    def snake_index_to_well(self, idx):
+        if not (1 <= idx <= self.total):
             return None
-        plate = "A" if idx <= 96 else "B"
-        local = (idx - 1) % 96
-        row = local // 12
+        plate = "A" if idx <= self.per_plate else "B"
+        local = (idx - 1) % self.per_plate
+        row = local // self.cols
         if row % 2 == 0:
-            col = local % 12
+            col = local % self.cols
         else:
-            col = 11 - (local % 12)
+            col = (self.cols - 1) - (local % self.cols)
         return plate, row, col
 
     def _init_ui(self):
@@ -244,8 +260,10 @@ class Plate96PreviewDialog(QDialog):
         # Plate 그리드
         plates_row = QHBoxLayout()
         plates_row.setSpacing(T.SP_MD)
-        self.grid_a = _PreviewPlateGrid("A", is_dark=self.is_dark)
-        self.grid_b = _PreviewPlateGrid("B", is_dark=self.is_dark)
+        self.grid_a = _PreviewPlateGrid("A", is_dark=self.is_dark,
+                                        rows=self.rows, cols=self.cols)
+        self.grid_b = _PreviewPlateGrid("B", is_dark=self.is_dark,
+                                        rows=self.rows, cols=self.cols)
         plates_row.addWidget(self.grid_a, 1)
         plates_row.addWidget(self.grid_b, 1)
         root.addLayout(plates_row)
@@ -257,7 +275,8 @@ class Plate96PreviewDialog(QDialog):
         self._build_legend(root, P)
 
         # 표기규격: 화살표(→) 금지 — 경로는 플레이트 위 선으로 이미 시각화됨.
-        info = QLabel("서펜타인 채움 · 플레이트 2 × 96 = 192 wells")
+        info = QLabel(f"서펜타인 채움 · {self.rack_label} 2 × "
+                      f"{self.per_plate} = {self.total} wells")
         info.setStyleSheet(f"font-size: {T.FS_XS}; color: {P.TEXT_SECONDARY};")
         root.addWidget(info)
 
@@ -281,7 +300,7 @@ class Plate96PreviewDialog(QDialog):
 
             for k in range(n):
                 snake_idx = cur_idx + k
-                if snake_idx > 192:
+                if snake_idx > self.total:
                     break
                 w = self.snake_index_to_well(snake_idx)
                 if not w:

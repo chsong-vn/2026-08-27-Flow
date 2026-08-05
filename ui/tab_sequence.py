@@ -1027,9 +1027,22 @@ class SequenceTab(QWidget):
         self.btn_preview.setToolTip("나선형 회전판에서 튜브 사용 예측을 시각화합니다.")
         self.btn_preview.clicked.connect(self.show_spiral_preview)
 
+        # 랙 선택 (2026-08-05): 96-well / 에펜도르프 랙 등 — 선택 시 좌표 파일이
+        # 교체되고 이후 이동은 기존 로직(서펜타인 + machine 좌표) 그대로 동작.
+        self.cb_rack = QComboBox()
+        for _lbl, _val in self._rack_options():
+            self.cb_rack.addItem(_lbl, _val)
+        self.cb_rack.setMinimumHeight(T.H_BTN_XL)
+        self.cb_rack.setToolTip(
+            "분취 랙 선택 — 좌표 파일이 교체되고 튜브 수/격자가 함께 바뀝니다.\n"
+            "랙 교체 후에는 HOME 을 먼저 실행하세요.")
+        self._sync_rack_combo()
+        self.cb_rack.currentIndexChanged.connect(self._on_rack_changed)
+
         tl.addWidget(self.lbl_start_tube_seq)
         tl.addWidget(self.sp_collector_start)
         tl.addWidget(self.lbl_well_id)
+        tl.addWidget(self.cb_rack)
         tl.addWidget(self.btn_preview)
 
         tl.addSpacing(12)
@@ -2651,11 +2664,123 @@ class SequenceTab(QWidget):
         collector = getattr(self.app, "collector", None)
         if collector and type(collector).__name__ == "Plate96Collector":
             from ui.dialog_plate96_preview import Plate96PreviewDialog
-            dlg = Plate96PreviewDialog(start_tube, step_infos, parent=self)
+            # 실제 로드된 랙 격자를 미리보기에 반영 (좌표 데이터가 진실원)
+            _rows, _cols, _label = self._rack_geometry(collector)
+            dlg = Plate96PreviewDialog(start_tube, step_infos, parent=self,
+                                       rows=_rows, cols=_cols, rack_label=_label)
         else:
             from ui.dialogs import SpiralPreviewDialog
             dlg = SpiralPreviewDialog(start_tube, step_infos, parent=self)
         dlg.exec_()
+
+    # ─── 랙 (분취 플레이트/튜브 랙) ────────────────────────────
+    @staticmethod
+    def _rack_geometry(collector):
+        """로드된 좌표 데이터에서 (rows, cols, 라벨) 유도 — 하드코딩 금지.
+
+        @codesyncer-decision(2026-08-05): 격자 크기의 진실원은 좌표 JSON.
+          well_sequence 의 row_idx/col_idx 최대값으로 역산해 96-well(8×12)·
+          에펜 랙(5×5) 등 어떤 랙이든 미리보기가 자동으로 맞는다."""
+        try:
+            wells = [w for w in getattr(collector, "well_sequence", [])
+                     if w.get("plate") == "A"]
+            if wells:
+                rows = max(w["row_idx"] for w in wells) + 1
+                cols = max(w["col_idx"] for w in wells) + 1
+                label = getattr(collector, "rack_label", None) or "96-Well Plate"
+                return rows, cols, label
+        except Exception:
+            pass
+        return 8, 12, "96-Well Plate"
+
+    def _rack_options(self):
+        """선택 가능한 랙 목록 [(라벨, rack_type)] — data/ 의 좌표 파일 존재 기준."""
+        import os
+        opts = [("96-Well Plate (8×12)", "plate96")]
+        data_dir = os.path.join(os.path.dirname(os.path.dirname(
+            os.path.abspath(__file__))), "hardware", "collectors", "data")
+        try:
+            for fn in sorted(os.listdir(data_dir)):
+                if not (fn.startswith("well_coordinates_") and fn.endswith(".json")):
+                    continue
+                rack = fn[len("well_coordinates_"):-len(".json")]
+                label = rack
+                try:
+                    import json
+                    with open(os.path.join(data_dir, fn), encoding="utf-8") as f:
+                        meta = (json.load(f).get("rack") or {})
+                    label = (f"{meta.get('display_name', rack)} "
+                             f"({meta.get('rows', '?')}×{meta.get('cols', '?')})")
+                except Exception:
+                    pass
+                opts.append((label, rack))
+        except Exception:
+            pass
+        return opts
+
+    def _current_rack_type(self):
+        cfg = getattr(self.app, "cfg", None)
+        try:
+            c_id = ((cfg.config_data.get("roles", {}) or {})
+                    .get("collector", {}) or {}).get("driver_id")
+            dev = cfg.get_device_info(c_id) or {}
+            return str((dev.get("settings") or {}).get("rack_type", "plate96")
+                       or "plate96")
+        except Exception:
+            return "plate96"
+
+    def _on_rack_changed(self, idx):
+        """랙 선택 → config 저장 + 분취기 좌표 재로드 (기존 이동 로직 그대로 사용)."""
+        from PyQt5.QtWidgets import QMessageBox
+        rack = self.cb_rack.itemData(idx)
+        if rack is None or rack == self._current_rack_type():
+            return
+        cfg = getattr(self.app, "cfg", None)
+        collector = getattr(self.app, "collector", None)
+        if cfg is None:
+            return
+        try:
+            c_id = ((cfg.config_data.get("roles", {}) or {})
+                    .get("collector", {}) or {}).get("driver_id")
+            dev = next((d for d in cfg.config_data.get("inventory", [])
+                        if d.get("id") == c_id), None)
+            if dev is None:
+                QMessageBox.warning(self, "랙 변경", "분취기 장치가 설정에 없습니다.")
+                self._sync_rack_combo()
+                return
+            dev.setdefault("settings", {})["rack_type"] = rack
+            cfg.save_config(cfg.config_data.get("inventory", []),
+                            cfg.config_data.get("roles", {}),
+                            cfg.config_data.get("system_params", {}))
+            # 실행 중인 분취기 드라이버에 즉시 반영 (재연결 없이 좌표만 교체)
+            if collector is not None and hasattr(collector, "reload_data"):
+                import os
+                data_dir = os.path.join(os.path.dirname(os.path.dirname(
+                    os.path.abspath(__file__))), "hardware", "collectors", "data")
+                fname = ("well_coordinates.json" if rack == "plate96"
+                         else f"well_coordinates_{rack}.json")
+                collector.coords_path = os.path.join(data_dir, fname)
+                collector.reload_data()
+                # 위치 재확인 필요 — 좌표계가 바뀌었으므로 홈 기준으로 리셋
+                collector.current_position = 0
+                collector._motion_confirmed = False
+                n = getattr(collector, "total_tubes", 0)
+                self.app.signals.sig_log.emit(
+                    f"[분취기] 랙 변경: {rack} ({n} 튜브) — 다음 이동 전 HOME 권장")
+                self.sp_collector_start.setMaximum(max(1, n))
+                self._update_well_id_label()
+        except Exception as e:
+            QMessageBox.warning(self, "랙 변경 실패", str(e))
+            self._sync_rack_combo()
+
+    def _sync_rack_combo(self):
+        if not hasattr(self, "cb_rack"):
+            return
+        cur = self._current_rack_type()
+        i = self.cb_rack.findData(cur)
+        self.cb_rack.blockSignals(True)
+        self.cb_rack.setCurrentIndex(i if i >= 0 else 0)
+        self.cb_rack.blockSignals(False)
 
     # ─── Theme Support ─────────────────────────────────────────
 

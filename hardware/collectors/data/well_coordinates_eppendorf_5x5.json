@@ -1,0 +1,801 @@
+{
+  "frame": {
+    "soft_endstop_min": [
+      0.0,
+      0.0,
+      0.0
+    ],
+    "soft_endstop_max": [
+      200.0,
+      200.0,
+      250.0
+    ],
+    "z_levels": {
+      "z_travel": 49.0,
+      "z_approach": 44.5,
+      "z_dispense": 43.5,
+      "z_wash_dip": 10.0,
+      "note": "eppendorf_5x5 실측 입력값 (generate_rack_coords.py 인자)"
+    },
+    "z_reference": "G28 절대좌표 (deck_v13, 프로파일 상면 마운트)",
+    "needs_session_setup": "G28 후 절대좌표 사용",
+    "deck": {
+      "source": "deck_map.py / deck_v13.py",
+      "deck_rot_180": true,
+      "a1_corner": [
+        "-X",
+        "-Y"
+      ],
+      "pitch_mm": 9.0,
+      "nominal_deck_coords": {
+        "L-A1": [
+          -77.49,
+          -65.13
+        ],
+        "L-H12": [
+          -14.49,
+          33.87
+        ],
+        "R-A1": [
+          14.49,
+          -65.13
+        ],
+        "R-H12": [
+          77.49,
+          33.87
+        ],
+        "RES_CENTER": [
+          0.0,
+          77.25
+        ],
+        "RES_LOW": [
+          42.75,
+          77.25
+        ]
+      },
+      "side_to_plate": {
+        "L": "A",
+        "R": "B"
+      },
+      "bolt_pattern": {
+        "thread": "M3",
+        "square_mm": 209.0,
+        "deck_coords": {
+          "BOLT_FL": [
+            -104.5,
+            -104.5
+          ],
+          "BOLT_FR": [
+            104.5,
+            -104.5
+          ],
+          "BOLT_RL": [
+            -104.5,
+            104.5
+          ],
+          "BOLT_RR": [
+            104.5,
+            104.5
+          ]
+        },
+        "machine_coords_global_fit": {
+          "BOLT_FL": [
+            1.757,
+            -5.172
+          ],
+          "BOLT_FR": [
+            210.756,
+            -4.568
+          ],
+          "BOLT_RL": [
+            1.153,
+            203.828
+          ],
+          "BOLT_RR": [
+            210.153,
+            204.431
+          ]
+        },
+        "note": "패턴 중심=데크 원점. 4점 모두 니들 스트로크 밖(정상). 구 베드 홀 210x210 M4 와 비호환"
+      }
+    },
+    "calibration": {
+      "method": "5점 티칭 — L(A1,H12) / R(A1,H12) / RES_CENTER. 플레이트별 강체변환 scale=1.0 고정",
+      "taught": {
+        "L-A1": [
+          28.5,
+          34.5,
+          26.5
+        ],
+        "L-H12": [
+          91.5,
+          133.0,
+          26.5
+        ],
+        "R-A1": [
+          121.0,
+          35.0,
+          26.5
+        ],
+        "R-H12": [
+          183.0,
+          133.5,
+          26.5
+        ],
+        "RES_CENTER": [
+          102.5,
+          175.0,
+          10.0
+        ]
+      },
+      "fit_L": {
+        "rotation_deg": -0.1315,
+        "origin": [
+          106.026,
+          99.274
+        ],
+        "residual_max_mm": 0.2114,
+        "residual_mm": [
+          0.2114,
+          0.2114
+        ]
+      },
+      "fit_R": {
+        "rotation_deg": 0.2832,
+        "origin": [
+          105.933,
+          99.653
+        ],
+        "residual_max_mm": 0.4786,
+        "residual_mm": [
+          0.4786,
+          0.4786
+        ]
+      },
+      "fit_global": {
+        "rotation_deg": 0.1655,
+        "origin": [
+          105.955,
+          99.63
+        ],
+        "residual_max_mm": 0.5869,
+        "residual_mm": [
+          0.2713,
+          0.4769,
+          0.5869,
+          0.413
+        ]
+      },
+      "res_center_predict_error_mm": 3.739,
+      "row_direction": "+X (A->H)",
+      "col_direction": "+Y (1->12)"
+    },
+    "envelope_ok": true
+  },
+  "wash_positions": [
+    {
+      "id": "RES_CENTER",
+      "X": 102.5,
+      "Y": 175.0,
+      "Z_dip": 10.0,
+      "note": "폐액 토출 위치 (리저버 중앙, 벽에서 가장 멀다). Z_dip=림 위 — 담금 아님"
+    },
+    {
+      "id": "RES_LOW",
+      "X": 145.25,
+      "Y": 175.123,
+      "Z_dip": 10.0,
+      "note": "경사 낮은 쪽/배출 노치. 참조용 — 드라이버는 [0]만 사용"
+    }
+  ],
+  "rack": {
+    "name": "eppendorf_5x5",
+    "display_name": "Eppendorf 5x5",
+    "rows": 5,
+    "cols": 5,
+    "max_volume_per_well_ml": 1.5,
+    "source": "generate_rack_coords.py ← rack_eppendorf_5x5.json (96-well 5점 티칭 fit 재사용, SLAS-4 앵커)"
+  },
+  "wells": [
+    {
+      "plate": "A",
+      "well": "A1",
+      "row_idx": 0,
+      "col_idx": 0,
+      "machine_X": 28.674,
+      "machine_Y": 28.821,
+      "Z_approach": 44.5,
+      "Z_dispense": 43.5,
+      "deck_X": -77.19,
+      "deck_Y": -70.63
+    },
+    {
+      "plate": "A",
+      "well": "A2",
+      "row_idx": 0,
+      "col_idx": 1,
+      "machine_X": 28.731,
+      "machine_Y": 53.821,
+      "Z_approach": 44.5,
+      "Z_dispense": 43.5,
+      "deck_X": -77.19,
+      "deck_Y": -45.63
+    },
+    {
+      "plate": "A",
+      "well": "A3",
+      "row_idx": 0,
+      "col_idx": 2,
+      "machine_X": 28.789,
+      "machine_Y": 78.821,
+      "Z_approach": 44.5,
+      "Z_dispense": 43.5,
+      "deck_X": -77.19,
+      "deck_Y": -20.63
+    },
+    {
+      "plate": "A",
+      "well": "A4",
+      "row_idx": 0,
+      "col_idx": 3,
+      "machine_X": 28.846,
+      "machine_Y": 103.821,
+      "Z_approach": 44.5,
+      "Z_dispense": 43.5,
+      "deck_X": -77.19,
+      "deck_Y": 4.37
+    },
+    {
+      "plate": "A",
+      "well": "A5",
+      "row_idx": 0,
+      "col_idx": 4,
+      "machine_X": 28.904,
+      "machine_Y": 128.821,
+      "Z_approach": 44.5,
+      "Z_dispense": 43.5,
+      "deck_X": -77.19,
+      "deck_Y": 29.37
+    },
+    {
+      "plate": "A",
+      "well": "B1",
+      "row_idx": 1,
+      "col_idx": 0,
+      "machine_X": 44.274,
+      "machine_Y": 28.786,
+      "Z_approach": 44.5,
+      "Z_dispense": 43.5,
+      "deck_X": -61.59,
+      "deck_Y": -70.63
+    },
+    {
+      "plate": "A",
+      "well": "B2",
+      "row_idx": 1,
+      "col_idx": 1,
+      "machine_X": 44.331,
+      "machine_Y": 53.785,
+      "Z_approach": 44.5,
+      "Z_dispense": 43.5,
+      "deck_X": -61.59,
+      "deck_Y": -45.63
+    },
+    {
+      "plate": "A",
+      "well": "B3",
+      "row_idx": 1,
+      "col_idx": 2,
+      "machine_X": 44.389,
+      "machine_Y": 78.785,
+      "Z_approach": 44.5,
+      "Z_dispense": 43.5,
+      "deck_X": -61.59,
+      "deck_Y": -20.63
+    },
+    {
+      "plate": "A",
+      "well": "B4",
+      "row_idx": 1,
+      "col_idx": 3,
+      "machine_X": 44.446,
+      "machine_Y": 103.785,
+      "Z_approach": 44.5,
+      "Z_dispense": 43.5,
+      "deck_X": -61.59,
+      "deck_Y": 4.37
+    },
+    {
+      "plate": "A",
+      "well": "B5",
+      "row_idx": 1,
+      "col_idx": 4,
+      "machine_X": 44.504,
+      "machine_Y": 128.785,
+      "Z_approach": 44.5,
+      "Z_dispense": 43.5,
+      "deck_X": -61.59,
+      "deck_Y": 29.37
+    },
+    {
+      "plate": "A",
+      "well": "C1",
+      "row_idx": 2,
+      "col_idx": 0,
+      "machine_X": 59.874,
+      "machine_Y": 28.75,
+      "Z_approach": 44.5,
+      "Z_dispense": 43.5,
+      "deck_X": -45.99,
+      "deck_Y": -70.63
+    },
+    {
+      "plate": "A",
+      "well": "C2",
+      "row_idx": 2,
+      "col_idx": 1,
+      "machine_X": 59.931,
+      "machine_Y": 53.75,
+      "Z_approach": 44.5,
+      "Z_dispense": 43.5,
+      "deck_X": -45.99,
+      "deck_Y": -45.63
+    },
+    {
+      "plate": "A",
+      "well": "C3",
+      "row_idx": 2,
+      "col_idx": 2,
+      "machine_X": 59.989,
+      "machine_Y": 78.75,
+      "Z_approach": 44.5,
+      "Z_dispense": 43.5,
+      "deck_X": -45.99,
+      "deck_Y": -20.63
+    },
+    {
+      "plate": "A",
+      "well": "C4",
+      "row_idx": 2,
+      "col_idx": 3,
+      "machine_X": 60.046,
+      "machine_Y": 103.75,
+      "Z_approach": 44.5,
+      "Z_dispense": 43.5,
+      "deck_X": -45.99,
+      "deck_Y": 4.37
+    },
+    {
+      "plate": "A",
+      "well": "C5",
+      "row_idx": 2,
+      "col_idx": 4,
+      "machine_X": 60.104,
+      "machine_Y": 128.749,
+      "Z_approach": 44.5,
+      "Z_dispense": 43.5,
+      "deck_X": -45.99,
+      "deck_Y": 29.37
+    },
+    {
+      "plate": "A",
+      "well": "D1",
+      "row_idx": 3,
+      "col_idx": 0,
+      "machine_X": 75.474,
+      "machine_Y": 28.714,
+      "Z_approach": 44.5,
+      "Z_dispense": 43.5,
+      "deck_X": -30.39,
+      "deck_Y": -70.63
+    },
+    {
+      "plate": "A",
+      "well": "D2",
+      "row_idx": 3,
+      "col_idx": 1,
+      "machine_X": 75.531,
+      "machine_Y": 53.714,
+      "Z_approach": 44.5,
+      "Z_dispense": 43.5,
+      "deck_X": -30.39,
+      "deck_Y": -45.63
+    },
+    {
+      "plate": "A",
+      "well": "D3",
+      "row_idx": 3,
+      "col_idx": 2,
+      "machine_X": 75.589,
+      "machine_Y": 78.714,
+      "Z_approach": 44.5,
+      "Z_dispense": 43.5,
+      "deck_X": -30.39,
+      "deck_Y": -20.63
+    },
+    {
+      "plate": "A",
+      "well": "D4",
+      "row_idx": 3,
+      "col_idx": 3,
+      "machine_X": 75.646,
+      "machine_Y": 103.714,
+      "Z_approach": 44.5,
+      "Z_dispense": 43.5,
+      "deck_X": -30.39,
+      "deck_Y": 4.37
+    },
+    {
+      "plate": "A",
+      "well": "D5",
+      "row_idx": 3,
+      "col_idx": 4,
+      "machine_X": 75.703,
+      "machine_Y": 128.714,
+      "Z_approach": 44.5,
+      "Z_dispense": 43.5,
+      "deck_X": -30.39,
+      "deck_Y": 29.37
+    },
+    {
+      "plate": "A",
+      "well": "E1",
+      "row_idx": 4,
+      "col_idx": 0,
+      "machine_X": 91.074,
+      "machine_Y": 28.678,
+      "Z_approach": 44.5,
+      "Z_dispense": 43.5,
+      "deck_X": -14.79,
+      "deck_Y": -70.63
+    },
+    {
+      "plate": "A",
+      "well": "E2",
+      "row_idx": 4,
+      "col_idx": 1,
+      "machine_X": 91.131,
+      "machine_Y": 53.678,
+      "Z_approach": 44.5,
+      "Z_dispense": 43.5,
+      "deck_X": -14.79,
+      "deck_Y": -45.63
+    },
+    {
+      "plate": "A",
+      "well": "E3",
+      "row_idx": 4,
+      "col_idx": 2,
+      "machine_X": 91.189,
+      "machine_Y": 78.678,
+      "Z_approach": 44.5,
+      "Z_dispense": 43.5,
+      "deck_X": -14.79,
+      "deck_Y": -20.63
+    },
+    {
+      "plate": "A",
+      "well": "E4",
+      "row_idx": 4,
+      "col_idx": 3,
+      "machine_X": 91.246,
+      "machine_Y": 103.678,
+      "Z_approach": 44.5,
+      "Z_dispense": 43.5,
+      "deck_X": -14.79,
+      "deck_Y": 4.37
+    },
+    {
+      "plate": "A",
+      "well": "E5",
+      "row_idx": 4,
+      "col_idx": 4,
+      "machine_X": 91.303,
+      "machine_Y": 128.678,
+      "Z_approach": 44.5,
+      "Z_dispense": 43.5,
+      "deck_X": -14.79,
+      "deck_Y": 29.37
+    },
+    {
+      "plate": "B",
+      "well": "A1",
+      "row_idx": 0,
+      "col_idx": 0,
+      "machine_X": 121.072,
+      "machine_Y": 29.097,
+      "Z_approach": 44.5,
+      "Z_dispense": 43.5,
+      "deck_X": 14.79,
+      "deck_Y": -70.63
+    },
+    {
+      "plate": "B",
+      "well": "A2",
+      "row_idx": 0,
+      "col_idx": 1,
+      "machine_X": 120.948,
+      "machine_Y": 54.097,
+      "Z_approach": 44.5,
+      "Z_dispense": 43.5,
+      "deck_X": 14.79,
+      "deck_Y": -45.63
+    },
+    {
+      "plate": "B",
+      "well": "A3",
+      "row_idx": 0,
+      "col_idx": 2,
+      "machine_X": 120.825,
+      "machine_Y": 79.096,
+      "Z_approach": 44.5,
+      "Z_dispense": 43.5,
+      "deck_X": 14.79,
+      "deck_Y": -20.63
+    },
+    {
+      "plate": "B",
+      "well": "A4",
+      "row_idx": 0,
+      "col_idx": 3,
+      "machine_X": 120.701,
+      "machine_Y": 104.096,
+      "Z_approach": 44.5,
+      "Z_dispense": 43.5,
+      "deck_X": 14.79,
+      "deck_Y": 4.37
+    },
+    {
+      "plate": "B",
+      "well": "A5",
+      "row_idx": 0,
+      "col_idx": 4,
+      "machine_X": 120.578,
+      "machine_Y": 129.096,
+      "Z_approach": 44.5,
+      "Z_dispense": 43.5,
+      "deck_X": 14.79,
+      "deck_Y": 29.37
+    },
+    {
+      "plate": "B",
+      "well": "B1",
+      "row_idx": 1,
+      "col_idx": 0,
+      "machine_X": 136.672,
+      "machine_Y": 29.174,
+      "Z_approach": 44.5,
+      "Z_dispense": 43.5,
+      "deck_X": 30.39,
+      "deck_Y": -70.63
+    },
+    {
+      "plate": "B",
+      "well": "B2",
+      "row_idx": 1,
+      "col_idx": 1,
+      "machine_X": 136.548,
+      "machine_Y": 54.174,
+      "Z_approach": 44.5,
+      "Z_dispense": 43.5,
+      "deck_X": 30.39,
+      "deck_Y": -45.63
+    },
+    {
+      "plate": "B",
+      "well": "B3",
+      "row_idx": 1,
+      "col_idx": 2,
+      "machine_X": 136.425,
+      "machine_Y": 79.173,
+      "Z_approach": 44.5,
+      "Z_dispense": 43.5,
+      "deck_X": 30.39,
+      "deck_Y": -20.63
+    },
+    {
+      "plate": "B",
+      "well": "B4",
+      "row_idx": 1,
+      "col_idx": 3,
+      "machine_X": 136.301,
+      "machine_Y": 104.173,
+      "Z_approach": 44.5,
+      "Z_dispense": 43.5,
+      "deck_X": 30.39,
+      "deck_Y": 4.37
+    },
+    {
+      "plate": "B",
+      "well": "B5",
+      "row_idx": 1,
+      "col_idx": 4,
+      "machine_X": 136.177,
+      "machine_Y": 129.173,
+      "Z_approach": 44.5,
+      "Z_dispense": 43.5,
+      "deck_X": 30.39,
+      "deck_Y": 29.37
+    },
+    {
+      "plate": "B",
+      "well": "C1",
+      "row_idx": 2,
+      "col_idx": 0,
+      "machine_X": 152.272,
+      "machine_Y": 29.251,
+      "Z_approach": 44.5,
+      "Z_dispense": 43.5,
+      "deck_X": 45.99,
+      "deck_Y": -70.63
+    },
+    {
+      "plate": "B",
+      "well": "C2",
+      "row_idx": 2,
+      "col_idx": 1,
+      "machine_X": 152.148,
+      "machine_Y": 54.251,
+      "Z_approach": 44.5,
+      "Z_dispense": 43.5,
+      "deck_X": 45.99,
+      "deck_Y": -45.63
+    },
+    {
+      "plate": "B",
+      "well": "C3",
+      "row_idx": 2,
+      "col_idx": 2,
+      "machine_X": 152.024,
+      "machine_Y": 79.251,
+      "Z_approach": 44.5,
+      "Z_dispense": 43.5,
+      "deck_X": 45.99,
+      "deck_Y": -20.63
+    },
+    {
+      "plate": "B",
+      "well": "C4",
+      "row_idx": 2,
+      "col_idx": 3,
+      "machine_X": 151.901,
+      "machine_Y": 104.25,
+      "Z_approach": 44.5,
+      "Z_dispense": 43.5,
+      "deck_X": 45.99,
+      "deck_Y": 4.37
+    },
+    {
+      "plate": "B",
+      "well": "C5",
+      "row_idx": 2,
+      "col_idx": 4,
+      "machine_X": 151.777,
+      "machine_Y": 129.25,
+      "Z_approach": 44.5,
+      "Z_dispense": 43.5,
+      "deck_X": 45.99,
+      "deck_Y": 29.37
+    },
+    {
+      "plate": "B",
+      "well": "D1",
+      "row_idx": 3,
+      "col_idx": 0,
+      "machine_X": 167.871,
+      "machine_Y": 29.328,
+      "Z_approach": 44.5,
+      "Z_dispense": 43.5,
+      "deck_X": 61.59,
+      "deck_Y": -70.63
+    },
+    {
+      "plate": "B",
+      "well": "D2",
+      "row_idx": 3,
+      "col_idx": 1,
+      "machine_X": 167.748,
+      "machine_Y": 54.328,
+      "Z_approach": 44.5,
+      "Z_dispense": 43.5,
+      "deck_X": 61.59,
+      "deck_Y": -45.63
+    },
+    {
+      "plate": "B",
+      "well": "D3",
+      "row_idx": 3,
+      "col_idx": 2,
+      "machine_X": 167.624,
+      "machine_Y": 79.328,
+      "Z_approach": 44.5,
+      "Z_dispense": 43.5,
+      "deck_X": 61.59,
+      "deck_Y": -20.63
+    },
+    {
+      "plate": "B",
+      "well": "D4",
+      "row_idx": 3,
+      "col_idx": 3,
+      "machine_X": 167.501,
+      "machine_Y": 104.327,
+      "Z_approach": 44.5,
+      "Z_dispense": 43.5,
+      "deck_X": 61.59,
+      "deck_Y": 4.37
+    },
+    {
+      "plate": "B",
+      "well": "D5",
+      "row_idx": 3,
+      "col_idx": 4,
+      "machine_X": 167.377,
+      "machine_Y": 129.327,
+      "Z_approach": 44.5,
+      "Z_dispense": 43.5,
+      "deck_X": 61.59,
+      "deck_Y": 29.37
+    },
+    {
+      "plate": "B",
+      "well": "E1",
+      "row_idx": 4,
+      "col_idx": 0,
+      "machine_X": 183.471,
+      "machine_Y": 29.405,
+      "Z_approach": 44.5,
+      "Z_dispense": 43.5,
+      "deck_X": 77.19,
+      "deck_Y": -70.63
+    },
+    {
+      "plate": "B",
+      "well": "E2",
+      "row_idx": 4,
+      "col_idx": 1,
+      "machine_X": 183.348,
+      "machine_Y": 54.405,
+      "Z_approach": 44.5,
+      "Z_dispense": 43.5,
+      "deck_X": 77.19,
+      "deck_Y": -45.63
+    },
+    {
+      "plate": "B",
+      "well": "E3",
+      "row_idx": 4,
+      "col_idx": 2,
+      "machine_X": 183.224,
+      "machine_Y": 79.405,
+      "Z_approach": 44.5,
+      "Z_dispense": 43.5,
+      "deck_X": 77.19,
+      "deck_Y": -20.63
+    },
+    {
+      "plate": "B",
+      "well": "E4",
+      "row_idx": 4,
+      "col_idx": 3,
+      "machine_X": 183.1,
+      "machine_Y": 104.404,
+      "Z_approach": 44.5,
+      "Z_dispense": 43.5,
+      "deck_X": 77.19,
+      "deck_Y": 4.37
+    },
+    {
+      "plate": "B",
+      "well": "E5",
+      "row_idx": 4,
+      "col_idx": 4,
+      "machine_X": 182.977,
+      "machine_Y": 129.404,
+      "Z_approach": 44.5,
+      "Z_dispense": 43.5,
+      "deck_X": 77.19,
+      "deck_Y": 29.37
+    }
+  ]
+}

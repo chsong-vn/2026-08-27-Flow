@@ -267,10 +267,21 @@ class HardwareManager:
                     self.collector = MockCollector()
                     self.collector.connect("Mock_Port")
             elif collector_driver == "Plate96Collector":
-                self.collector = Plate96Collector()
+                # @codesyncer-decision(2026-08-05 랙 확장): settings.rack_type 으로
+                #   좌표 파일 선택 — "plate96"(기본) | "eppendorf_5x5" 등.
+                #   랙별 좌표는 generate_rack_coords.py 가 생성 (기존 티칭 재사용).
+                _c_set = c_info.get("settings", {}) or {}
+                _rack = str(_c_set.get("rack_type", "plate96") or "plate96")
+                _cfile = (None if _rack == "plate96"
+                          else f"well_coordinates_{_rack}.json")
                 try:
+                    self.collector = Plate96Collector(coords_file=_cfile)
+                    if self.collector.total_tubes <= 0:
+                        raise RuntimeError(
+                            f"랙 '{_rack}' 좌표 로드 실패 — "
+                            f"generate_rack_coords.py 로 생성했는지 확인")
                     _, msg = self.collector.connect(c_info["port"])
-                    print(f"[Collector] {msg}")
+                    print(f"[Collector] {msg} (rack={_rack})")
                 except Exception as e:
                     print(f"  - Plate96 연결 실패 (무시): {e}")
                     self.collector = MockCollector()
