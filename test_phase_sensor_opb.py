@@ -168,6 +168,46 @@ check("스왑: 양쪽 판독 동작", sb.read_phase("collect") in
       ("CLEAR_LIQUID", "OPAQUE_LIQUID", "GAS") and sa.read_phase("collect") in
       ("CLEAR_LIQUID", "GAS"))
 
+print("== 9. StatusWorker 엔드투엔드 — 실제 폴링 스레드에 실물 OPB 드라이버 연결 ==")
+# 대시보드 그래프 경로: StatusWorker.read_phase 폴 → sig_phase_data(0/1) →
+# app_monitoring dh_phase → dash_tab.update_phase. 여기서는 첫 관절(워커→시그널)을
+# 실물 드라이버로 검증 (이후 관절은 test_phase_dashboard 가 커버).
+import os
+os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
+from PyQt5.QtWidgets import QApplication
+from PyQt5.QtCore import Qt
+
+qapp = QApplication.instance() or QApplication(sys.argv)
+from core.worker import StatusWorker
+
+
+class _Cfg:
+    ACTIVE_PUMPS = []
+    PUMP_VALVE_MAP = {}
+
+
+fs9 = FakeStream()
+ps9 = PhaseSensorOPBADC("COM_FAKE", sensors={"collect": 0, "reactor_in": 1},
+                        debounce_n=1, stale_sec=10.0, name="OPB-W")
+ps9.connect(serial_override=fs9)
+fs9.feed(b"801,100\r\n")                      # collect=액체(801>440), reactor_in=기체(100<717)
+wait_until(lambda: ps9._state.get(0) is not None and ps9._state.get(1) is not None)
+
+got = []
+w = StatusWorker({}, {}, None, _Cfg(), interval=0.05, phase_sensor=ps9)
+w.signals.sig_phase_data.connect(lambda d: got.append(dict(d)), Qt.DirectConnection)
+w.start()
+ok = wait_until(lambda: len(got) >= 2, 5.0)
+check("워커 → sig_phase_data 방출", ok, f"{len(got)}건")
+check("0/1 매핑 (collect=1 액체, reactor_in=0 기체)",
+      got and got[-1] == {"collect": 1, "reactor_in": 0}, str(got[-1] if got else None))
+
+fs9.feed(b"80,900\r\n")                       # 반전: collect=기체, reactor_in=액체
+ok = wait_until(lambda: got and got[-1] == {"collect": 0, "reactor_in": 1}, 5.0)
+check("위상 변화가 다음 폴에 반영", ok, str(got[-1] if got else None))
+w.stop()
+ps9.disconnect()
+
 print()
 print("RESULT:", "ALL PASS" if not fails else f"{len(fails)} FAIL: {fails}")
 sys.exit(1 if fails else 0)

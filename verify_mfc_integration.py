@@ -139,6 +139,15 @@ tab._mfc_off()
 time.sleep(0.3)
 check("Manual OFF → _sp 0", abs(fa.mfc._sp) < 1e-9)
 
+# 배관도 N2 애니메이션 매핑 — app_monitoring 의 gas_flowing 판정식과 동일
+# (visual_diagram set_state(color="gas") 의 입력. _sp 미러는 드라이버 이식에서 보존됨)
+fa.mfc.set_flow(20.0)
+_gas_on = bool(fa.mfc is not None and float(getattr(fa.mfc, "_sp", 0.0) or 0.0) > 0)
+check("N2 20sccm → 배관도 gas_flowing True", _gas_on)
+fa.mfc.set_flow(0.0)
+_gas_off = bool(fa.mfc is not None and float(getattr(fa.mfc, "_sp", 0.0) or 0.0) > 0)
+check("N2 0 → gas_flowing False", not _gas_off)
+
 # HTE 파라미터 저장 경로
 tab.chk_hte.setChecked(True)
 tab._hte_params["hte_gas_sccm"].setValue(30.0)
