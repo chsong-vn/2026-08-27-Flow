@@ -1120,6 +1120,19 @@ class HardwareConfigDialog(QDialog):
         col2.addRow("Post-reactor Vol.:", self.sp_post_r)
         col2.addRow("Collection Line Vol.:", self.sp_cl)
         col2.addRow("Priming Rate:", self.sp_pf)
+
+        # 시퀀스 자동 세척 타이밍 (2026-08-05 사용자 요청: JSON 전용이던
+        # system_params.wash_mode 를 콤보로 노출. 볼륨/속도는 펌프 그룹 설정)
+        self.cb_wash_mode = QComboBox()
+        for _lbl, _val in (("off · 세척 없음", "off"),
+                           ("first_step · 첫 스텝만", "first_step"),
+                           ("port_change · 포트 변경 시", "port_change"),
+                           ("every_step · 매 스텝", "every_step")):
+            self.cb_wash_mode.addItem(_lbl, _val)
+        self.cb_wash_mode.setToolTip(
+            "시퀀스 중 자동 세척(용매 흡인 → 12번 폐액 배출) 실행 시점.\n"
+            "세척 볼륨/속도/횟수는 펌프 그룹 설정(Wash Volume/Flow Rate/Cycles)")
+        col2.addRow("Wash Mode:", self.cb_wash_mode)
         col2_lay.addLayout(col2)
         col2_lay.addStretch()
 
@@ -1182,6 +1195,11 @@ class HardwareConfigDialog(QDialog):
         self.sp_syr_refill.setValue(sp.get("syringe_refill_rate", 20.0))
         self.sp_mixing_id.setValue(sp.get("mixing_line_id_mm", 1.5))
         self.sp_mixing_len.setValue(sp.get("mixing_line_len_cm", 150.0))
+        _wm_idx = self.cb_wash_mode.findData(
+            str(sp.get("wash_mode", "port_change") or "port_change"))
+        if _wm_idx < 0:   # 미지 값 → 엔진 _normalize_mode 폴백과 동일하게 port_change
+            _wm_idx = self.cb_wash_mode.findData("port_change")
+        self.cb_wash_mode.setCurrentIndex(_wm_idx)
 
         self.sp_r_len.valueChanged.connect(self.calc_r_vol)
         self.sp_r_id.valueChanged.connect(self.calc_r_vol)
@@ -2005,6 +2023,7 @@ class HardwareConfigDialog(QDialog):
         self.temp_sys_params["syringe_refill_rate"] = self.sp_syr_refill.value()
         self.temp_sys_params["mixing_line_id_mm"] = self.sp_mixing_id.value()
         self.temp_sys_params["mixing_line_len_cm"] = self.sp_mixing_len.value()
+        self.temp_sys_params["wash_mode"] = self.cb_wash_mode.currentData()
 
         self.cfg.save_config(self.temp_inventory, self.temp_roles, self.temp_sys_params)
         QMessageBox.information(self, "적용 완료", "설정이 저장되었습니다.\n하드웨어를 재연결합니다.")
