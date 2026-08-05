@@ -1,0 +1,1318 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE CDXML SYSTEM "http://www.cambridgesoft.com/xml/cdxml.dtd" >
+<CDXML CreationProgram="ChemDraw 13.0.0.3015" Name="ITC Equipment.ctp" WindowPosition="0.0 0.0" WindowSize="1347.0 706.5" WindowIsZoomed="yes" FractionalWidths="yes" InterpretChemically="yes" ShowAtomQuery="yes" ShowAtomStereo="no" ShowAtomEnhancedStereo="yes" ShowAtomNumber="no" ShowResidueID="no" ShowBondQuery="yes" ShowBondRxn="yes" ShowBondStereo="no" ShowTerminalCarbonLabels="no" ShowNonTerminalCarbonLabels="no" HideImplicitHydrogens="no" LabelFont="3" LabelSize="10.0" LabelFace="96" CaptionFont="4" CaptionSize="12.0" CaptionFace="0" HashSpacing="2.7" MarginWidth="2.0" LineWidth="1.0" BoldWidth="4.0" BondLength="28.35" BondSpacing="12" ChainAngle="7864320" LabelJustification="Auto" CaptionJustification="Left" AminoAcidTermini="HOH" ShowSequenceTermini="yes" ShowSequenceBonds="yes" ResidueWrapCount="40" ResidueBlockCount="10" ResidueZigZag="yes" NumberResidueBlocks="no" PrintMargins="36.0 36.0 36.0 36.0" color="0" bgcolor="1" MacPrintInfo="0003000001200120000000000b6808a0ff84ff880be409180367052803fc0002000001200120000000000b6808a0000100640064000000010001010100000001270f000100010000000000000000000000000002001901900000000000600000000000000000000100000000000000000000000000000000" ChemPropName="" ChemPropFormula="Chemical Formula: " ChemPropExactMass="Exact Mass: " ChemPropMolWt="Molecular Weight: " ChemPropMOverZ="m/z: " ChemPropAnalysis="Elemental Analysis: " ChemPropBoilingPt="Boiling Point: " ChemPropMeltingPt="Melting Point: " ChemPropCritTemp="Critical Temp: " ChemPropCritPres="Critical Pres: " ChemPropCritVol="Critical Vol: " ChemPropGibbs="Gibbs Energy: " ChemPropLogP="Log P: " ChemPropMR="MR: " ChemPropHenry="Henry's Law: " ChemPropEForm="Heat of Form: " ChemProptPSA="tPSA: ">
+	<colortable>
+		<color r="1.0" g="1.0" b="1.0"/>
+		<color r="0.0" g="0.0" b="0.0"/>
+		<color r="1.0" g="0.0" b="0.0"/>
+		<color r="1.0" g="1.0" b="0.0"/>
+		<color r="0.0" g="1.0" b="0.0"/>
+		<color r="0.0" g="1.0" b="1.0"/>
+		<color r="0.0" g="0.0" b="1.0"/>
+		<color r="1.0" g="0.0" b="1.0"/>
+		<color r="0.7803921568627451" g="0.7803921568627451" b="0.7803921568627451"/>
+		<color r="0.2549019607843137" g="0.2549019607843137" b="0.2549019607843137"/>
+		<color r="0.7254901960784313" g="0.0" b="0.0"/>
+		<color r="0.7490196078431373" g="0.7490196078431373" b="0.7490196078431373"/>
+		<color r="0.7450980392156863" g="0.7450980392156863" b="0.7450980392156863"/>
+		<color r="0.0" g="0.5019607843137255" b="0.7529411764705882"/>
+		<color r="0.8784313725490196" g="0.8784313725490196" b="0.8784313725490196"/>
+		<color r="0.1568627450980392" g="0.1607843137254902" b="0.45098039215686275"/>
+		<color r="0.41568627450980394" g="0.4196078431372549" b="0.43529411764705883"/>
+		<color r="0.7529411764705882" g="0.7529411764705882" b="0.7529411764705882"/>
+		<color r="0.5019607843137255" g="0.5019607843137255" b="0.5019607843137255"/>
+		<color r="0.5725490196078431" g="0.5725490196078431" b="0.5725490196078431"/>
+	</colortable>
+	<fonttable>
+		<font id="3" charset="iso-8859-1" name="Arial"/>
+		<font id="4" charset="iso-8859-1" name="Times New Roman"/>
+	</fonttable>
+	<page id="932996036" BoundingBox="0.0 0.0 540.0 720.0" HeaderPosition="36.0" FooterPosition="36.0" PrintTrimMarks="yes" HeightPages="1" WidthPages="1">
+		<group id="932965824" BoundingBox="241.92 179.61 292.81 248.31" Z="40">
+			<group id="932965823" BoundingBox="241.92 179.61 292.81 248.31" Z="39" Integral="yes">
+				<graphic id="932995779" SupersededBy="932996037" BoundingBox="243.2 240.11 256.2 197.12" Z="27" GraphicType="Line" HeadSize="1000"/>
+				<graphic id="932995780" SupersededBy="932996038" BoundingBox="243.17 240.11 248.35 241.38" Z="28" GraphicType="Arc" HeadSize="1000" AngularSize="90.0"/>
+				<graphic id="932995781" SupersededBy="932996039" BoundingBox="285.41 246.22 248.2 246.22" Z="29" GraphicType="Line" HeadSize="1000"/>
+				<graphic id="932995782" SupersededBy="932996040" BoundingBox="256.36 195.92 256.36 183.61" Z="30" GraphicType="Line" HeadSize="1000"/>
+				<graphic id="932995783" SupersededBy="932996041" BoundingBox="256.19 197.12 250.92 195.92" Z="31" GraphicType="Arc" HeadSize="1000" AngularSize="90.0"/>
+				<graphic id="932995784" SupersededBy="932996042" BoundingBox="285.46 247.06 285.16 241.49" Z="32" GraphicType="Arc" HeadSize="1000" AngularSize="90.0"/>
+				<graphic id="932995785" SupersededBy="932996043" BoundingBox="290.4 240.11 277.4 197.1" Z="33" GraphicType="Line" HeadSize="1000"/>
+				<graphic id="932995786" SupersededBy="932996044" BoundingBox="277.26 195.92 277.26 183.61" Z="34" GraphicType="Line" HeadSize="1000"/>
+				<graphic id="932995787" SupersededBy="932996045" BoundingBox="277.26 195.92 282.7 195.92" Z="35" GraphicType="Arc" HeadSize="1000" AngularSize="90.0"/>
+				<graphic id="932995788" SupersededBy="932996046" BoundingBox="280.75 180.89 280.24 183.49" Z="36" GraphicType="Arc" HeadSize="1000" AngularSize="90.0"/>
+				<graphic id="932995789" SupersededBy="932996047" BoundingBox="256.36 183.61 253.38 183.49" Z="37" GraphicType="Arc" HeadSize="1000" AngularSize="90.0"/>
+				<arrow id="932996037" BoundingBox="242.73 196.97 256.68 240.26" Z="27" FillType="None" ArrowheadType="Solid" HeadSize="1000" ArrowheadCenterSize="875" ArrowheadWidth="250" Head3D="243.2 240.11 0.0" Tail3D="256.2 197.12 0.0" Center3D="420.37 287.36 0.0" MajorAxisEnd3D="470.52 287.36 0.0" MinorAxisEnd3D="420.37 331.88 0.0"/>
+				<arrow id="932996038" BoundingBox="241.92 238.86 249.2 247.39" Z="28" FillType="None" ArrowheadType="Solid" HeadSize="800" ArrowheadCenterSize="700" ArrowheadWidth="200" AngularSize="-102.6" Head3D="243.17 240.11 0.0" Tail3D="248.09 246.15 0.0" Center3D="248.35 241.38 0.0" MajorAxisEnd3D="243.15 242.59 0.0" MinorAxisEnd3D="246.99 236.77 0.0"/>
+				<arrow id="932996039" BoundingBox="248.2 245.72 285.41 246.72" Z="29" FillType="None" ArrowheadType="Solid" HeadSize="1000" ArrowheadCenterSize="875" ArrowheadWidth="250" Head3D="285.41 246.22 0.0" Tail3D="248.2 246.22 0.0" Center3D="383.91 322.62 0.0" MajorAxisEnd3D="421.14 322.62 0.0" MinorAxisEnd3D="383.91 366.0 0.0"/>
+				<arrow id="932996040" BoundingBox="255.86 183.61 256.86 195.92" Z="30" FillType="None" ArrowheadType="Solid" HeadSize="1000" ArrowheadCenterSize="875" ArrowheadWidth="250" Head3D="256.36 195.92 0.0" Tail3D="256.36 183.61 0.0" Center3D="437.97 235.9 0.0" MajorAxisEnd3D="444.49 235.9 0.0" MinorAxisEnd3D="437.97 248.21 0.0"/>
+				<arrow id="932996041" BoundingBox="254.94 194.83 257.61 198.37" Z="31" FillType="None" ArrowheadType="Solid" HeadSize="800" ArrowheadCenterSize="700" ArrowheadWidth="200" AngularSize="-14.2" Head3D="256.19 197.12 0.0" Tail3D="256.36 195.93 0.0" Center3D="250.92 195.92 0.0" MajorAxisEnd3D="256.16 194.62 0.0" MinorAxisEnd3D="252.4 200.56 0.0"/>
+				<arrow id="932996042" BoundingBox="284.21 239.05 292.81 248.31" Z="32" FillType="None" ArrowheadType="Solid" HeadSize="800" ArrowheadCenterSize="700" ArrowheadWidth="200" AngularSize="-102.6" Head3D="285.46 247.06 0.0" Tail3D="291.41 240.01 0.0" Center3D="285.16 241.49 0.0" MajorAxisEnd3D="291.43 242.89 0.0" MinorAxisEnd3D="286.8 236.08 0.0"/>
+				<arrow id="932996043" BoundingBox="276.92 196.95 290.87 240.26" Z="33" FillType="None" ArrowheadType="Solid" HeadSize="1000" ArrowheadCenterSize="875" ArrowheadWidth="250" Head3D="290.4 240.11 0.0" Tail3D="277.4 197.1 0.0" Center3D="667.54 521.56 0.0" MajorAxisEnd3D="619.62 521.56 0.0" MinorAxisEnd3D="667.54 564.1 0.0"/>
+				<arrow id="932996044" BoundingBox="276.76 183.61 277.76 195.92" Z="34" FillType="None" ArrowheadType="Solid" HeadSize="1000" ArrowheadCenterSize="875" ArrowheadWidth="250" Head3D="277.26 195.92 0.0" Tail3D="277.26 183.61 0.0" Center3D="95.65 235.9 0.0" MajorAxisEnd3D="89.13 235.9 0.0" MinorAxisEnd3D="95.65 248.21 0.0"/>
+				<arrow id="932996045" BoundingBox="276.01 194.67 278.63 198.2" Z="35" FillType="None" ArrowheadType="Solid" HeadSize="800" ArrowheadCenterSize="700" ArrowheadWidth="200" AngularSize="-14.2" Head3D="277.26 195.92 0.0" Tail3D="277.42 197.1 0.0" Center3D="282.7 195.92 0.0" MajorAxisEnd3D="277.46 194.62 0.0" MinorAxisEnd3D="281.22 200.56 0.0"/>
+				<arrow id="932996046" BoundingBox="276.01 179.64 282.0 184.65" Z="36" FillType="None" ArrowheadType="Solid" HeadSize="800" ArrowheadCenterSize="700" ArrowheadWidth="200" AngularSize="-102.6" Head3D="280.75 180.89 0.0" Tail3D="277.26 183.61 0.0" Center3D="280.24 183.49 0.0" MajorAxisEnd3D="279.21 181.01 0.0" MinorAxisEnd3D="283.03 182.59 0.0"/>
+				<arrow id="932996047" BoundingBox="251.86 179.61 257.61 184.86" Z="37" FillType="None" ArrowheadType="Solid" HeadSize="800" ArrowheadCenterSize="700" ArrowheadWidth="200" AngularSize="-102.6" Head3D="256.36 183.61 0.0" Tail3D="252.87 180.89 0.0" Center3D="253.38 183.49 0.0" MajorAxisEnd3D="254.41 181.01 0.0" MinorAxisEnd3D="250.59 182.59 0.0"/>
+			</group>
+			<graphic id="932995790" SupersededBy="932996048" BoundingBox="285.23 230.48 248.02 230.48" Z="38" GraphicType="Line" HeadSize="1000"/>
+			<arrow id="932996048" BoundingBox="248.02 229.98 285.23 230.98" Z="38" FillType="None" ArrowheadType="Solid" HeadSize="1000" ArrowheadCenterSize="875" ArrowheadWidth="250" Head3D="285.23 230.48 0.0" Tail3D="248.02 230.48 0.0" Center3D="383.73 306.89 0.0" MajorAxisEnd3D="420.96 306.89 0.0" MinorAxisEnd3D="383.73 350.26 0.0"/>
+		</group>
+		<annotation id="0" Keyword="GUID" Content="cc466264-4922-40c0-b2c4-c98728125c3f"/>
+		<annotation id="0" Keyword="Name" Content="Proteasome"/>
+	</page>
+	<page id="932996049" BoundingBox="0.0 0.0 540.0 720.0" HeaderPosition="36.0" FooterPosition="36.0" PrintTrimMarks="yes" HeightPages="1" WidthPages="1">
+		<group id="932959344" BoundingBox="165.82 185.27 225.99 268.8" Z="39">
+			<group id="932959324" BoundingBox="165.82 187.46 225.99 268.8" Z="40" Integral="yes">
+				<group id="932959285" BoundingBox="165.82 187.46 225.99 268.8" Z="41">
+					<graphic id="932995792" SupersededBy="932996050" BoundingBox="185.72 210.74 185.72 191.54" Z="45" GraphicType="Line" HeadSize="1000"/>
+					<graphic id="932995793" SupersededBy="932996051" BoundingBox="206.1 210.56 206.1 191.19" Z="47" GraphicType="Line" HeadSize="1000"/>
+					<graphic id="932995794" SupersededBy="932996052" BoundingBox="209.58 188.74 209.07 191.34" Z="49" GraphicType="Arc" HeadSize="1000" AngularSize="90.0"/>
+					<graphic id="932995795" SupersededBy="932996053" BoundingBox="185.72 191.46 182.75 191.34" Z="50" GraphicType="Arc" HeadSize="1000" AngularSize="90.0"/>
+					<graphic id="932995796" SupersededBy="932996054" BoundingBox="185.43 211.84 195.9 238.71" Z="52" GraphicType="Arc" HeadSize="1000" AngularSize="270.0"/>
+					<arrow id="932996050" BoundingBox="185.22 191.54 186.22 210.74" Z="45" FillType="None" ArrowheadType="Solid" HeadSize="1000" ArrowheadCenterSize="875" ArrowheadWidth="250" Head3D="185.72 210.74 0.0" Tail3D="185.72 191.54 0.0" Center3D="480.23 363.88 0.0" MajorAxisEnd3D="490.37 363.88 0.0" MinorAxisEnd3D="480.23 383.08 0.0"/>
+					<arrow id="932996051" BoundingBox="205.6 191.19 206.6 210.56" Z="47" FillType="None" ArrowheadType="Solid" HeadSize="1000" ArrowheadCenterSize="875" ArrowheadWidth="250" Head3D="206.1 210.56 0.0" Tail3D="206.1 191.19 0.0" Center3D="510.78 363.53 0.0" MajorAxisEnd3D="500.55 363.53 0.0" MinorAxisEnd3D="510.78 382.9 0.0"/>
+					<arrow id="932996052" BoundingBox="204.89 187.49 210.83 192.14" Z="49" FillType="None" ArrowheadType="Solid" HeadSize="800" ArrowheadCenterSize="700" ArrowheadWidth="200" AngularSize="-102.6" Head3D="209.58 188.74 0.0" Tail3D="206.1 191.46 0.0" Center3D="209.07 191.34 0.0" MajorAxisEnd3D="208.05 188.86 0.0" MinorAxisEnd3D="211.87 190.44 0.0"/>
+					<arrow id="932996053" BoundingBox="181.31 187.46 186.97 192.71" Z="50" FillType="None" ArrowheadType="Solid" HeadSize="800" ArrowheadCenterSize="700" ArrowheadWidth="200" AngularSize="-102.6" Head3D="185.72 191.46 0.0" Tail3D="182.23 188.74 0.0" Center3D="182.75 191.34 0.0" MajorAxisEnd3D="183.77 188.86 0.0" MinorAxisEnd3D="179.95 190.44 0.0"/>
+					<arrow id="932996054" BoundingBox="165.82 210.59 225.99 268.8" Z="52" FillType="None" ArrowheadType="Solid" HeadSize="800" ArrowheadCenterSize="700" ArrowheadWidth="200" AngularSize="-317.0" Head3D="185.43 211.84 0.0" Tail3D="206.57 211.91 0.0" Center3D="195.9 238.71 0.0" MajorAxisEnd3D="224.74 238.71 0.0" MinorAxisEnd3D="195.9 209.87 0.0"/>
+				</group>
+				<graphic id="932995797" SupersededBy="932996055" BoundingBox="185.55 211.68 180.29 210.5" Z="46" GraphicType="Arc" HeadSize="1000" AngularSize="90.0"/>
+				<graphic id="932995798" SupersededBy="932996056" BoundingBox="206.09 210.5 211.53 210.5" Z="48" GraphicType="Arc" HeadSize="1000" AngularSize="90.0"/>
+				<arrow id="932996055" BoundingBox="184.3 209.84 186.92 212.93" Z="46" FillType="None" ArrowheadType="Solid" HeadSize="800" ArrowheadCenterSize="700" ArrowheadWidth="200" AngularSize="-14.2" Head3D="185.55 211.68 0.0" Tail3D="185.71 210.5 0.0" Center3D="180.29 210.5 0.0" MajorAxisEnd3D="185.51 209.18 0.0" MinorAxisEnd3D="181.77 215.15 0.0"/>
+				<arrow id="932996056" BoundingBox="204.84 209.25 207.41 212.49" Z="48" FillType="None" ArrowheadType="Solid" HeadSize="800" ArrowheadCenterSize="700" ArrowheadWidth="200" AngularSize="-14.2" Head3D="206.09 210.5 0.0" Tail3D="206.26 211.68 0.0" Center3D="211.53 210.5 0.0" MajorAxisEnd3D="206.3 209.18 0.0" MinorAxisEnd3D="210.06 215.15 0.0"/>
+			</group>
+			<group id="932959343" BoundingBox="185.01 185.27 206.5 202.22" Z="42">
+				<group id="932959372" BoundingBox="185.01 185.27 194.02 202.22" Z="43" Integral="yes">
+					<graphic id="932995799" SupersededBy="932996057" BoundingBox="193.48 201.72 187.85 201.72" Z="53" GraphicType="Line" HeadSize="1000"/>
+					<graphic id="932995800" SupersededBy="932996058" BoundingBox="193.48 185.77 185.51 185.77" Z="54" GraphicType="Line" HeadSize="1000"/>
+					<graphic id="932995801" SupersededBy="932996059" BoundingBox="193.52 201.64 193.52 186.05" Z="55" GraphicType="Line" HeadSize="1000"/>
+					<graphic id="932995802" SupersededBy="932996060" BoundingBox="187.85 201.74 185.51 185.77" Z="56" GraphicType="Line" HeadSize="1000"/>
+					<arrow id="932996057" BoundingBox="187.85 201.22 193.48 202.22" Z="53" FillType="None" ArrowheadType="Solid" HeadSize="1000" ArrowheadCenterSize="875" ArrowheadWidth="250" Head3D="193.48 201.72 0.0" Tail3D="187.85 201.72 0.0" Center3D="489.05 380.99 0.0" MajorAxisEnd3D="494.68 380.99 0.0" MinorAxisEnd3D="489.05 387.57 0.0"/>
+					<arrow id="932996058" BoundingBox="185.51 185.27 193.48 186.27" Z="54" FillType="None" ArrowheadType="Solid" HeadSize="1000" ArrowheadCenterSize="875" ArrowheadWidth="250" Head3D="193.48 185.77 0.0" Tail3D="185.51 185.77 0.0" Center3D="487.89 357.07 0.0" MajorAxisEnd3D="495.86 357.07 0.0" MinorAxisEnd3D="487.89 366.36 0.0"/>
+					<arrow id="932996059" BoundingBox="193.02 186.05 194.02 201.64" Z="55" FillType="None" ArrowheadType="Solid" HeadSize="1000" ArrowheadCenterSize="875" ArrowheadWidth="250" Head3D="193.52 201.64 0.0" Tail3D="193.52 186.05 0.0" Center3D="498.2 375.64 0.0" MajorAxisEnd3D="489.95 375.64 0.0" MinorAxisEnd3D="498.2 391.25 0.0"/>
+					<arrow id="932996060" BoundingBox="185.01 185.7 188.34 201.81" Z="56" FillType="None" ArrowheadType="Solid" HeadSize="1000" ArrowheadCenterSize="875" ArrowheadWidth="250" Head3D="187.85 201.74 0.0" Tail3D="185.51 185.77 0.0" Center3D="482.24 373.02 0.0" MajorAxisEnd3D="473.49 373.02 0.0" MinorAxisEnd3D="482.24 389.58 0.0"/>
+				</group>
+				<group id="932959286" BoundingBox="197.51 185.27 206.5 202.22" Z="44" Integral="yes">
+					<graphic id="932995803" SupersededBy="932996061" BoundingBox="198.03 201.72 203.68 201.72" Z="57" GraphicType="Line" HeadSize="1000"/>
+					<graphic id="932995804" SupersededBy="932996062" BoundingBox="198.03 185.77 206.0 185.77" Z="58" GraphicType="Line" HeadSize="1000"/>
+					<graphic id="932995805" SupersededBy="932996063" BoundingBox="198.01 201.64 198.01 186.05" Z="59" GraphicType="Line" HeadSize="1000"/>
+					<graphic id="932995806" SupersededBy="932996064" BoundingBox="203.68 201.74 206.0 185.77" Z="60" GraphicType="Line" HeadSize="1000"/>
+					<arrow id="932996061" BoundingBox="198.03 201.22 203.68 202.22" Z="57" FillType="None" ArrowheadType="Solid" HeadSize="1000" ArrowheadCenterSize="875" ArrowheadWidth="250" Head3D="198.03 201.72 0.0" Tail3D="203.68 201.72 0.0" Center3D="-97.52 380.99 0.0" MajorAxisEnd3D="-103.17 380.99 0.0" MinorAxisEnd3D="-97.52 387.57 0.0"/>
+					<arrow id="932996062" BoundingBox="198.03 185.27 206.0 186.27" Z="58" FillType="None" ArrowheadType="Solid" HeadSize="1000" ArrowheadCenterSize="875" ArrowheadWidth="250" Head3D="198.03 185.77 0.0" Tail3D="206.0 185.77 0.0" Center3D="-96.36 357.07 0.0" MajorAxisEnd3D="-104.33 357.07 0.0" MinorAxisEnd3D="-96.36 366.36 0.0"/>
+					<arrow id="932996063" BoundingBox="197.51 186.05 198.51 201.64" Z="59" FillType="None" ArrowheadType="Solid" HeadSize="1000" ArrowheadCenterSize="875" ArrowheadWidth="250" Head3D="198.01 201.64 0.0" Tail3D="198.01 186.05 0.0" Center3D="-106.68 375.64 0.0" MajorAxisEnd3D="-98.43 375.64 0.0" MinorAxisEnd3D="-106.68 391.25 0.0"/>
+					<arrow id="932996064" BoundingBox="203.18 185.7 206.5 201.81" Z="60" FillType="None" ArrowheadType="Solid" HeadSize="1000" ArrowheadCenterSize="875" ArrowheadWidth="250" Head3D="203.68 201.74 0.0" Tail3D="206.0 185.77 0.0" Center3D="-90.73 373.02 0.0" MajorAxisEnd3D="-81.97 373.02 0.0" MinorAxisEnd3D="-90.73 389.58 0.0"/>
+				</group>
+			</group>
+			<graphic id="932995807" SupersededBy="932996065" BoundingBox="216.69 251.86 174.21 251.86" Z="51" GraphicType="Line" HeadSize="1000"/>
+			<arrow id="932996065" BoundingBox="174.21 251.36 216.69 252.36" Z="51" FillType="None" ArrowheadType="Solid" HeadSize="1000" ArrowheadCenterSize="875" ArrowheadWidth="250" Head3D="216.69 251.86 0.0" Tail3D="174.21 251.86 0.0" Center3D="505.43 454.45 0.0" MajorAxisEnd3D="547.93 454.45 0.0" MinorAxisEnd3D="505.43 503.94 0.0"/>
+		</group>
+	</page>
+	<page id="932996066" BoundingBox="0.0 0.0 540.0 720.0" HeaderPosition="36.0" FooterPosition="36.0" PrintTrimMarks="yes" HeightPages="1" WidthPages="1">
+		<group id="932959463" BoundingBox="97.91 77.2 158.08 160.72" Z="47">
+			<group id="932959434" BoundingBox="97.91 79.42 158.08 160.72" Z="48" Integral="yes">
+				<graphic id="932995809" SupersededBy="932996067" BoundingBox="117.82 102.66 117.82 83.47" Z="53" GraphicType="Line" HeadSize="1000"/>
+				<graphic id="932995810" SupersededBy="932996068" BoundingBox="117.64 103.61 112.38 102.43" Z="54" GraphicType="Arc" HeadSize="1000" AngularSize="90.0"/>
+				<graphic id="932995811" SupersededBy="932996069" BoundingBox="138.2 102.49 138.2 83.11" Z="55" GraphicType="Line" HeadSize="1000"/>
+				<graphic id="932995812" SupersededBy="932996070" BoundingBox="138.19 102.43 143.63 102.43" Z="56" GraphicType="Arc" HeadSize="1000" AngularSize="90.0"/>
+				<graphic id="932995813" SupersededBy="932996071" BoundingBox="141.68 80.67 141.17 83.27" Z="57" GraphicType="Arc" HeadSize="1000" AngularSize="90.0"/>
+				<graphic id="932995814" SupersededBy="932996072" BoundingBox="117.82 83.39 114.85 83.27" Z="58" GraphicType="Arc" HeadSize="1000" AngularSize="90.0"/>
+				<graphic id="932995815" SupersededBy="932996073" BoundingBox="117.52 103.77 128.0 130.64" Z="60" GraphicType="Arc" HeadSize="1000" AngularSize="270.0"/>
+				<arrow id="932996067" BoundingBox="117.32 83.47 118.32 102.66" Z="53" FillType="None" ArrowheadType="Solid" HeadSize="1000" ArrowheadCenterSize="875" ArrowheadWidth="250" Head3D="117.82 102.66 0.0" Tail3D="117.82 83.47 0.0" Center3D="412.32 255.81 0.0" MajorAxisEnd3D="422.46 255.81 0.0" MinorAxisEnd3D="412.32 275.01 0.0"/>
+				<arrow id="932996068" BoundingBox="116.39 101.77 119.02 104.86" Z="54" FillType="None" ArrowheadType="Solid" HeadSize="800" ArrowheadCenterSize="700" ArrowheadWidth="200" AngularSize="-14.2" Head3D="117.64 103.61 0.0" Tail3D="117.81 102.42 0.0" Center3D="112.38 102.43 0.0" MajorAxisEnd3D="117.6 101.11 0.0" MinorAxisEnd3D="113.86 107.07 0.0"/>
+				<arrow id="932996069" BoundingBox="137.7 83.11 138.7 102.49" Z="55" FillType="None" ArrowheadType="Solid" HeadSize="1000" ArrowheadCenterSize="875" ArrowheadWidth="250" Head3D="138.2 102.49 0.0" Tail3D="138.2 83.11 0.0" Center3D="442.88 255.46 0.0" MajorAxisEnd3D="432.64 255.46 0.0" MinorAxisEnd3D="442.88 274.83 0.0"/>
+				<arrow id="932996070" BoundingBox="136.94 101.18 139.5 104.42" Z="56" FillType="None" ArrowheadType="Solid" HeadSize="800" ArrowheadCenterSize="700" ArrowheadWidth="200" AngularSize="-14.2" Head3D="138.19 102.43 0.0" Tail3D="138.36 103.61 0.0" Center3D="143.63 102.43 0.0" MajorAxisEnd3D="138.39 101.11 0.0" MinorAxisEnd3D="142.15 107.07 0.0"/>
+				<arrow id="932996071" BoundingBox="136.97 79.42 142.93 84.14" Z="57" FillType="None" ArrowheadType="Solid" HeadSize="800" ArrowheadCenterSize="700" ArrowheadWidth="200" AngularSize="-102.6" Head3D="141.68 80.67 0.0" Tail3D="138.19 83.39 0.0" Center3D="141.17 83.27 0.0" MajorAxisEnd3D="140.14 80.79 0.0" MinorAxisEnd3D="143.96 82.37 0.0"/>
+				<arrow id="932996072" BoundingBox="113.08 79.42 119.07 84.64" Z="58" FillType="None" ArrowheadType="Solid" HeadSize="800" ArrowheadCenterSize="700" ArrowheadWidth="200" AngularSize="-102.6" Head3D="117.82 83.39 0.0" Tail3D="114.33 80.67 0.0" Center3D="114.85 83.27 0.0" MajorAxisEnd3D="115.87 80.79 0.0" MinorAxisEnd3D="112.05 82.37 0.0"/>
+				<arrow id="932996073" BoundingBox="97.91 102.52 158.08 160.72" Z="60" FillType="None" ArrowheadType="Solid" HeadSize="800" ArrowheadCenterSize="700" ArrowheadWidth="200" AngularSize="-317.0" Head3D="117.52 103.77 0.0" Tail3D="138.66 103.84 0.0" Center3D="128.0 130.64 0.0" MajorAxisEnd3D="156.84 130.64 0.0" MinorAxisEnd3D="128.0 101.8 0.0"/>
+			</group>
+			<group id="932959462" BoundingBox="117.11 77.2 138.93 94.15" Z="49">
+				<group id="932959436" BoundingBox="117.11 77.2 122.98 94.15" Z="50" Integral="yes">
+					<graphic id="932995816" SupersededBy="932996074" BoundingBox="122.46 93.65 119.94 93.65" Z="61" GraphicType="Line" HeadSize="1000"/>
+					<graphic id="932995817" SupersededBy="932996075" BoundingBox="122.46 77.7 117.6 77.7" Z="62" GraphicType="Line" HeadSize="1000"/>
+					<graphic id="932995818" SupersededBy="932996076" BoundingBox="119.94 93.67 117.6 77.7" Z="63" GraphicType="Line" HeadSize="1000"/>
+					<graphic id="932995819" SupersededBy="932996077" BoundingBox="122.48 93.67 122.48 77.7" Z="65" GraphicType="Line" HeadSize="1000"/>
+					<arrow id="932996074" BoundingBox="119.94 93.15 122.46 94.15" Z="61" FillType="None" ArrowheadType="Solid" HeadSize="1000" ArrowheadCenterSize="875" ArrowheadWidth="250" Head3D="122.46 93.65 0.0" Tail3D="119.94 93.65 0.0" Center3D="158.0 124.56 0.0" MajorAxisEnd3D="160.54 124.56 0.0" MinorAxisEnd3D="158.0 127.55 0.0"/>
+					<arrow id="932996075" BoundingBox="117.6 77.2 122.46 78.2" Z="62" FillType="None" ArrowheadType="Solid" HeadSize="1000" ArrowheadCenterSize="875" ArrowheadWidth="250" Head3D="122.46 77.7 0.0" Tail3D="117.6 77.7 0.0" Center3D="157.76 100.91 0.0" MajorAxisEnd3D="162.63 100.91 0.0" MinorAxisEnd3D="157.76 106.58 0.0"/>
+					<arrow id="932996076" BoundingBox="117.11 77.63 120.44 93.74" Z="63" FillType="None" ArrowheadType="Solid" HeadSize="1000" ArrowheadCenterSize="875" ArrowheadWidth="250" Head3D="119.94 93.67 0.0" Tail3D="117.6 77.7 0.0" Center3D="385.71 321.57 0.0" MajorAxisEnd3D="376.67 321.57 0.0" MinorAxisEnd3D="385.71 338.62 0.0"/>
+					<arrow id="932996077" BoundingBox="121.98 77.7 122.98 93.67" Z="65" FillType="None" ArrowheadType="Solid" HeadSize="1000" ArrowheadCenterSize="875" ArrowheadWidth="250" Head3D="122.48 93.67 0.0" Tail3D="122.48 77.7 0.0" Center3D="158.95 116.07 0.0" MajorAxisEnd3D="150.78 116.07 0.0" MinorAxisEnd3D="158.95 132.02 0.0"/>
+				</group>
+				<group id="932959437" BoundingBox="126.24 77.2 129.89 94.07" Z="51" Integral="yes">
+					<graphic id="932995820" SupersededBy="932996078" BoundingBox="126.74 93.57 126.74 77.72" Z="64" GraphicType="Line" HeadSize="1000"/>
+					<graphic id="932995821" SupersededBy="932996079" BoundingBox="129.39 93.59 129.39 77.68" Z="66" GraphicType="Line" HeadSize="1000"/>
+					<graphic id="932995822" SupersededBy="932996080" BoundingBox="126.7 77.7 129.36 77.7" Z="67" GraphicType="Line" HeadSize="1000"/>
+					<graphic id="932995823" SupersededBy="932996081" BoundingBox="126.74 93.57 129.39 93.57" Z="68" GraphicType="Line" HeadSize="1000"/>
+					<arrow id="932996078" BoundingBox="126.24 77.72 127.24 93.57" Z="64" FillType="None" ArrowheadType="Solid" HeadSize="1000" ArrowheadCenterSize="875" ArrowheadWidth="250" Head3D="126.74 93.57 0.0" Tail3D="126.74 77.72 0.0" Center3D="166.17 116.5 0.0" MajorAxisEnd3D="174.56 116.5 0.0" MinorAxisEnd3D="166.17 132.35 0.0"/>
+					<arrow id="932996079" BoundingBox="128.89 77.68 129.89 93.59" Z="66" FillType="None" ArrowheadType="Solid" HeadSize="1000" ArrowheadCenterSize="875" ArrowheadWidth="250" Head3D="129.39 93.59 0.0" Tail3D="129.39 77.68 0.0" Center3D="170.44 116.68 0.0" MajorAxisEnd3D="178.87 116.68 0.0" MinorAxisEnd3D="170.44 132.59 0.0"/>
+					<arrow id="932996080" BoundingBox="126.7 77.2 129.36 78.2" Z="67" FillType="None" ArrowheadType="Solid" HeadSize="1000" ArrowheadCenterSize="875" ArrowheadWidth="250" Head3D="126.7 77.7 0.0" Tail3D="129.36 77.7 0.0" Center3D="167.47 100.64 0.0" MajorAxisEnd3D="164.81 100.64 0.0" MinorAxisEnd3D="167.47 103.75 0.0"/>
+					<arrow id="932996081" BoundingBox="126.74 93.07 129.39 94.07" Z="68" FillType="None" ArrowheadType="Solid" HeadSize="1000" ArrowheadCenterSize="875" ArrowheadWidth="250" Head3D="126.74 93.57 0.0" Tail3D="129.39 93.57 0.0" Center3D="167.51 124.44 0.0" MajorAxisEnd3D="164.87 124.44 0.0" MinorAxisEnd3D="167.51 127.53 0.0"/>
+				</group>
+				<group id="932959439" BoundingBox="133.05 77.2 138.93 94.15" Z="52" Integral="yes">
+					<graphic id="932995824" SupersededBy="932996082" BoundingBox="133.57 93.65 136.09 93.65" Z="69" GraphicType="Line" HeadSize="1000"/>
+					<graphic id="932995825" SupersededBy="932996083" BoundingBox="133.55 77.7 138.43 77.7" Z="70" GraphicType="Line" HeadSize="1000"/>
+					<graphic id="932995826" SupersededBy="932996084" BoundingBox="136.09 93.67 138.43 77.7" Z="71" GraphicType="Line" HeadSize="1000"/>
+					<graphic id="932995827" SupersededBy="932996085" BoundingBox="133.55 93.67 133.55 77.72" Z="72" GraphicType="Line" HeadSize="1000"/>
+					<arrow id="932996082" BoundingBox="133.57 93.15 136.09 94.15" Z="69" FillType="None" ArrowheadType="Solid" HeadSize="1000" ArrowheadCenterSize="875" ArrowheadWidth="250" Head3D="133.57 93.65 0.0" Tail3D="136.09 93.65 0.0" Center3D="-188.62 112.68 0.0" MajorAxisEnd3D="-191.14 112.68 0.0" MinorAxisEnd3D="-188.62 113.06 0.0"/>
+					<arrow id="932996083" BoundingBox="133.55 77.2 138.43 78.2" Z="70" FillType="None" ArrowheadType="Solid" HeadSize="1000" ArrowheadCenterSize="875" ArrowheadWidth="250" Head3D="133.55 77.7 0.0" Tail3D="138.43 77.7 0.0" Center3D="179.54 189.11 0.0" MajorAxisEnd3D="174.66 189.11 0.0" MinorAxisEnd3D="179.54 216.28 0.0"/>
+					<arrow id="932996084" BoundingBox="135.59 77.63 138.93 93.74" Z="71" FillType="None" ArrowheadType="Solid" HeadSize="1000" ArrowheadCenterSize="875" ArrowheadWidth="250" Head3D="136.09 93.67 0.0" Tail3D="138.43 77.7 0.0" Center3D="-158.3 264.95 0.0" MajorAxisEnd3D="-149.56 264.95 0.0" MinorAxisEnd3D="-158.3 281.5 0.0"/>
+					<arrow id="932996085" BoundingBox="133.05 77.72 134.05 93.67" Z="72" FillType="None" ArrowheadType="Solid" HeadSize="1000" ArrowheadCenterSize="875" ArrowheadWidth="250" Head3D="133.55 93.67 0.0" Tail3D="133.55 77.72 0.0" Center3D="176.41 116.6 0.0" MajorAxisEnd3D="184.85 116.6 0.0" MinorAxisEnd3D="176.41 132.55 0.0"/>
+				</group>
+			</group>
+			<graphic id="932995828" SupersededBy="932996086" BoundingBox="148.79 143.79 106.3 143.79" Z="59" GraphicType="Line" HeadSize="1000"/>
+			<arrow id="932996086" BoundingBox="106.3 143.29 148.79 144.29" Z="59" FillType="None" ArrowheadType="Solid" HeadSize="1000" ArrowheadCenterSize="875" ArrowheadWidth="250" Head3D="148.79 143.79 0.0" Tail3D="106.3 143.79 0.0" Center3D="437.52 346.37 0.0" MajorAxisEnd3D="480.03 346.37 0.0" MinorAxisEnd3D="437.52 395.87 0.0"/>
+		</group>
+	</page>
+	<page id="932996087" BoundingBox="0.0 0.0 540.0 720.0" HeaderPosition="36.0" FooterPosition="36.0" PrintTrimMarks="yes" HeightPages="1" WidthPages="1">
+		<group id="932959603" BoundingBox="202.06 218.69 277.16 327.97" Z="89">
+			<group id="932959554" BoundingBox="224.87 291.85 248.79 292.85" Z="90" Integral="yes">
+				<graphic id="932995830" SupersededBy="932996088" BoundingBox="224.87 292.35 233.75 292.35" Z="128" GraphicType="Line" HeadSize="1000"/>
+				<graphic id="932995831" SupersededBy="932996089" BoundingBox="239.93 292.35 248.79 292.35" Z="129" GraphicType="Line" HeadSize="1000"/>
+				<arrow id="932996088" BoundingBox="224.87 291.85 233.75 292.85" Z="128" FillType="None" ArrowheadType="Solid" HeadSize="1000" ArrowheadCenterSize="875" ArrowheadWidth="250" Head3D="224.87 292.35 0.0" Tail3D="233.75 292.35 0.0" Center3D="369.39 626.51 0.0" MajorAxisEnd3D="369.39 638.06 0.0" MinorAxisEnd3D="357.82 626.51 0.0"/>
+				<arrow id="932996089" BoundingBox="239.93 291.85 248.79 292.85" Z="129" FillType="None" ArrowheadType="Solid" HeadSize="1000" ArrowheadCenterSize="875" ArrowheadWidth="250" Head3D="239.93 292.35 0.0" Tail3D="248.79 292.35 0.0" Center3D="384.45 626.51 0.0" MajorAxisEnd3D="384.45 638.06 0.0" MinorAxisEnd3D="372.88 626.51 0.0"/>
+			</group>
+			<group id="932959602" BoundingBox="202.06 218.69 277.16 327.97" Z="91">
+				<group id="932959555" BoundingBox="218.39 221.5 256.07 327.97" Z="92" Integral="yes">
+					<graphic id="932995832" SupersededBy="932996090" BoundingBox="235.05 312.21 235.05 228.42" Z="98" GraphicType="Line" HeadSize="1000"/>
+					<graphic id="932995833" SupersededBy="932996091" BoundingBox="238.57 312.21 238.57 228.42" Z="99" GraphicType="Line" HeadSize="1000"/>
+					<graphic id="932995834" SupersededBy="932996092" BoundingBox="223.8 321.49 223.8 269.18" Z="100" GraphicType="Line" HeadSize="1000"/>
+					<graphic id="932995835" SupersededBy="932996093" BoundingBox="235.06 228.43 233.04 228.27" Z="102" GraphicType="Arc" HeadSize="1000" AngularSize="90.0"/>
+					<graphic id="932995836" SupersededBy="932996094" BoundingBox="238.55 228.42 233.31 227.99" Z="103" GraphicType="Arc" HeadSize="1000" AngularSize="90.0"/>
+					<graphic id="932995837" SupersededBy="932996095" BoundingBox="223.81 321.49 225.81 321.65" Z="104" GraphicType="Arc" HeadSize="1000" AngularSize="90.0"/>
+					<graphic id="932995838" SupersededBy="932996096" BoundingBox="225.97 323.65 247.94 323.65" Z="105" GraphicType="Line" HeadSize="1000"/>
+					<graphic id="932995839" SupersededBy="932996097" BoundingBox="250.01 247.62 250.01 228.42" Z="106" GraphicType="Line" HeadSize="1000"/>
+					<graphic id="932995840" SupersededBy="932996098" BoundingBox="252.19 226.27 252.02 228.27" Z="108" GraphicType="Arc" HeadSize="1000" AngularSize="90.0"/>
+					<graphic id="932995841" SupersededBy="932996099" BoundingBox="252.17 222.75 251.74 227.99" Z="109" GraphicType="Arc" HeadSize="1000" AngularSize="90.0"/>
+					<graphic id="932995842" SupersededBy="932996100" BoundingBox="246.5 247.62 246.5 228.42" Z="110" GraphicType="Line" HeadSize="1000"/>
+					<graphic id="932995843" SupersededBy="932996101" BoundingBox="247.94 323.64 248.12 321.29" Z="111" GraphicType="Arc" HeadSize="1000" AngularSize="90.0"/>
+					<graphic id="932995844" SupersededBy="932996102" BoundingBox="229.71 258.96 229.71 247.88" Z="112" GraphicType="Line" HeadSize="1000"/>
+					<graphic id="932995845" SupersededBy="932996103" BoundingBox="232.13 244.97 232.35 247.66" Z="113" GraphicType="Arc" HeadSize="1000" AngularSize="90.0"/>
+					<graphic id="932995846" SupersededBy="932996104" BoundingBox="232.13 244.96 235.01 244.96" Z="114" GraphicType="Line" HeadSize="1000"/>
+					<graphic id="932995847" SupersededBy="932996105" BoundingBox="244.14 249.98 244.32 247.8" Z="115" GraphicType="Arc" HeadSize="1000" AngularSize="90.0"/>
+					<graphic id="932995848" SupersededBy="932996106" BoundingBox="244.18 253.45 244.63 248.05" Z="116" GraphicType="Arc" HeadSize="1000" AngularSize="90.0"/>
+					<graphic id="932995849" SupersededBy="932996107" BoundingBox="244.11 247.82 241.48 247.6" Z="117" GraphicType="Arc" HeadSize="1000" AngularSize="90.0"/>
+					<graphic id="932995850" SupersededBy="932996108" BoundingBox="244.14 249.98 244.12 247.82" Z="118" GraphicType="Line" HeadSize="1000"/>
+					<graphic id="932995851" SupersededBy="932996109" BoundingBox="244.18 259.02 244.18 253.43" Z="119" GraphicType="Line" HeadSize="1000"/>
+					<graphic id="932995852" SupersededBy="932996110" BoundingBox="244.26 259.0 239.06 268.74" Z="120" GraphicType="Arc" HeadSize="1000" AngularSize="-90.0"/>
+					<graphic id="932995853" SupersededBy="932996111" BoundingBox="223.81 269.18 234.85 268.74" Z="121" GraphicType="Arc" HeadSize="1000" AngularSize="-90.0"/>
+					<graphic id="932995854" SupersededBy="932996112" BoundingBox="250.13 321.11 250.13 269.18" Z="122" GraphicType="Line" HeadSize="1000"/>
+					<graphic id="932995855" SupersededBy="932996113" BoundingBox="219.64 324.52 227.39 324.99" Z="123" GraphicType="Arc" HeadSize="1000" AngularSize="-90.0"/>
+					<graphic id="932995856" SupersededBy="932996114" BoundingBox="250.25 317.44 247.02 324.56" Z="124" GraphicType="Arc" HeadSize="1000" AngularSize="-90.0"/>
+					<graphic id="932995857" SupersededBy="932996115" BoundingBox="219.64 324.52 221.72 324.7" Z="125" GraphicType="Arc" HeadSize="1000" AngularSize="90.0"/>
+					<graphic id="932995858" SupersededBy="932996116" BoundingBox="221.82 326.7 252.15 326.7" Z="126" GraphicType="Line" HeadSize="1000"/>
+					<graphic id="932995859" SupersededBy="932996117" BoundingBox="252.15 326.72 252.35 324.28" Z="127" GraphicType="Arc" HeadSize="1000" AngularSize="90.0"/>
+					<graphic id="932995860" SupersededBy="932996118" BoundingBox="238.65 244.96 241.27 244.96" Z="132" GraphicType="Line" HeadSize="1000"/>
+					<arrow id="932996090" BoundingBox="234.55 228.42 235.55 312.21" Z="98" FillType="None" ArrowheadType="Solid" HeadSize="1000" ArrowheadCenterSize="875" ArrowheadWidth="250" Head3D="235.05 312.21 0.0" Tail3D="235.05 228.42 0.0" Center3D="374.1 623.63 0.0" MajorAxisEnd3D="457.87 623.63 0.0" MinorAxisEnd3D="374.1 707.4 0.0"/>
+					<arrow id="932996091" BoundingBox="238.07 228.42 239.07 312.21" Z="99" FillType="None" ArrowheadType="Solid" HeadSize="1000" ArrowheadCenterSize="875" ArrowheadWidth="250" Head3D="238.57 312.21 0.0" Tail3D="238.57 228.42 0.0" Center3D="377.6 623.63 0.0" MajorAxisEnd3D="461.37 623.63 0.0" MinorAxisEnd3D="377.6 707.4 0.0"/>
+					<arrow id="932996092" BoundingBox="223.3 269.18 224.3 321.49" Z="100" FillType="None" ArrowheadType="Solid" HeadSize="1000" ArrowheadCenterSize="875" ArrowheadWidth="250" Head3D="223.8 321.49 0.0" Tail3D="223.8 269.18 0.0" Center3D="363.33 644.89 0.0" MajorAxisEnd3D="419.67 644.89 0.0" MinorAxisEnd3D="363.33 697.18 0.0"/>
+					<arrow id="932996093" BoundingBox="231.61 225.02 236.31 229.68" Z="102" FillType="None" ArrowheadType="Solid" HeadSize="800" ArrowheadCenterSize="700" ArrowheadWidth="200" AngularSize="-99.5" Head3D="235.06 228.43 0.0" Tail3D="232.86 226.27 0.0" Center3D="233.04 228.27 0.0" MajorAxisEnd3D="235.07 228.27 0.0" MinorAxisEnd3D="233.04 230.28 0.0"/>
+					<arrow id="932996094" BoundingBox="231.62 221.5 239.8 229.67" Z="103" FillType="None" ArrowheadType="Solid" HeadSize="800" ArrowheadCenterSize="700" ArrowheadWidth="200" AngularSize="-99.5" Head3D="238.55 228.42 0.0" Tail3D="232.87 222.75 0.0" Center3D="233.31 227.99 0.0" MajorAxisEnd3D="238.57 227.99 0.0" MinorAxisEnd3D="233.31 233.25 0.0"/>
+					<arrow id="932996095" BoundingBox="222.56 320.24 226.9 324.9" Z="104" FillType="None" ArrowheadType="Solid" HeadSize="800" ArrowheadCenterSize="700" ArrowheadWidth="200" AngularSize="-99.5" Head3D="223.81 321.49 0.0" Tail3D="225.99 323.65 0.0" Center3D="225.81 321.65 0.0" MajorAxisEnd3D="223.8 321.65 0.0" MinorAxisEnd3D="225.81 319.64 0.0"/>
+					<arrow id="932996096" BoundingBox="225.97 323.15 247.94 324.15" Z="105" FillType="None" ArrowheadType="Solid" HeadSize="1000" ArrowheadCenterSize="875" ArrowheadWidth="250" Head3D="225.97 323.65 0.0" Tail3D="247.94 323.65 0.0" Center3D="377.6 673.48 0.0" MajorAxisEnd3D="377.6 695.43 0.0" MinorAxisEnd3D="355.63 673.48 0.0"/>
+					<arrow id="932996097" BoundingBox="249.51 228.42 250.51 247.62" Z="106" FillType="None" ArrowheadType="Solid" HeadSize="1000" ArrowheadCenterSize="875" ArrowheadWidth="250" Head3D="250.01 247.62 0.0" Tail3D="250.01 228.42 0.0" Center3D="402.09 455.22 0.0" MajorAxisEnd3D="371.95 455.22 0.0" MinorAxisEnd3D="402.09 475.94 0.0"/>
+					<arrow id="932996098" BoundingBox="248.76 225.02 253.44 229.63" Z="108" FillType="None" ArrowheadType="Solid" HeadSize="800" ArrowheadCenterSize="700" ArrowheadWidth="200" AngularSize="-99.5" Head3D="252.19 226.27 0.0" Tail3D="250.01 228.42 0.0" Center3D="252.02 228.27 0.0" MajorAxisEnd3D="250.01 228.27 0.0" MinorAxisEnd3D="252.02 230.28 0.0"/>
+					<arrow id="932996099" BoundingBox="245.25 221.5 253.42 229.68" Z="109" FillType="None" ArrowheadType="Solid" HeadSize="800" ArrowheadCenterSize="700" ArrowheadWidth="200" AngularSize="-99.5" Head3D="252.17 222.75 0.0" Tail3D="246.5 228.43 0.0" Center3D="251.74 227.99 0.0" MajorAxisEnd3D="246.48 227.99 0.0" MinorAxisEnd3D="251.74 233.25 0.0"/>
+					<arrow id="932996100" BoundingBox="246.0 228.42 247.0 247.62" Z="110" FillType="None" ArrowheadType="Solid" HeadSize="1000" ArrowheadCenterSize="875" ArrowheadWidth="250" Head3D="246.5 247.62 0.0" Tail3D="246.5 228.42 0.0" Center3D="396.82 455.22 0.0" MajorAxisEnd3D="365.63 455.22 0.0" MinorAxisEnd3D="396.82 476.66 0.0"/>
+					<arrow id="932996101" BoundingBox="246.69 319.96 251.38 324.89" Z="111" FillType="None" ArrowheadType="Solid" HeadSize="800" ArrowheadCenterSize="700" ArrowheadWidth="200" AngularSize="-99.5" Head3D="247.94 323.64 0.0" Tail3D="250.12 321.11 0.0" Center3D="248.12 321.29 0.0" MajorAxisEnd3D="250.13 321.29 0.0" MinorAxisEnd3D="248.12 318.93 0.0"/>
+					<arrow id="932996102" BoundingBox="229.21 247.88 230.21 258.96" Z="112" FillType="None" ArrowheadType="Solid" HeadSize="1000" ArrowheadCenterSize="875" ArrowheadWidth="250" Head3D="229.71 258.96 0.0" Tail3D="229.71 247.88 0.0" Center3D="372.23 570.89 0.0" MajorAxisEnd3D="371.62 570.89 0.0" MinorAxisEnd3D="372.23 571.7 0.0"/>
+					<arrow id="932996103" BoundingBox="228.47 243.72 233.38 249.13" Z="113" FillType="None" ArrowheadType="Solid" HeadSize="800" ArrowheadCenterSize="700" ArrowheadWidth="200" AngularSize="-90.0" Head3D="232.13 244.97 0.0" Tail3D="229.72 247.88 0.0" Center3D="232.35 247.66 0.0" MajorAxisEnd3D="229.71 247.66 0.0" MinorAxisEnd3D="232.35 250.36 0.0"/>
+					<arrow id="932996104" BoundingBox="232.13 244.46 235.01 245.46" Z="114" FillType="None" ArrowheadType="Solid" HeadSize="1000" ArrowheadCenterSize="875" ArrowheadWidth="250" Head3D="232.13 244.96 0.0" Tail3D="235.01 244.96 0.0" Center3D="299.96 302.25 0.0" MajorAxisEnd3D="299.96 306.01 0.0" MinorAxisEnd3D="296.18 302.25 0.0"/>
+					<arrow id="932996105" BoundingBox="242.89 246.59 247.75 251.23" Z="115" FillType="None" ArrowheadType="Solid" HeadSize="800" ArrowheadCenterSize="700" ArrowheadWidth="200" AngularSize="-99.5" Head3D="244.14 249.98 0.0" Tail3D="246.5 247.61 0.0" Center3D="244.32 247.8 0.0" MajorAxisEnd3D="244.32 249.98 0.0" MinorAxisEnd3D="242.13 247.8 0.0"/>
+					<arrow id="932996106" BoundingBox="242.93 246.59 251.27 254.7" Z="116" FillType="None" ArrowheadType="Solid" HeadSize="800" ArrowheadCenterSize="700" ArrowheadWidth="200" AngularSize="-99.5" Head3D="244.18 253.45 0.0" Tail3D="250.01 247.61 0.0" Center3D="244.63 248.05 0.0" MajorAxisEnd3D="244.63 253.47 0.0" MinorAxisEnd3D="239.24 248.05 0.0"/>
+					<arrow id="932996107" BoundingBox="240.45 243.72 245.36 249.07" Z="117" FillType="None" ArrowheadType="Solid" HeadSize="800" ArrowheadCenterSize="700" ArrowheadWidth="200" AngularSize="-99.5" Head3D="244.11 247.82 0.0" Tail3D="241.26 244.97 0.0" Center3D="241.48 247.6 0.0" MajorAxisEnd3D="244.12 247.6 0.0" MinorAxisEnd3D="241.48 250.24 0.0"/>
+					<arrow id="932996108" BoundingBox="243.62 247.81 244.64 249.99" Z="118" FillType="None" ArrowheadType="Solid" HeadSize="1000" ArrowheadCenterSize="875" ArrowheadWidth="250" Head3D="244.14 249.98 0.0" Tail3D="244.12 247.82 0.0" Center3D="316.53 308.69 0.0" MajorAxisEnd3D="316.53 308.04 0.0" MinorAxisEnd3D="315.69 308.69 0.0"/>
+					<arrow id="932996109" BoundingBox="243.68 253.43 244.68 259.02" Z="119" FillType="None" ArrowheadType="Solid" HeadSize="1000" ArrowheadCenterSize="875" ArrowheadWidth="250" Head3D="244.18 259.02 0.0" Tail3D="244.18 253.43 0.0" Center3D="316.59 320.52 0.0" MajorAxisEnd3D="316.32 320.52 0.0" MinorAxisEnd3D="316.59 320.9 0.0"/>
+					<arrow id="932996110" BoundingBox="243.01 257.75 251.37 270.41" Z="120" FillType="None" ArrowheadType="Solid" HeadSize="800" ArrowheadCenterSize="700" ArrowheadWidth="200" AngularSize="64.1" Head3D="244.26 259.0 0.0" Tail3D="250.12 269.16 0.0" Center3D="239.06 268.74 0.0" MajorAxisEnd3D="228.0 268.74 0.0" MinorAxisEnd3D="239.06 257.7 0.0"/>
+					<arrow id="932996111" BoundingBox="222.56 257.71 230.97 270.43" Z="121" FillType="None" ArrowheadType="Solid" HeadSize="800" ArrowheadCenterSize="700" ArrowheadWidth="200" AngularSize="64.6" Head3D="223.81 269.18 0.0" Tail3D="229.72 258.96 0.0" Center3D="234.85 268.74 0.0" MajorAxisEnd3D="245.89 268.74 0.0" MinorAxisEnd3D="234.85 257.7 0.0"/>
+					<arrow id="932996112" BoundingBox="249.63 269.18 250.63 321.11" Z="122" FillType="None" ArrowheadType="Solid" HeadSize="1000" ArrowheadCenterSize="875" ArrowheadWidth="250" Head3D="250.13 321.11 0.0" Tail3D="250.13 269.18 0.0" Center3D="388.67 642.26 0.0" MajorAxisEnd3D="444.64 642.26 0.0" MinorAxisEnd3D="388.67 694.19 0.0"/>
+					<arrow id="932996113" BoundingBox="218.39 316.87 225.03 325.77" Z="123" FillType="None" ArrowheadType="Solid" HeadSize="800" ArrowheadCenterSize="700" ArrowheadWidth="200" AngularSize="58.8" Head3D="219.64 324.52 0.0" Tail3D="223.78 318.12 0.0" Center3D="227.39 324.99 0.0" MajorAxisEnd3D="235.14 324.99 0.0" MinorAxisEnd3D="227.39 317.24 0.0"/>
+					<arrow id="932996114" BoundingBox="249.0 316.19 256.07 325.32" Z="124" FillType="None" ArrowheadType="Solid" HeadSize="800" ArrowheadCenterSize="700" ArrowheadWidth="200" AngularSize="62.0" Head3D="250.25 317.44 0.0" Tail3D="254.82 324.07 0.0" Center3D="247.02 324.56 0.0" MajorAxisEnd3D="239.2 324.56 0.0" MinorAxisEnd3D="247.02 316.74 0.0"/>
+					<arrow id="932996115" BoundingBox="218.39 323.27 222.91 327.97" Z="125" FillType="None" ArrowheadType="Solid" HeadSize="800" ArrowheadCenterSize="700" ArrowheadWidth="200" AngularSize="-99.5" Head3D="219.64 324.52 0.0" Tail3D="221.88 326.72 0.0" Center3D="221.72 324.7 0.0" MajorAxisEnd3D="219.63 324.7 0.0" MinorAxisEnd3D="221.72 322.67 0.0"/>
+					<arrow id="932996116" BoundingBox="221.82 326.2 252.15 327.2" Z="126" FillType="None" ArrowheadType="Solid" HeadSize="1000" ArrowheadCenterSize="875" ArrowheadWidth="250" Head3D="221.82 326.7 0.0" Tail3D="252.15 326.7 0.0" Center3D="552.84 581.74 0.0" MajorAxisEnd3D="552.84 610.83 0.0" MinorAxisEnd3D="523.74 581.74 0.0"/>
+					<arrow id="932996117" BoundingBox="250.9 323.08 256.04 327.97" Z="127" FillType="None" ArrowheadType="Solid" HeadSize="800" ArrowheadCenterSize="700" ArrowheadWidth="200" AngularSize="-99.5" Head3D="252.15 326.72 0.0" Tail3D="254.78 324.08 0.0" Center3D="252.35 324.28 0.0" MajorAxisEnd3D="254.79 324.28 0.0" MinorAxisEnd3D="252.35 321.84 0.0"/>
+					<arrow id="932996118" BoundingBox="238.65 244.46 241.27 245.46" Z="132" FillType="None" ArrowheadType="Solid" HeadSize="1000" ArrowheadCenterSize="875" ArrowheadWidth="250" Head3D="238.65 244.96 0.0" Tail3D="241.27 244.96 0.0" Center3D="371.83 526.77 0.0" MajorAxisEnd3D="371.83 530.19 0.0" MinorAxisEnd3D="368.43 526.77 0.0"/>
+				</group>
+				<group id="932959600" BoundingBox="202.06 222.25 232.88 226.76" Z="93">
+					<group id="932959556" BoundingBox="204.35 222.25 232.88 226.76" Z="94" Integral="yes">
+						<graphic id="932995861" SupersededBy="932996119" BoundingBox="204.35 226.26 232.88 226.26" Z="101" GraphicType="Line" HeadSize="1000"/>
+						<graphic id="932995862" SupersededBy="932996120" BoundingBox="204.35 222.75 232.88 222.75" Z="130" GraphicType="Line" HeadSize="1000"/>
+						<arrow id="932996119" BoundingBox="204.35 225.76 232.88 226.76" Z="101" FillType="None" ArrowheadType="Solid" HeadSize="1000" ArrowheadCenterSize="875" ArrowheadWidth="250" Head3D="204.35 226.26 0.0" Tail3D="232.88 226.26 0.0" Center3D="348.45 527.38 0.0" MajorAxisEnd3D="348.45 555.91 0.0" MinorAxisEnd3D="319.92 527.38 0.0"/>
+						<arrow id="932996120" BoundingBox="204.35 222.25 232.88 223.25" Z="130" FillType="None" ArrowheadType="Solid" HeadSize="1000" ArrowheadCenterSize="875" ArrowheadWidth="250" Head3D="204.35 222.75 0.0" Tail3D="232.88 222.75 0.0" Center3D="348.45 523.86 0.0" MajorAxisEnd3D="348.45 552.4 0.0" MinorAxisEnd3D="319.92 523.86 0.0"/>
+					</group>
+					<graphic id="932959680" BoundingBox="207.17 223.94 203.31 225.12" Z="137" color="1" GraphicType="Rectangle" RectangleType="Filled" Center3D="205.24 224.53 0.0" MajorAxisEnd3D="207.17 224.53 0.0" MinorAxisEnd3D="205.24 223.94 0.0"/>
+				</group>
+				<group id="932959601" BoundingBox="252.19 218.69 277.16 229.95" Z="95">
+					<group id="932959557" BoundingBox="252.19 222.24 270.42 226.76" Z="96" Integral="yes">
+						<graphic id="932995863" SupersededBy="932996121" BoundingBox="270.42 226.26 252.19 226.26" Z="107" GraphicType="Line" HeadSize="1000"/>
+						<graphic id="932995864" SupersededBy="932996122" BoundingBox="270.42 222.74 252.19 222.74" Z="131" GraphicType="Line" HeadSize="1000"/>
+						<arrow id="932996121" BoundingBox="252.19 225.76 270.42 226.76" Z="107" FillType="None" ArrowheadType="Solid" HeadSize="1000" ArrowheadCenterSize="875" ArrowheadWidth="250" Head3D="270.42 226.26 0.0" Tail3D="252.19 226.26 0.0" Center3D="424.18 527.36 0.0" MajorAxisEnd3D="424.18 545.61 0.0" MinorAxisEnd3D="442.43 527.36 0.0"/>
+						<arrow id="932996122" BoundingBox="252.19 222.24 270.42 223.24" Z="131" FillType="None" ArrowheadType="Solid" HeadSize="1000" ArrowheadCenterSize="875" ArrowheadWidth="250" Head3D="270.42 222.74 0.0" Tail3D="252.19 222.74 0.0" Center3D="424.18 523.86 0.0" MajorAxisEnd3D="424.18 542.11 0.0" MinorAxisEnd3D="442.43 523.86 0.0"/>
+					</group>
+					<group id="932959558" BoundingBox="269.96 218.69 277.16 229.95" Z="97" Integral="yes">
+						<graphic id="932995865" SupersededBy="932996123" BoundingBox="270.46 222.77 270.46 219.07" Z="133" GraphicType="Line" HeadSize="1000"/>
+						<graphic id="932995866" SupersededBy="932996124" BoundingBox="270.46 219.07 276.84 224.33" Z="134" GraphicType="Line" HeadSize="1000"/>
+						<graphic id="932995867" SupersededBy="932996125" BoundingBox="270.46 226.2 270.46 229.57" Z="135" GraphicType="Line" HeadSize="1000"/>
+						<graphic id="932995868" SupersededBy="932996126" BoundingBox="270.46 229.57 276.84 224.33" Z="136" GraphicType="Line" HeadSize="1000"/>
+						<arrow id="932996123" BoundingBox="269.96 219.07 270.96 222.77" Z="133" FillType="None" ArrowheadType="Solid" HeadSize="1000" ArrowheadCenterSize="875" ArrowheadWidth="250" Head3D="270.46 222.77 0.0" Tail3D="270.46 219.07 0.0" Center3D="356.01 267.09 0.0" MajorAxisEnd3D="360.49 267.09 0.0" MinorAxisEnd3D="356.01 270.79 0.0"/>
+						<arrow id="932996124" BoundingBox="270.15 218.69 277.16 224.72" Z="134" FillType="None" ArrowheadType="Solid" HeadSize="1000" ArrowheadCenterSize="875" ArrowheadWidth="250" Head3D="270.46 219.07 0.0" Tail3D="276.84 224.33 0.0" Center3D="452.81 306.05 0.0" MajorAxisEnd3D="461.83 306.05 0.0" MinorAxisEnd3D="452.81 313.47 0.0"/>
+						<arrow id="932996125" BoundingBox="269.96 226.2 270.96 229.57" Z="135" FillType="None" ArrowheadType="Solid" HeadSize="1000" ArrowheadCenterSize="875" ArrowheadWidth="250" Head3D="270.46 226.2 0.0" Tail3D="270.46 229.57 0.0" Center3D="356.01 275.77 0.0" MajorAxisEnd3D="360.1 275.77 0.0" MinorAxisEnd3D="356.01 272.41 0.0"/>
+						<arrow id="932996126" BoundingBox="270.15 223.94 277.16 229.95" Z="136" FillType="None" ArrowheadType="Solid" HeadSize="1000" ArrowheadCenterSize="875" ArrowheadWidth="250" Head3D="270.46 229.57 0.0" Tail3D="276.84 224.33 0.0" Center3D="359.19 276.52 0.0" MajorAxisEnd3D="368.21 276.52 0.0" MinorAxisEnd3D="359.19 269.1 0.0"/>
+					</group>
+				</group>
+			</group>
+		</group>
+	</page>
+	<page id="932996127" BoundingBox="0.0 0.0 540.0 720.0" HeaderPosition="36.0" FooterPosition="36.0" PrintTrimMarks="yes" HeightPages="1" WidthPages="1">
+		<graphic id="932958455" BoundingBox="221.56 335.38 159.85 402.4" Z="7" GraphicType="Rectangle" RectangleType="RoundEdge" CornerRadius="600" Center3D="190.7 368.89 0.0" MajorAxisEnd3D="221.56 368.89 0.0" MinorAxisEnd3D="190.7 335.38 0.0"/>
+		<graphic id="932995870" SupersededBy="932996128" BoundingBox="221.6 351.91 266.62 351.91" Z="8" GraphicType="Line" HeadSize="1000"/>
+		<graphic id="932958458" BoundingBox="222.81 349.59 218.96 350.75" Z="9" color="1" GraphicType="Rectangle" RectangleType="Filled" Center3D="220.88 350.17 0.0" MajorAxisEnd3D="222.81 350.17 0.0" MinorAxisEnd3D="220.88 349.59 0.0"/>
+		<graphic id="932995871" SupersededBy="932996129" BoundingBox="221.6 348.44 266.62 348.44" Z="10" GraphicType="Line" HeadSize="1000"/>
+		<arrow id="932996128" BoundingBox="221.6 351.41 266.62 352.41" Z="8" FillType="None" ArrowheadType="Solid" HeadSize="1000" ArrowheadCenterSize="875" ArrowheadWidth="250" Head3D="221.6 351.91 0.0" Tail3D="266.62 351.91 0.0" Center3D="354.91 527.86 0.0" MajorAxisEnd3D="354.91 572.89 0.0" MinorAxisEnd3D="309.88 527.86 0.0"/>
+		<arrow id="932996129" BoundingBox="221.6 347.94 266.62 348.94" Z="10" FillType="None" ArrowheadType="Solid" HeadSize="1000" ArrowheadCenterSize="875" ArrowheadWidth="250" Head3D="221.6 348.44 0.0" Tail3D="266.62 348.44 0.0" Center3D="354.91 524.39 0.0" MajorAxisEnd3D="354.91 569.42 0.0" MinorAxisEnd3D="309.88 524.39 0.0"/>
+	</page>
+	<page id="932996130" BoundingBox="0.0 0.0 540.0 720.0" HeaderPosition="36.0" FooterPosition="36.0" PrintTrimMarks="yes" HeightPages="1" WidthPages="1"/>
+	<page id="932996131" BoundingBox="0.0 0.0 540.0 720.0" HeaderPosition="36.0" FooterPosition="36.0" PrintTrimMarks="yes" HeightPages="1" WidthPages="1">
+		<group id="932966058" BoundingBox="144.53 110.04 180.24 144.96" Z="17" Integral="yes">
+			<group id="932966059" BoundingBox="157.95 111.17 179.54 143.5" Z="16" Integral="yes">
+				<group id="932966060" BoundingBox="157.95 111.17 179.54 143.5" Z="12" Integral="yes">
+					<graphic id="932995874" SupersededBy="932996132" BoundingBox="179.24 127.33 158.25 143.1" Z="14" GraphicType="Line" HeadSize="1000"/>
+					<graphic id="932995875" SupersededBy="932996133" BoundingBox="179.24 127.33 158.25 111.57" Z="15" GraphicType="Line" HeadSize="1000"/>
+					<arrow id="932996132" BoundingBox="157.95 126.93 179.54 143.5" Z="14" FillType="None" ArrowheadType="Solid" HeadSize="1000" ArrowheadCenterSize="875" ArrowheadWidth="250" Head3D="179.24 127.33 0.0" Tail3D="158.25 143.1 0.0" Center3D="381.99 383.28 0.0" MajorAxisEnd3D="409.26 383.28 0.0" MinorAxisEnd3D="381.99 407.95 0.0"/>
+					<arrow id="932996133" BoundingBox="157.95 111.17 179.54 127.73" Z="15" FillType="None" ArrowheadType="Solid" HeadSize="1000" ArrowheadCenterSize="875" ArrowheadWidth="250" Head3D="179.24 127.33 0.0" Tail3D="158.25 111.57 0.0" Center3D="381.99 -128.59 0.0" MajorAxisEnd3D="409.26 -128.59 0.0" MinorAxisEnd3D="381.99 -153.28 0.0"/>
+				</group>
+			</group>
+			<graphic id="932995876" BoundingBox="162.39 110.95 162.39 127.33" Z="11" GraphicType="Orbital" OrbitalType="oval" Center3D="162.39 127.33 0.0" MajorAxisEnd3D="162.39 110.95 0.0" MinorAxisEnd3D="178.99 127.33 0.0"/>
+		</group>
+		<graphic id="932995877" SupersededBy="932996134" BoundingBox="215.6 127.33 179.24 127.33" Z="13" GraphicType="Line" HeadSize="1000"/>
+		<arrow id="932996134" BoundingBox="179.24 126.83 215.6 127.83" Z="13" FillType="None" ArrowheadType="Solid" HeadSize="1000" ArrowheadCenterSize="875" ArrowheadWidth="250" Head3D="215.6 127.33 0.0" Tail3D="179.24 127.33 0.0" Center3D="179.24 127.33 0.0" MajorAxisEnd3D="193.04 127.33 0.0" MinorAxisEnd3D="179.24 141.13 0.0"/>
+		<annotation id="0" Keyword="GUID" Content="cc466264-4922-40c0-b2c4-c98728125c3f"/>
+		<annotation id="0" Keyword="Name" Content="Proteasome"/>
+	</page>
+	<page id="932996135" BoundingBox="0.0 0.0 540.0 720.0" HeaderPosition="36.0" FooterPosition="36.0" PrintTrimMarks="yes" HeightPages="1" WidthPages="1">
+		<graphic id="932995878" SupersededBy="932996136" BoundingBox="173.4 195.08 173.4 97.42" Z="6" GraphicType="Line" HeadSize="1000"/>
+		<graphic id="932995879" SupersededBy="932996137" BoundingBox="254.79 146.18 176.07 146.18" Z="7" GraphicType="Line" HeadSize="1000"/>
+		<graphic id="932966070" BoundingBox="176.38 147.31 173.28 145.99" Z="8" GraphicType="Oval" OvalType="Filled" Center3D="173.28 145.99 0.0" MajorAxisEnd3D="176.38 147.31 0.0" MinorAxisEnd3D="171.9 148.95 0.0"/>
+		<arrow id="932996136" BoundingBox="172.9 97.42 173.9 195.08" Z="6" FillType="None" ArrowheadType="Solid" HeadSize="1000" ArrowheadCenterSize="875" ArrowheadWidth="250" Head3D="173.4 195.08 0.0" Tail3D="173.4 97.42 0.0" Center3D="527.09 728.21 0.0" MajorAxisEnd3D="624.74 728.21 0.0" MinorAxisEnd3D="527.09 825.86 0.0"/>
+		<arrow id="932996137" BoundingBox="176.07 145.68 254.79 146.68" Z="7" FillType="None" ArrowheadType="Solid" HeadSize="1000" ArrowheadCenterSize="875" ArrowheadWidth="250" Head3D="254.79 146.18 0.0" Tail3D="176.07 146.18 0.0" Center3D="408.84 286.8 0.0" MajorAxisEnd3D="487.56 286.8 0.0" MinorAxisEnd3D="408.84 365.52 0.0"/>
+		<annotation id="0" Keyword="GUID" Content="cc466264-4922-40c0-b2c4-c98728125c3f"/>
+		<annotation id="0" Keyword="Name" Content="Proteasome"/>
+	</page>
+	<page id="932996138" BoundingBox="0.0 0.0 540.0 720.0" HeaderPosition="36.0" FooterPosition="36.0" PrintTrimMarks="yes" HeightPages="1" WidthPages="1">
+		<group id="932966073" BoundingBox="148.23 126.48 183.94 161.74" Z="21" Integral="yes">
+			<group id="932966074" BoundingBox="152.09 134.4 180.08 153.81" Z="17" Integral="yes">
+				<group id="932966075" BoundingBox="152.09 134.4 180.08 153.81" Z="15" Integral="yes">
+					<graphic id="932995881" SupersededBy="932996139" BoundingBox="179.8 153.39 152.37 134.82" Z="16" GraphicType="Line" HeadSize="1000"/>
+					<arrow id="932996139" BoundingBox="152.09 134.4 180.08 153.81" Z="16" FillType="None" ArrowheadType="Solid" HeadSize="1000" ArrowheadCenterSize="875" ArrowheadWidth="250" Head3D="179.8 153.39 0.0" Tail3D="152.37 134.82 0.0" Center3D="444.87 -148.2 0.0" MajorAxisEnd3D="480.52 -148.2 0.0" MinorAxisEnd3D="444.87 -177.27 0.0"/>
+				</group>
+			</group>
+			<group id="932966078" BoundingBox="152.09 134.4 180.08 153.81" Z="20" Integral="yes">
+				<group id="932966079" BoundingBox="152.09 134.4 180.08 153.81" Z="18" Integral="yes">
+					<graphic id="932995882" SupersededBy="932996140" BoundingBox="152.37 153.39 179.8 134.82" Z="19" GraphicType="Line" HeadSize="1000"/>
+					<arrow id="932996140" BoundingBox="152.09 134.4 180.08 153.81" Z="19" FillType="None" ArrowheadType="Solid" HeadSize="1000" ArrowheadCenterSize="875" ArrowheadWidth="250" Head3D="152.37 153.39 0.0" Tail3D="179.8 134.82 0.0" Center3D="57.16 234.69 0.0" MajorAxisEnd3D="21.51 234.69 0.0" MinorAxisEnd3D="57.16 205.62 0.0"/>
+				</group>
+			</group>
+			<graphic id="932995883" BoundingBox="166.09 127.73 166.09 144.11" Z="14" GraphicType="Orbital" OrbitalType="oval" Center3D="166.09 144.11 0.0" MajorAxisEnd3D="166.09 127.73 0.0" MinorAxisEnd3D="182.69 144.11 0.0"/>
+		</group>
+		<graphic id="932995884" SupersededBy="932996141" BoundingBox="205.33 144.11 128.42 144.11" Z="13" GraphicType="Line" HeadSize="1000"/>
+		<arrow id="932996141" BoundingBox="128.42 143.61 205.33 144.61" Z="13" FillType="None" ArrowheadType="Solid" HeadSize="1000" ArrowheadCenterSize="875" ArrowheadWidth="250" Head3D="205.33 144.11 0.0" Tail3D="128.42 144.11 0.0" Center3D="297.14 222.06 0.0" MajorAxisEnd3D="326.33 222.06 0.0" MinorAxisEnd3D="297.14 251.25 0.0"/>
+		<annotation id="0" Keyword="GUID" Content="cc466264-4922-40c0-b2c4-c98728125c3f"/>
+		<annotation id="0" Keyword="Name" Content="Proteasome"/>
+	</page>
+	<page id="932996142" BoundingBox="0.0 0.0 540.0 720.0" HeaderPosition="36.0" FooterPosition="36.0" PrintTrimMarks="yes" HeightPages="1" WidthPages="1">
+		<group id="932995090" BoundingBox="76.54 76.88 116.68 115.67" Z="16" Integral="yes">
+			<group id="932994446" BoundingBox="80.84 92.64 88.11 99.95" Z="11" Integral="yes">
+				<graphic id="932994447" BoundingBox="82.43 97.47 84.65 96.16" Z="10" GraphicType="Oval" OvalType="Filled" Center3D="84.65 96.16 0.0" MajorAxisEnd3D="82.43 97.47 0.0" MinorAxisEnd3D="83.37 93.89 0.0"/>
+			</group>
+			<group id="932994448" BoundingBox="104.84 92.64 112.11 99.95" Z="13" Integral="yes">
+				<graphic id="932994449" BoundingBox="106.42 97.47 108.64 96.16" Z="12" GraphicType="Oval" OvalType="Filled" Center3D="108.64 96.16 0.0" MajorAxisEnd3D="106.42 97.47 0.0" MinorAxisEnd3D="107.36 93.89 0.0"/>
+			</group>
+			<group id="932994450" BoundingBox="93.15 81.48 100.63 88.94" Z="15" Integral="yes">
+				<graphic id="932994451" BoundingBox="94.61 86.4 96.83 85.09" Z="14" GraphicType="Oval" OvalType="Filled" Center3D="96.83 85.09 0.0" MajorAxisEnd3D="94.61 86.4 0.0" MinorAxisEnd3D="95.55 82.81 0.0"/>
+			</group>
+			<graphic id="932994820" BoundingBox="115.81 96.27 96.8 96.27" Z="9" GraphicType="Oval" OvalType="" Center3D="96.8 96.27 0.0" MajorAxisEnd3D="115.81 96.27 0.0" MinorAxisEnd3D="96.8 114.79 0.0"/>
+		</group>
+		<annotation id="0" Keyword="GUID" Content="cc466264-4922-40c0-b2c4-c98728125c3f"/>
+		<annotation id="0" Keyword="Name" Content="Proteasome"/>
+	</page>
+	<page id="932996143" BoundingBox="0.0 0.0 540.0 720.0" HeaderPosition="36.0" FooterPosition="36.0" PrintTrimMarks="yes" HeightPages="1" WidthPages="1">
+		<group id="932995470" BoundingBox="105.99 65.59 146.52 104.75" Z="18" Integral="yes">
+			<graphic id="932994445" BoundingBox="145.27 84.98 126.25 84.98" Z="10" GraphicType="Oval" OvalType="" Center3D="126.25 84.98 0.0" MajorAxisEnd3D="145.27 84.98 0.0" MinorAxisEnd3D="126.25 103.5 0.0"/>
+			<graphic id="932994441" BoundingBox="138.53 80.99 137.21 78.78" Z="11" GraphicType="Oval" OvalType="Filled" Center3D="137.21 78.78 0.0" MajorAxisEnd3D="138.53 80.99 0.0" MinorAxisEnd3D="134.94 80.06 0.0"/>
+			<graphic id="932994442" BoundingBox="116.47 93.4 115.16 91.18" Z="12" GraphicType="Oval" OvalType="Filled" Center3D="115.16 91.18 0.0" MajorAxisEnd3D="116.47 93.4 0.0" MinorAxisEnd3D="112.88 92.46 0.0"/>
+			<graphic id="932994443" BoundingBox="116.61 76.56 115.29 78.78" Z="13" GraphicType="Oval" OvalType="Filled" Center3D="115.29 78.78 0.0" MajorAxisEnd3D="116.61 76.56 0.0" MinorAxisEnd3D="113.02 77.5 0.0"/>
+			<graphic id="932994444" BoundingBox="138.66 88.97 137.35 91.18" Z="14" GraphicType="Oval" OvalType="Filled" Center3D="137.35 91.18 0.0" MajorAxisEnd3D="138.66 88.97 0.0" MinorAxisEnd3D="135.08 89.9 0.0"/>
+			<graphic id="932994818" BoundingBox="127.6 82.76 126.29 84.98" Z="15" GraphicType="Oval" OvalType="Filled" Center3D="126.29 84.98 0.0" MajorAxisEnd3D="127.6 82.76 0.0" MinorAxisEnd3D="124.01 83.7 0.0"/>
+			<graphic id="932994819" BoundingBox="127.64 99.08 126.33 96.87" Z="16" GraphicType="Oval" OvalType="Filled" Center3D="126.33 96.87 0.0" MajorAxisEnd3D="127.64 99.08 0.0" MinorAxisEnd3D="124.05 98.14 0.0"/>
+			<graphic id="932995469" BoundingBox="127.64 75.17 126.33 72.96" Z="17" GraphicType="Oval" OvalType="Filled" Center3D="126.33 72.96 0.0" MajorAxisEnd3D="127.64 75.17 0.0" MinorAxisEnd3D="124.05 74.24 0.0"/>
+		</group>
+		<annotation id="0" Keyword="GUID" Content="cc466264-4922-40c0-b2c4-c98728125c3f"/>
+		<annotation id="0" Keyword="Name" Content="Proteasome"/>
+	</page>
+	<page id="932996144" BoundingBox="0.0 0.0 540.0 720.0" HeaderPosition="36.0" FooterPosition="36.0" PrintTrimMarks="yes" HeightPages="1" WidthPages="1"/>
+	<page id="932996145" BoundingBox="0.0 0.0 540.0 720.0" HeaderPosition="36.0" FooterPosition="36.0" PrintTrimMarks="yes" HeightPages="1" WidthPages="1">
+		<group id="932965060" BoundingBox="188.39 150.26 240.27 201.27" Z="109" Integral="yes">
+			<group id="932965055" BoundingBox="218.68 150.26 240.27 201.27" Z="61" Integral="yes">
+				<group id="932965056" BoundingBox="218.68 150.47 240.19 201.27" Z="60" Integral="yes">
+					<group id="932965057" BoundingBox="218.68 150.47 240.19 201.27" Z="59" Integral="yes">
+						<graphic id="932965058" BoundingBox="238.11 185.73 229.43 175.87" Z="58" GraphicType="Oval" OvalType="" Center3D="229.43 175.87 0.0" MajorAxisEnd3D="238.11 185.73 0.0" MinorAxisEnd3D="225.55 197.92 0.0"/>
+					</group>
+				</group>
+				<graphic id="932965059" BoundingBox="238.19 185.52 229.52 175.66" Z="57" color="14" GraphicType="Oval" OvalType="Filled" Center3D="229.52 175.66 0.0" MajorAxisEnd3D="238.19 185.52 0.0" MinorAxisEnd3D="225.63 197.71 0.0"/>
+			</group>
+			<group id="932964999" BoundingBox="214.95 150.26 236.46 201.27" Z="66" Integral="yes">
+				<group id="932964998" BoundingBox="215.01 150.47 236.15 201.27" Z="65" Integral="yes">
+					<group id="932964941" BoundingBox="215.01 150.47 236.15 201.27" Z="64" Integral="yes">
+						<graphic id="38379" BoundingBox="234.3 185.73 225.62 175.87" Z="63" GraphicType="Oval" OvalType="" Center3D="225.62 175.87 0.0" MajorAxisEnd3D="234.3 185.73 0.0" MinorAxisEnd3D="221.74 197.92 0.0"/>
+					</group>
+				</group>
+				<graphic id="38378" BoundingBox="234.38 185.52 225.7 175.66" Z="62" color="14" GraphicType="Oval" OvalType="Filled" Center3D="225.7 175.66 0.0" MajorAxisEnd3D="234.38 185.52 0.0" MinorAxisEnd3D="221.82 197.71 0.0"/>
+			</group>
+			<group id="932965000" BoundingBox="211.19 150.26 232.64 201.27" Z="71" Integral="yes">
+				<group id="932965001" BoundingBox="211.19 150.47 232.34 201.27" Z="70" Integral="yes">
+					<group id="932965002" BoundingBox="211.19 150.47 232.34 201.27" Z="69" Integral="yes">
+						<graphic id="932965003" BoundingBox="230.48 185.73 221.81 175.87" Z="68" GraphicType="Oval" OvalType="" Center3D="221.81 175.87 0.0" MajorAxisEnd3D="230.48 185.73 0.0" MinorAxisEnd3D="217.93 197.92 0.0"/>
+					</group>
+				</group>
+				<graphic id="932965004" BoundingBox="230.56 185.52 221.89 175.66" Z="67" color="14" GraphicType="Oval" OvalType="Filled" Center3D="221.89 175.66 0.0" MajorAxisEnd3D="230.56 185.52 0.0" MinorAxisEnd3D="218.01 197.71 0.0"/>
+			</group>
+			<group id="932965005" BoundingBox="207.38 150.26 228.61 201.27" Z="76" Integral="yes">
+				<group id="932965006" BoundingBox="207.38 150.47 228.61 201.27" Z="75" Integral="yes">
+					<group id="932965007" BoundingBox="207.38 150.47 228.61 201.27" Z="74" Integral="yes">
+						<graphic id="932965008" BoundingBox="226.67 185.73 217.99 175.87" Z="73" GraphicType="Oval" OvalType="" Center3D="217.99 175.87 0.0" MajorAxisEnd3D="226.67 185.73 0.0" MinorAxisEnd3D="214.11 197.92 0.0"/>
+					</group>
+				</group>
+				<graphic id="932965009" BoundingBox="226.75 185.52 218.07 175.66" Z="72" color="14" GraphicType="Oval" OvalType="Filled" Center3D="218.07 175.66 0.0" MajorAxisEnd3D="226.75 185.52 0.0" MinorAxisEnd3D="214.19 197.71 0.0"/>
+			</group>
+			<group id="932965010" BoundingBox="203.57 150.26 224.79 201.27" Z="81" Integral="yes">
+				<group id="932965011" BoundingBox="203.57 150.47 224.79 201.27" Z="80" Integral="yes">
+					<group id="932965012" BoundingBox="203.57 150.47 224.79 201.27" Z="79" Integral="yes">
+						<graphic id="932965013" BoundingBox="222.85 185.73 214.18 175.87" Z="78" GraphicType="Oval" OvalType="" Center3D="214.18 175.87 0.0" MajorAxisEnd3D="222.85 185.73 0.0" MinorAxisEnd3D="210.3 197.92 0.0"/>
+					</group>
+				</group>
+				<graphic id="932965014" BoundingBox="222.94 185.52 214.26 175.66" Z="77" color="14" GraphicType="Oval" OvalType="Filled" Center3D="214.26 175.66 0.0" MajorAxisEnd3D="222.94 185.52 0.0" MinorAxisEnd3D="210.38 197.71 0.0"/>
+			</group>
+			<group id="932965015" BoundingBox="199.75 150.26 221.06 201.27" Z="86" Integral="yes">
+				<group id="932965016" BoundingBox="199.75 150.47 220.98 201.27" Z="85" Integral="yes">
+					<group id="932965017" BoundingBox="199.75 150.47 220.98 201.27" Z="84" Integral="yes">
+						<graphic id="932965018" BoundingBox="219.04 185.73 210.36 175.87" Z="83" GraphicType="Oval" OvalType="" Center3D="210.36 175.87 0.0" MajorAxisEnd3D="219.04 185.73 0.0" MinorAxisEnd3D="206.48 197.92 0.0"/>
+					</group>
+				</group>
+				<graphic id="932965019" BoundingBox="219.12 185.52 210.45 175.66" Z="82" color="14" GraphicType="Oval" OvalType="Filled" Center3D="210.45 175.66 0.0" MajorAxisEnd3D="219.12 185.52 0.0" MinorAxisEnd3D="206.56 197.71 0.0"/>
+			</group>
+			<group id="932965020" BoundingBox="195.94 150.26 217.24 201.27" Z="91" Integral="yes">
+				<group id="932965021" BoundingBox="195.94 150.47 217.16 201.27" Z="90" Integral="yes">
+					<group id="932965022" BoundingBox="195.94 150.47 217.16 201.27" Z="89" Integral="yes">
+						<graphic id="932965023" BoundingBox="215.23 185.73 206.55 175.87" Z="88" GraphicType="Oval" OvalType="" Center3D="206.55 175.87 0.0" MajorAxisEnd3D="215.23 185.73 0.0" MinorAxisEnd3D="202.67 197.92 0.0"/>
+					</group>
+				</group>
+				<graphic id="932965024" BoundingBox="215.31 185.52 206.63 175.66" Z="87" color="14" GraphicType="Oval" OvalType="Filled" Center3D="206.63 175.66 0.0" MajorAxisEnd3D="215.31 185.52 0.0" MinorAxisEnd3D="202.75 197.71 0.0"/>
+			</group>
+			<group id="932965025" BoundingBox="192.2 150.26 213.43 201.27" Z="96" Integral="yes">
+				<group id="932965026" BoundingBox="192.21 150.47 213.35 201.27" Z="95" Integral="yes">
+					<group id="932965027" BoundingBox="192.21 150.47 213.35 201.27" Z="94" Integral="yes">
+						<graphic id="932965028" BoundingBox="211.41 185.73 202.74 175.87" Z="93" GraphicType="Oval" OvalType="" Center3D="202.74 175.87 0.0" MajorAxisEnd3D="211.41 185.73 0.0" MinorAxisEnd3D="198.86 197.92 0.0"/>
+					</group>
+				</group>
+				<graphic id="932965029" BoundingBox="211.49 185.52 202.82 175.66" Z="92" color="14" GraphicType="Oval" OvalType="Filled" Center3D="202.82 175.66 0.0" MajorAxisEnd3D="211.49 185.52 0.0" MinorAxisEnd3D="198.94 197.71 0.0"/>
+			</group>
+			<group id="932965030" BoundingBox="188.39 150.26 209.62 201.27" Z="101" Integral="yes">
+				<group id="932965031" BoundingBox="188.39 150.47 209.53 201.27" Z="100" Integral="yes">
+					<group id="932965032" BoundingBox="188.39 150.47 209.53 201.27" Z="99" Integral="yes">
+						<graphic id="932965033" BoundingBox="207.6 185.73 198.92 175.87" Z="98" GraphicType="Oval" OvalType="" Center3D="198.92 175.87 0.0" MajorAxisEnd3D="207.6 185.73 0.0" MinorAxisEnd3D="195.04 197.92 0.0"/>
+					</group>
+				</group>
+				<graphic id="932965034" BoundingBox="207.68 185.52 199.0 175.66" Z="97" color="14" GraphicType="Oval" OvalType="Filled" Center3D="199.0 175.66 0.0" MajorAxisEnd3D="207.68 185.52 0.0" MinorAxisEnd3D="195.12 197.71 0.0"/>
+			</group>
+			<group id="932965035" BoundingBox="191.05 157.27 205.75 194.01" Z="106" Integral="yes">
+				<group id="932965036" BoundingBox="191.05 157.27 205.75 194.01" Z="105" Integral="yes">
+					<group id="932965037" BoundingBox="191.05 157.27 205.75 194.01" Z="104" Integral="yes">
+						<graphic id="932965038" BoundingBox="203.96 182.81 198.35 175.77" Z="103" GraphicType="Oval" OvalType="" Center3D="198.35 175.77 0.0" MajorAxisEnd3D="203.96 182.81 0.0" MinorAxisEnd3D="195.85 191.52 0.0"/>
+					</group>
+				</group>
+			</group>
+			<graphic id="932965039" BoundingBox="204.02 182.81 198.41 175.77" Z="102" color="1" GraphicType="Oval" OvalType="Filled" Center3D="198.41 175.77 0.0" MajorAxisEnd3D="204.02 182.81 0.0" MinorAxisEnd3D="195.9 191.52 0.0"/>
+		</group>
+		<t id="932992830" p="216.93 226.59" BoundingBox="203.43 216.14 230.44 241.54" Z="110" Warning="Chemical Interpretation is not possible for this label" CaptionJustification="Center" Justification="Center" LineHeight="auto" LineStarts="6 10">
+			<s font="3" size="9.0" face="0" color="3">XX mL
+X </s>
+			<s font="3" size="9.0" face="64" color="3">o</s>
+			<s font="3" size="9.0" face="0" color="3">C</s>
+		</t>
+		<graphic id="932995888" SupersededBy="932996146" BoundingBox="249.62 175.77 238.64 175.77" Z="107" GraphicType="Line" HeadSize="1000"/>
+		<graphic id="932995889" SupersededBy="932996147" BoundingBox="197.89 175.77 180.39 175.77" Z="108" GraphicType="Line" HeadSize="1000"/>
+		<arrow id="932996146" BoundingBox="238.64 175.27 249.62 176.27" Z="107" FillType="None" ArrowheadType="Solid" HeadSize="1000" ArrowheadCenterSize="875" ArrowheadWidth="250" Head3D="249.62 175.77 0.0" Tail3D="238.64 175.77 0.0" Center3D="238.64 175.77 0.0" MajorAxisEnd3D="238.64 170.76 0.0" MinorAxisEnd3D="243.68 175.77 0.0"/>
+		<arrow id="932996147" BoundingBox="180.39 175.27 197.89 176.27" Z="108" FillType="None" ArrowheadType="Solid" HeadSize="1000" ArrowheadCenterSize="875" ArrowheadWidth="250" Head3D="197.89 175.77 0.0" Tail3D="180.39 175.77 0.0" Center3D="634.03 567.33 0.0" MajorAxisEnd3D="634.03 559.35 0.0" MinorAxisEnd3D="642.07 567.33 0.0"/>
+		<annotation id="0" Keyword="GUID" Content="cc466264-4922-40c0-b2c4-c98728125c3f"/>
+		<annotation id="0" Keyword="Name" Content="Proteasome"/>
+	</page>
+	<page id="932996148" BoundingBox="0.0 0.0 540.0 720.0" HeaderPosition="36.0" FooterPosition="36.0" PrintTrimMarks="yes" HeightPages="1" WidthPages="1">
+		<group id="932965062" BoundingBox="197.59 103.97 248.6 155.85" Z="114" Integral="yes">
+			<group id="932965063" BoundingBox="197.59 134.62 248.6 155.85" Z="68" Integral="yes">
+				<group id="932965064" BoundingBox="197.59 134.62 248.39 155.85" Z="67" Integral="yes">
+					<group id="932965065" BoundingBox="197.59 134.62 248.39 155.85" Z="66" Integral="yes">
+						<graphic id="932965066" BoundingBox="213.13 153.91 222.99 145.23" Z="65" GraphicType="Oval" OvalType="" Center3D="222.99 145.23 0.0" MajorAxisEnd3D="213.13 153.91 0.0" MinorAxisEnd3D="200.94 141.35 0.0"/>
+					</group>
+				</group>
+				<graphic id="932965067" BoundingBox="213.34 153.99 223.2 145.31" Z="64" color="14" GraphicType="Oval" OvalType="Filled" Center3D="223.2 145.31 0.0" MajorAxisEnd3D="213.34 153.99 0.0" MinorAxisEnd3D="201.15 141.43 0.0"/>
+			</group>
+			<group id="932965068" BoundingBox="197.59 130.81 248.6 152.03" Z="73" Integral="yes">
+				<group id="932965069" BoundingBox="197.59 130.81 248.39 152.03" Z="72" Integral="yes">
+					<group id="932965070" BoundingBox="197.59 130.81 248.39 152.03" Z="71" Integral="yes">
+						<graphic id="932965071" BoundingBox="213.13 150.09 222.99 141.42" Z="70" GraphicType="Oval" OvalType="" Center3D="222.99 141.42 0.0" MajorAxisEnd3D="213.13 150.09 0.0" MinorAxisEnd3D="200.94 137.54 0.0"/>
+					</group>
+				</group>
+				<graphic id="932965072" BoundingBox="213.34 150.18 223.2 141.5" Z="69" color="14" GraphicType="Oval" OvalType="Filled" Center3D="223.2 141.5 0.0" MajorAxisEnd3D="213.34 150.18 0.0" MinorAxisEnd3D="201.15 137.62 0.0"/>
+			</group>
+			<group id="932965073" BoundingBox="197.59 126.99 248.6 148.3" Z="78" Integral="yes">
+				<group id="932965074" BoundingBox="197.59 126.99 248.39 148.22" Z="77" Integral="yes">
+					<group id="932965075" BoundingBox="197.59 126.99 248.39 148.22" Z="76" Integral="yes">
+						<graphic id="932965076" BoundingBox="213.13 146.28 222.99 137.6" Z="75" GraphicType="Oval" OvalType="" Center3D="222.99 137.6 0.0" MajorAxisEnd3D="213.13 146.28 0.0" MinorAxisEnd3D="200.94 133.72 0.0"/>
+					</group>
+				</group>
+				<graphic id="932965077" BoundingBox="213.34 146.36 223.2 137.69" Z="74" color="14" GraphicType="Oval" OvalType="Filled" Center3D="223.2 137.69 0.0" MajorAxisEnd3D="213.34 146.36 0.0" MinorAxisEnd3D="201.15 133.8 0.0"/>
+			</group>
+			<group id="932965078" BoundingBox="197.59 123.18 248.6 144.48" Z="83" Integral="yes">
+				<group id="932965079" BoundingBox="197.59 123.18 248.39 144.4" Z="82" Integral="yes">
+					<group id="932965080" BoundingBox="197.59 123.18 248.39 144.4" Z="81" Integral="yes">
+						<graphic id="932965081" BoundingBox="213.13 142.47 222.99 133.79" Z="80" GraphicType="Oval" OvalType="" Center3D="222.99 133.79 0.0" MajorAxisEnd3D="213.13 142.47 0.0" MinorAxisEnd3D="200.94 129.91 0.0"/>
+					</group>
+				</group>
+				<graphic id="932965082" BoundingBox="213.34 142.55 223.2 133.87" Z="79" color="14" GraphicType="Oval" OvalType="Filled" Center3D="223.2 133.87 0.0" MajorAxisEnd3D="213.34 142.55 0.0" MinorAxisEnd3D="201.15 129.99 0.0"/>
+			</group>
+			<group id="932965083" BoundingBox="197.59 119.44 248.6 140.67" Z="88" Integral="yes">
+				<group id="932965084" BoundingBox="197.59 119.45 248.39 140.59" Z="87" Integral="yes">
+					<group id="932965085" BoundingBox="197.59 119.45 248.39 140.59" Z="86" Integral="yes">
+						<graphic id="932965086" BoundingBox="213.13 138.65 222.99 129.98" Z="85" GraphicType="Oval" OvalType="" Center3D="222.99 129.98 0.0" MajorAxisEnd3D="213.13 138.65 0.0" MinorAxisEnd3D="200.94 126.1 0.0"/>
+					</group>
+				</group>
+				<graphic id="932965087" BoundingBox="213.34 138.73 223.2 130.06" Z="84" color="14" GraphicType="Oval" OvalType="Filled" Center3D="223.2 130.06 0.0" MajorAxisEnd3D="213.34 138.73 0.0" MinorAxisEnd3D="201.15 126.18 0.0"/>
+			</group>
+			<group id="932965088" BoundingBox="197.59 115.63 248.6 136.86" Z="93" Integral="yes">
+				<group id="932965089" BoundingBox="197.59 115.63 248.39 136.78" Z="92" Integral="yes">
+					<group id="932965090" BoundingBox="197.59 115.63 248.39 136.78" Z="91" Integral="yes">
+						<graphic id="932965091" BoundingBox="213.13 134.84 222.99 126.16" Z="90" GraphicType="Oval" OvalType="" Center3D="222.99 126.16 0.0" MajorAxisEnd3D="213.13 134.84 0.0" MinorAxisEnd3D="200.94 122.28 0.0"/>
+					</group>
+				</group>
+				<graphic id="932965092" BoundingBox="213.34 134.92 223.2 126.24" Z="89" color="14" GraphicType="Oval" OvalType="Filled" Center3D="223.2 126.24 0.0" MajorAxisEnd3D="213.34 134.92 0.0" MinorAxisEnd3D="201.15 122.36 0.0"/>
+			</group>
+			<group id="932965093" BoundingBox="197.59 111.59 248.6 133.04" Z="98" Integral="yes">
+				<group id="932965094" BoundingBox="197.59 111.59 248.39 132.96" Z="97" Integral="yes">
+					<group id="932965095" BoundingBox="197.59 111.59 248.39 132.96" Z="96" Integral="yes">
+						<graphic id="932965096" BoundingBox="213.13 131.02 222.99 122.35" Z="95" GraphicType="Oval" OvalType="" Center3D="222.99 122.35 0.0" MajorAxisEnd3D="213.13 131.02 0.0" MinorAxisEnd3D="200.94 118.47 0.0"/>
+					</group>
+				</group>
+				<graphic id="932965097" BoundingBox="213.34 131.11 223.2 122.43" Z="94" color="14" GraphicType="Oval" OvalType="Filled" Center3D="223.2 122.43 0.0" MajorAxisEnd3D="213.34 131.11 0.0" MinorAxisEnd3D="201.15 118.55 0.0"/>
+			</group>
+			<group id="932965098" BoundingBox="197.59 107.78 248.6 129.29" Z="103" Integral="yes">
+				<group id="932965099" BoundingBox="197.59 107.78 248.39 129.29" Z="102" Integral="yes">
+					<group id="932965100" BoundingBox="197.59 107.78 248.39 129.29" Z="101" Integral="yes">
+						<graphic id="932965101" BoundingBox="213.13 127.21 222.99 118.53" Z="100" GraphicType="Oval" OvalType="" Center3D="222.99 118.53 0.0" MajorAxisEnd3D="213.13 127.21 0.0" MinorAxisEnd3D="200.94 114.65 0.0"/>
+					</group>
+				</group>
+				<graphic id="932965102" BoundingBox="213.34 127.29 223.2 118.62" Z="99" color="14" GraphicType="Oval" OvalType="Filled" Center3D="223.2 118.62 0.0" MajorAxisEnd3D="213.34 127.29 0.0" MinorAxisEnd3D="201.15 114.73 0.0"/>
+			</group>
+			<group id="932965103" BoundingBox="197.59 103.97 248.6 125.56" Z="108" Integral="yes">
+				<group id="932965104" BoundingBox="197.59 103.97 248.39 125.47" Z="107" Integral="yes">
+					<group id="932965105" BoundingBox="197.59 103.97 248.39 125.47" Z="106" Integral="yes">
+						<graphic id="932965106" BoundingBox="213.13 123.4 222.99 114.72" Z="105" GraphicType="Oval" OvalType="" Center3D="222.99 114.72 0.0" MajorAxisEnd3D="213.13 123.4 0.0" MinorAxisEnd3D="200.94 110.84 0.0"/>
+					</group>
+				</group>
+				<graphic id="932965107" BoundingBox="213.34 123.48 223.2 114.8" Z="104" color="14" GraphicType="Oval" OvalType="Filled" Center3D="223.2 114.8 0.0" MajorAxisEnd3D="213.34 123.48 0.0" MinorAxisEnd3D="201.15 110.92 0.0"/>
+			</group>
+			<group id="932965108" BoundingBox="204.59 106.85 241.34 121.14" Z="113" Integral="yes">
+				<group id="932965109" BoundingBox="204.59 106.85 241.34 121.14" Z="112" Integral="yes">
+					<group id="932965110" BoundingBox="204.59 106.85 241.34 121.14" Z="111" Integral="yes">
+						<graphic id="932965111" BoundingBox="216.05 119.76 223.09 114.15" Z="110" GraphicType="Oval" OvalType="" Center3D="223.09 114.15 0.0" MajorAxisEnd3D="216.05 119.76 0.0" MinorAxisEnd3D="207.34 111.64 0.0"/>
+					</group>
+				</group>
+			</group>
+			<graphic id="932965112" BoundingBox="216.05 119.81 223.09 114.21" Z="109" color="1" GraphicType="Oval" OvalType="Filled" Center3D="223.09 114.21 0.0" MajorAxisEnd3D="216.05 119.81 0.0" MinorAxisEnd3D="207.34 111.7 0.0"/>
+		</group>
+		<group id="932959853" BoundingBox="239.82 93.92 240.82 113.94" Z="115" Integral="yes">
+			<group id="932959854" BoundingBox="239.82 93.92 240.82 113.94" Z="116" Integral="yes">
+				<group id="932959855" BoundingBox="239.82 93.92 240.82 113.94" Z="117" Integral="yes">
+					<group id="932959856" BoundingBox="239.82 93.92 240.82 113.94" Z="118" Integral="yes">
+						<graphic id="932995891" SupersededBy="932996149" BoundingBox="240.32 113.94 240.32 93.92" Z="122" GraphicType="Line" HeadSize="1000"/>
+						<arrow id="932996149" BoundingBox="239.82 93.92 240.82 113.94" Z="122" FillType="None" ArrowheadType="Solid" HeadSize="1000" ArrowheadCenterSize="875" ArrowheadWidth="250" Head3D="240.32 113.94 0.0" Tail3D="240.32 93.92 0.0" Center3D="240.32 93.92 0.0" MajorAxisEnd3D="245.34 93.92 0.0" MinorAxisEnd3D="240.32 98.94 0.0"/>
+					</group>
+				</group>
+			</group>
+		</group>
+		<group id="932959859" BoundingBox="205.45 94.05 206.45 114.07" Z="119" Integral="yes">
+			<group id="932959860" BoundingBox="205.45 94.05 206.45 114.07" Z="120" Integral="yes">
+				<group id="932959861" BoundingBox="205.45 94.05 206.45 114.07" Z="121" Integral="yes">
+					<graphic id="932995892" SupersededBy="932996150" BoundingBox="205.95 114.07 205.95 94.05" Z="123" GraphicType="Line" HeadSize="1000"/>
+					<arrow id="932996150" BoundingBox="205.45 94.05 206.45 114.07" Z="123" FillType="None" ArrowheadType="Solid" HeadSize="1000" ArrowheadCenterSize="875" ArrowheadWidth="250" Head3D="205.95 114.07 0.0" Tail3D="205.95 94.05 0.0" Center3D="205.95 94.05 0.0" MajorAxisEnd3D="210.97 94.05 0.0" MinorAxisEnd3D="205.95 99.07 0.0"/>
+				</group>
+			</group>
+		</group>
+		<t id="932992831" p="226.68 183.09" BoundingBox="213.18 172.64 240.19 198.04" Z="124" Warning="Chemical Interpretation is not possible for this label" CaptionJustification="Center" Justification="Center" LineHeight="auto" LineStarts="6 10">
+			<s font="3" size="9.0" face="0" color="3">XX mL
+X </s>
+			<s font="3" size="9.0" face="64" color="3">o</s>
+			<s font="3" size="9.0" face="0" color="3">C</s>
+		</t>
+		<annotation id="0" Keyword="GUID" Content="cc466264-4922-40c0-b2c4-c98728125c3f"/>
+		<annotation id="0" Keyword="Name" Content="Proteasome"/>
+	</page>
+	<page id="932996151" BoundingBox="0.0 0.0 540.0 720.0" HeaderPosition="36.0" FooterPosition="36.0" PrintTrimMarks="yes" HeightPages="1" WidthPages="1">
+		<group id="932992720" BoundingBox="137.8 343.93 290.45 423.48" Z="85">
+			<fragment id="932992721" BoundingBox="138.47 344.65 149.54 355.72" Z="54">
+				<graphic id="932995894" BoundingBox="141.93 354.77 144.01 350.19" Z="55" IgnoreWarnings="yes" GraphicType="Orbital" OvalType="Circle Filled" OrbitalType="sFilled" Center3D="144.01 350.19 0.0" MajorAxisEnd3D="141.93 354.77 0.0" MinorAxisEnd3D="148.59 352.26 0.0"/>
+			</fragment>
+			<fragment id="932992723" BoundingBox="137.8 412.42 148.87 423.48" Z="59">
+				<graphic id="932995895" BoundingBox="141.26 422.54 143.34 417.95" Z="60" IgnoreWarnings="yes" GraphicType="Orbital" OvalType="Circle Filled" OrbitalType="sFilled" Center3D="143.34 417.95 0.0" MajorAxisEnd3D="141.26 422.54 0.0" MinorAxisEnd3D="147.92 420.03 0.0"/>
+			</fragment>
+			<fragment id="932992725" BoundingBox="173.39 378.56 184.46 389.63" Z="61">
+				<graphic id="932995896" BoundingBox="176.85 388.68 178.92 384.09" Z="62" IgnoreWarnings="yes" GraphicType="Orbital" OvalType="Circle Filled" OrbitalType="sFilled" Center3D="178.92 384.09 0.0" MajorAxisEnd3D="176.85 388.68 0.0" MinorAxisEnd3D="183.51 386.17 0.0"/>
+			</fragment>
+			<fragment id="932992727" BoundingBox="247.24 381.03 258.3 392.1" Z="63">
+				<graphic id="932995897" BoundingBox="250.7 391.15 252.77 386.57" Z="72" IgnoreWarnings="yes" GraphicType="Orbital" OvalType="Circle Filled" OrbitalType="sFilled" Center3D="252.77 386.57 0.0" MajorAxisEnd3D="250.7 391.15 0.0" MinorAxisEnd3D="257.36 388.64 0.0"/>
+			</fragment>
+			<fragment id="932992729" BoundingBox="173.5 378.94 184.57 390.01" Z="74">
+				<graphic id="932995898" BoundingBox="176.96 389.06 179.03 384.47" Z="75" IgnoreWarnings="yes" GraphicType="Orbital" OvalType="Circle Filled" OrbitalType="sFilled" Center3D="179.03 384.47 0.0" MajorAxisEnd3D="176.96 389.06 0.0" MinorAxisEnd3D="183.62 386.55 0.0"/>
+			</fragment>
+			<graphic id="932995899" SupersededBy="932996152" BoundingBox="142.67 350.34 179.48 350.34" Z="56" GraphicType="Line" HeadSize="1000"/>
+			<graphic id="932995900" SupersededBy="932996153" BoundingBox="164.26 384.13 178.61 384.13" Z="57" GraphicType="Line" HeadSize="1000"/>
+			<graphic id="932995901" SupersededBy="932996154" BoundingBox="146.36 415.14 164.26 384.13" Z="58" GraphicType="Line" HeadSize="1000"/>
+			<graphic id="932995902" SupersededBy="932996155" BoundingBox="252.72 349.66 248.17 349.65" Z="64" IgnoreWarnings="yes" GraphicType="Arc" HeadSize="1000" AngularSize="180.0"/>
+			<graphic id="932995903" SupersededBy="932996156" BoundingBox="234.49 349.66 229.94 349.65" Z="65" IgnoreWarnings="yes" GraphicType="Arc" HeadSize="1000" AngularSize="180.0"/>
+			<graphic id="932995904" SupersededBy="932996157" BoundingBox="234.49 418.01 239.05 418.0" Z="66" IgnoreWarnings="yes" GraphicType="Arc" HeadSize="1000" AngularSize="180.0"/>
+			<graphic id="932995905" SupersededBy="932996158" BoundingBox="216.25 417.99 220.8 417.98" Z="67" IgnoreWarnings="yes" GraphicType="Arc" HeadSize="1000" AngularSize="180.0"/>
+			<graphic id="932995906" SupersededBy="932996159" BoundingBox="216.09 349.63 211.54 349.65" Z="68" IgnoreWarnings="yes" GraphicType="Arc" HeadSize="1000" AngularSize="180.0"/>
+			<graphic id="932995907" SupersededBy="932996160" BoundingBox="197.88 349.65 193.33 349.64" Z="69" IgnoreWarnings="yes" GraphicType="Arc" HeadSize="1000" AngularSize="180.0"/>
+			<graphic id="932995908" SupersededBy="932996161" BoundingBox="197.88 418.0 202.43 417.99" Z="70" IgnoreWarnings="yes" GraphicType="Arc" HeadSize="1000" AngularSize="180.0"/>
+			<graphic id="932995909" SupersededBy="932996162" BoundingBox="179.68 417.99 184.23 417.98" Z="71" IgnoreWarnings="yes" GraphicType="Arc" HeadSize="1000" AngularSize="180.0"/>
+			<graphic id="932995910" SupersededBy="932996163" BoundingBox="179.55 349.68 179.68 417.99" Z="73" IgnoreWarnings="yes" GraphicType="Line" HeadSize="1000"/>
+			<graphic id="932995911" SupersededBy="932996164" BoundingBox="188.78 349.62 188.78 417.97" Z="76" GraphicType="Line" HeadSize="1000"/>
+			<graphic id="932995912" SupersededBy="932996165" BoundingBox="197.88 349.65 197.88 418.0" Z="77" GraphicType="Line" HeadSize="1000"/>
+			<graphic id="932995913" SupersededBy="932996166" BoundingBox="206.99 349.66 206.99 418.01" Z="78" GraphicType="Line" HeadSize="1000"/>
+			<graphic id="932995914" SupersededBy="932996167" BoundingBox="216.25 349.65 216.25 417.99" Z="79" GraphicType="Line" HeadSize="1000"/>
+			<graphic id="932995915" SupersededBy="932996168" BoundingBox="225.39 349.63 225.39 417.98" Z="80" GraphicType="Line" HeadSize="1000"/>
+			<graphic id="932995916" SupersededBy="932996169" BoundingBox="234.49 349.66 234.49 418.01" Z="81" GraphicType="Line" HeadSize="1000"/>
+			<graphic id="932995917" SupersededBy="932996170" BoundingBox="243.6 349.64 243.6 417.99" Z="82" GraphicType="Line" HeadSize="1000"/>
+			<graphic id="932995918" SupersededBy="932996171" BoundingBox="252.72 349.66 252.72 386.3" Z="83" GraphicType="Line" HeadSize="1000"/>
+			<graphic id="932995919" SupersededBy="932996172" BoundingBox="290.45 386.29 252.72 386.29" Z="84" GraphicType="Line" ArrowType="FullHead" HeadSize="1000"/>
+			<arrow id="932996152" BoundingBox="142.67 349.84 179.48 350.84" Z="56" FillType="None" ArrowheadType="Solid" HeadSize="1000" ArrowheadCenterSize="875" ArrowheadWidth="250" Head3D="142.67 350.34 0.0" Tail3D="179.48 350.34 0.0" Center3D="235.71 535.21 0.0" MajorAxisEnd3D="272.52 535.21 0.0" MinorAxisEnd3D="235.71 572.02 0.0"/>
+			<arrow id="932996153" BoundingBox="164.26 383.63 178.61 384.63" Z="57" FillType="None" ArrowheadType="Solid" HeadSize="1000" ArrowheadCenterSize="875" ArrowheadWidth="250" Head3D="164.26 384.13 0.0" Tail3D="178.61 384.13 0.0" Center3D="269.7 580.65 0.0" MajorAxisEnd3D="284.05 580.65 0.0" MinorAxisEnd3D="269.7 595.0 0.0"/>
+			<arrow id="932996154" BoundingBox="145.92 383.88 164.69 415.39" Z="58" FillType="None" ArrowheadType="Solid" HeadSize="1000" ArrowheadCenterSize="875" ArrowheadWidth="250" Head3D="146.36 415.14 0.0" Tail3D="164.26 384.13 0.0" Center3D="249.34 613.45 0.0" MajorAxisEnd3D="285.14 613.45 0.0" MinorAxisEnd3D="249.34 649.25 0.0"/>
+			<arrow id="932996155" BoundingBox="242.37 343.94 253.97 350.91" Z="64" IgnoreWarnings="yes" FillType="None" ArrowheadType="Solid" HeadSize="800" ArrowheadCenterSize="700" ArrowheadWidth="200" AngularSize="-180.0" Head3D="252.72 349.66 0.0" Tail3D="243.62 349.63 0.0" Center3D="248.17 349.65 0.0" MajorAxisEnd3D="243.62 349.65 0.0" MinorAxisEnd3D="248.17 354.2 0.0"/>
+			<arrow id="932996156" BoundingBox="224.14 343.94 235.74 350.91" Z="65" IgnoreWarnings="yes" FillType="None" ArrowheadType="Solid" HeadSize="800" ArrowheadCenterSize="700" ArrowheadWidth="200" AngularSize="-180.0" Head3D="234.49 349.66 0.0" Tail3D="225.39 349.63 0.0" Center3D="229.94 349.65 0.0" MajorAxisEnd3D="225.39 349.65 0.0" MinorAxisEnd3D="229.94 354.2 0.0"/>
+			<arrow id="932996157" BoundingBox="233.24 416.74 244.85 423.44" Z="66" IgnoreWarnings="yes" FillType="None" ArrowheadType="Solid" HeadSize="800" ArrowheadCenterSize="700" ArrowheadWidth="200" AngularSize="-180.0" Head3D="234.49 418.01 0.0" Tail3D="243.6 417.99 0.0" Center3D="239.05 418.0 0.0" MajorAxisEnd3D="234.49 418.0 0.0" MinorAxisEnd3D="239.05 422.55 0.0"/>
+			<arrow id="932996158" BoundingBox="215.0 416.72 226.6 423.43" Z="67" IgnoreWarnings="yes" FillType="None" ArrowheadType="Solid" HeadSize="800" ArrowheadCenterSize="700" ArrowheadWidth="200" AngularSize="-180.0" Head3D="216.25 417.99 0.0" Tail3D="225.35 417.97 0.0" Center3D="220.8 417.98 0.0" MajorAxisEnd3D="216.25 417.98 0.0" MinorAxisEnd3D="220.8 422.53 0.0"/>
+			<arrow id="932996159" BoundingBox="205.74 343.94 217.34 350.91" Z="68" IgnoreWarnings="yes" FillType="None" ArrowheadType="Solid" HeadSize="800" ArrowheadCenterSize="700" ArrowheadWidth="200" AngularSize="-180.0" Head3D="216.09 349.63 0.0" Tail3D="206.99 349.66 0.0" Center3D="211.54 349.65 0.0" MajorAxisEnd3D="206.99 349.65 0.0" MinorAxisEnd3D="211.54 354.2 0.0"/>
+			<arrow id="932996160" BoundingBox="187.53 343.93 199.13 350.9" Z="69" IgnoreWarnings="yes" FillType="None" ArrowheadType="Solid" HeadSize="800" ArrowheadCenterSize="700" ArrowheadWidth="200" AngularSize="-180.0" Head3D="197.88 349.65 0.0" Tail3D="188.78 349.62 0.0" Center3D="193.33 349.64 0.0" MajorAxisEnd3D="188.78 349.64 0.0" MinorAxisEnd3D="193.33 354.19 0.0"/>
+			<arrow id="932996161" BoundingBox="196.63 416.72 208.23 423.43" Z="70" IgnoreWarnings="yes" FillType="None" ArrowheadType="Solid" HeadSize="800" ArrowheadCenterSize="700" ArrowheadWidth="200" AngularSize="-180.0" Head3D="197.88 418.0 0.0" Tail3D="206.98 417.97 0.0" Center3D="202.43 417.99 0.0" MajorAxisEnd3D="197.88 417.99 0.0" MinorAxisEnd3D="202.43 422.54 0.0"/>
+			<arrow id="932996162" BoundingBox="178.43 416.72 190.03 423.43" Z="71" IgnoreWarnings="yes" FillType="None" ArrowheadType="Solid" HeadSize="800" ArrowheadCenterSize="700" ArrowheadWidth="200" AngularSize="-180.0" Head3D="179.68 417.99 0.0" Tail3D="188.78 417.97 0.0" Center3D="184.23 417.98 0.0" MajorAxisEnd3D="179.68 417.98 0.0" MinorAxisEnd3D="184.23 422.53 0.0"/>
+			<arrow id="932996163" BoundingBox="179.05 349.68 180.18 418.0" Z="73" IgnoreWarnings="yes" FillType="None" ArrowheadType="Solid" HeadSize="1000" ArrowheadCenterSize="875" ArrowheadWidth="250" Head3D="179.55 349.68 0.0" Tail3D="179.68 417.99 0.0" Center3D="310.61 481.97 0.0" MajorAxisEnd3D="377.27 481.97 0.0" MinorAxisEnd3D="310.61 552.35 0.0"/>
+			<arrow id="932996164" BoundingBox="188.28 349.62 189.28 417.97" Z="76" FillType="None" ArrowheadType="Solid" HeadSize="1000" ArrowheadCenterSize="875" ArrowheadWidth="250" Head3D="188.78 349.62 0.0" Tail3D="188.78 417.97 0.0" Center3D="324.86 548.94 0.0" MajorAxisEnd3D="380.88 548.94 0.0" MinorAxisEnd3D="324.86 617.29 0.0"/>
+			<arrow id="932996165" BoundingBox="197.38 349.65 198.38 418.0" Z="77" FillType="None" ArrowheadType="Solid" HeadSize="1000" ArrowheadCenterSize="875" ArrowheadWidth="250" Head3D="197.88 349.65 0.0" Tail3D="197.88 418.0 0.0" Center3D="333.96 548.97 0.0" MajorAxisEnd3D="389.98 548.97 0.0" MinorAxisEnd3D="333.96 617.32 0.0"/>
+			<arrow id="932996166" BoundingBox="206.49 349.66 207.49 418.01" Z="78" FillType="None" ArrowheadType="Solid" HeadSize="1000" ArrowheadCenterSize="875" ArrowheadWidth="250" Head3D="206.99 349.66 0.0" Tail3D="206.99 418.01 0.0" Center3D="343.07 548.98 0.0" MajorAxisEnd3D="399.09 548.98 0.0" MinorAxisEnd3D="343.07 617.33 0.0"/>
+			<arrow id="932996167" BoundingBox="215.75 349.65 216.75 417.99" Z="79" FillType="None" ArrowheadType="Solid" HeadSize="1000" ArrowheadCenterSize="875" ArrowheadWidth="250" Head3D="216.25 349.65 0.0" Tail3D="216.25 417.99 0.0" Center3D="352.32 548.96 0.0" MajorAxisEnd3D="408.35 548.96 0.0" MinorAxisEnd3D="352.32 617.31 0.0"/>
+			<arrow id="932996168" BoundingBox="224.89 349.63 225.89 417.98" Z="80" FillType="None" ArrowheadType="Solid" HeadSize="1000" ArrowheadCenterSize="875" ArrowheadWidth="250" Head3D="225.39 349.63 0.0" Tail3D="225.39 417.98 0.0" Center3D="361.47 548.95 0.0" MajorAxisEnd3D="417.49 548.95 0.0" MinorAxisEnd3D="361.47 617.3 0.0"/>
+			<arrow id="932996169" BoundingBox="233.99 349.66 234.99 418.01" Z="81" FillType="None" ArrowheadType="Solid" HeadSize="1000" ArrowheadCenterSize="875" ArrowheadWidth="250" Head3D="234.49 349.66 0.0" Tail3D="234.49 418.01 0.0" Center3D="370.57 548.98 0.0" MajorAxisEnd3D="426.59 548.98 0.0" MinorAxisEnd3D="370.57 617.33 0.0"/>
+			<arrow id="932996170" BoundingBox="243.1 349.64 244.1 417.99" Z="82" FillType="None" ArrowheadType="Solid" HeadSize="1000" ArrowheadCenterSize="875" ArrowheadWidth="250" Head3D="243.6 349.64 0.0" Tail3D="243.6 417.99 0.0" Center3D="379.67 548.96 0.0" MajorAxisEnd3D="435.69 548.96 0.0" MinorAxisEnd3D="379.67 617.3 0.0"/>
+			<arrow id="932996171" BoundingBox="252.22 349.66 253.22 386.3" Z="83" FillType="None" ArrowheadType="Solid" HeadSize="1000" ArrowheadCenterSize="875" ArrowheadWidth="250" Head3D="252.72 349.66 0.0" Tail3D="252.72 386.3 0.0" Center3D="388.8 456.5 0.0" MajorAxisEnd3D="444.82 456.5 0.0" MinorAxisEnd3D="388.8 493.13 0.0"/>
+			<arrow id="932996172" BoundingBox="252.72 383.04 290.45 388.8" Z="84" FillType="None" ArrowheadType="Solid" ArrowheadHead="Full" HeadSize="1000" ArrowheadCenterSize="875" ArrowheadWidth="250" Head3D="290.45 386.29 0.0" Tail3D="252.72 386.29 0.0" Center3D="690.57 544.32 0.0" MajorAxisEnd3D="728.3 544.32 0.0" MinorAxisEnd3D="690.57 582.04 0.0"/>
+		</group>
+		<annotation id="0" Keyword="GUID" Content="cc466264-4922-40c0-b2c4-c98728125c3f"/>
+		<annotation id="0" Keyword="Name" Content="Proteasome"/>
+	</page>
+	<page id="932996173" BoundingBox="0.0 0.0 540.0 720.0" HeaderPosition="36.0" FooterPosition="36.0" PrintTrimMarks="yes" HeightPages="1" WidthPages="1">
+		<group id="932993259" BoundingBox="208.01 164.25 257.74 219.75" Z="1">
+			<fragment id="932993260" BoundingBox="210.91 164.25 254.47 200.43" Z="2">
+				<graphic id="932993261" BoundingBox="218.79 182.34 236.38 182.34" Z="3" GraphicType="Oval" OvalType="Circle" Center3D="236.38 182.34 0.0" MajorAxisEnd3D="218.79 182.34 0.0" MinorAxisEnd3D="236.38 164.75 0.0"/>
+				<graphic id="932993262" BoundingBox="215.07 182.34 232.66 182.34" Z="4" GraphicType="Oval" OvalType="Circle" Center3D="232.66 182.34 0.0" MajorAxisEnd3D="215.07 182.34 0.0" MinorAxisEnd3D="232.66 164.75 0.0"/>
+				<graphic id="932993263" BoundingBox="211.41 182.34 229.0 182.34" Z="5" GraphicType="Oval" OvalType="Circle" Center3D="229.0 182.34 0.0" MajorAxisEnd3D="211.41 182.34 0.0" MinorAxisEnd3D="229.0 164.75 0.0"/>
+			</fragment>
+			<graphic id="932993264" BoundingBox="208.51 214.67 212.12 214.67" Z="6" GraphicType="Oval" OvalType="Circle Filled" Center3D="212.12 214.67 0.0" MajorAxisEnd3D="208.51 214.67 0.0" MinorAxisEnd3D="212.12 211.06 0.0"/>
+			<graphic id="932993265" BoundingBox="250.01 214.06 253.63 214.06" Z="7" GraphicType="Oval" OvalType="Circle Filled" Center3D="253.63 214.06 0.0" MajorAxisEnd3D="250.01 214.06 0.0" MinorAxisEnd3D="253.63 210.45 0.0"/>
+			<graphic id="932995921" SupersededBy="932996174" BoundingBox="243.9 214.16 212.63 214.16" Z="12" GraphicType="Line" ArrowType="FullHead" HeadSize="2250"/>
+			<graphic id="932995922" SupersededBy="932996175" BoundingBox="253.44 214.16 210.5 214.16" Z="13" LineWidth="2.41" GraphicType="Line" HeadSize="1000"/>
+			<graphic id="932995923" SupersededBy="932996176" BoundingBox="212.0 180.56 212.0 214.87" Z="14" GraphicType="Line" HeadSize="1000"/>
+			<graphic id="932995924" SupersededBy="932996177" BoundingBox="253.43 180.56 253.43 214.87" Z="15" GraphicType="Line" HeadSize="1000"/>
+			<arrow id="932996174" BoundingBox="212.63 207.82 243.9 219.75" Z="12" FillType="None" ArrowheadType="Solid" ArrowheadHead="Full" HeadSize="1983" ArrowheadCenterSize="1735" ArrowheadWidth="559" Head3D="243.9 214.16 0.0" Tail3D="212.63 214.16 0.0" Center3D="691.59 -39.73 0.0" MajorAxisEnd3D="722.87 -39.73 0.0" MinorAxisEnd3D="691.59 -69.35 0.0"/>
+			<arrow id="932996175" BoundingBox="210.5 212.96 253.44 215.37" Z="13" LineWidth="2.41" FillType="None" ArrowheadType="Solid" HeadSize="1000" ArrowheadCenterSize="875" ArrowheadWidth="250" Head3D="253.44 214.16 0.0" Tail3D="210.5 214.16 0.0" Center3D="342.88 512.1 0.0" MajorAxisEnd3D="385.81 512.1 0.0" MinorAxisEnd3D="342.88 555.04 0.0"/>
+			<arrow id="932996176" BoundingBox="211.5 180.56 212.5 214.87" Z="14" FillType="None" ArrowheadType="Solid" HeadSize="1000" ArrowheadCenterSize="875" ArrowheadWidth="250" Head3D="212.0 180.56 0.0" Tail3D="212.0 214.87 0.0" Center3D="301.53 483.37 0.0" MajorAxisEnd3D="335.84 483.37 0.0" MinorAxisEnd3D="301.53 517.68 0.0"/>
+			<arrow id="932996177" BoundingBox="252.93 180.56 253.93 214.87" Z="15" FillType="None" ArrowheadType="Solid" HeadSize="1000" ArrowheadCenterSize="875" ArrowheadWidth="250" Head3D="253.43 180.56 0.0" Tail3D="253.43 214.87 0.0" Center3D="342.96 483.37 0.0" MajorAxisEnd3D="377.28 483.37 0.0" MinorAxisEnd3D="342.96 517.68 0.0"/>
+		</group>
+		<annotation id="0" Keyword="GUID" Content="cc466264-4922-40c0-b2c4-c98728125c3f"/>
+		<annotation id="0" Keyword="Name" Content="Proteasome"/>
+	</page>
+	<page id="932996178" BoundingBox="0.0 0.0 540.0 720.0" HeaderPosition="36.0" FooterPosition="36.0" PrintTrimMarks="yes" HeightPages="1" WidthPages="1">
+		<graphic id="932993274" BoundingBox="187.84 135.91 184.75 134.58" Z="1" GraphicType="Oval" OvalType="Filled" Center3D="184.75 134.58 0.0" MajorAxisEnd3D="187.84 135.91 0.0" MinorAxisEnd3D="183.37 137.54 0.0"/>
+		<annotation id="0" Keyword="GUID" Content="cc466264-4922-40c0-b2c4-c98728125c3f"/>
+		<annotation id="0" Keyword="Name" Content="Proteasome"/>
+	</page>
+	<page id="932996179" BoundingBox="0.0 0.0 540.0 720.0" HeaderPosition="36.0" FooterPosition="36.0" PrintTrimMarks="yes" HeightPages="1" WidthPages="1"/>
+	<page id="932996180" BoundingBox="0.0 0.0 540.0 720.0" HeaderPosition="36.0" FooterPosition="36.0" PrintTrimMarks="yes" HeightPages="1" WidthPages="1">
+		<group id="932993111" BoundingBox="216.71 86.32 247.23 96.92" Z="8">
+			<t id="932993112" p="231.97 94.67" BoundingBox="216.71 86.32 247.23 96.92" Z="10" Warning="Chemical Interpretation is not possible for this label" CaptionJustification="Center" Justification="Center" LineHeight="auto">
+				<s font="3" size="9.0" face="1" color="3">100 psi</s>
+			</t>
+		</group>
+		<graphic id="932995927" SupersededBy="932996181" BoundingBox="194.68 88.56 162.04 88.56" Z="9" GraphicType="Line" HeadSize="1000"/>
+		<graphic id="932995928" SupersededBy="932996182" BoundingBox="304.21 88.56 269.59 88.56" Z="11" GraphicType="Line" HeadSize="1000"/>
+		<graphic id="932993115" BoundingBox="268.81 102.52 195.31 73.74" Z="12" GraphicType="Rectangle" RectangleType="Plain" Center3D="232.06 88.13 0.0" MajorAxisEnd3D="268.81 88.13 0.0" MinorAxisEnd3D="232.06 102.52 0.0"/>
+		<arrow id="932996181" BoundingBox="162.04 88.06 194.68 89.06" Z="9" FillType="None" ArrowheadType="Solid" HeadSize="1000" ArrowheadCenterSize="875" ArrowheadWidth="250" Head3D="194.68 88.56 0.0" Tail3D="162.04 88.56 0.0" Center3D="315.3 106.92 0.0" MajorAxisEnd3D="347.93 106.92 0.0" MinorAxisEnd3D="315.3 155.49 0.0"/>
+		<arrow id="932996182" BoundingBox="269.59 88.06 304.21 89.06" Z="11" FillType="None" ArrowheadType="Solid" HeadSize="1000" ArrowheadCenterSize="875" ArrowheadWidth="250" Head3D="304.21 88.56 0.0" Tail3D="269.59 88.56 0.0" Center3D="269.59 88.56 0.0" MajorAxisEnd3D="270.85 88.56 0.0" MinorAxisEnd3D="269.59 91.28 0.0"/>
+		<annotation id="0" Keyword="GUID" Content="cc466264-4922-40c0-b2c4-c98728125c3f"/>
+		<annotation id="0" Keyword="Name" Content="Proteasome"/>
+	</page>
+	<page id="932996183" BoundingBox="0.0 0.0 540.0 720.0" HeaderPosition="36.0" FooterPosition="36.0" PrintTrimMarks="yes" HeightPages="1" WidthPages="1">
+		<group id="932993208" BoundingBox="224.21 93.82 254.73 104.42" Z="8">
+			<t id="932993209" p="239.47 102.17" BoundingBox="224.21 93.82 254.73 104.42" Z="10" Warning="Chemical Interpretation is not possible for this label" CaptionJustification="Center" Justification="Center" LineHeight="auto">
+				<s font="3" size="9.0" face="1" color="3">250 psi</s>
+			</t>
+		</group>
+		<graphic id="932995926" SupersededBy="932996184" BoundingBox="202.18 96.06 169.54 96.06" Z="9" GraphicType="Line" HeadSize="1000"/>
+		<graphic id="932995929" SupersededBy="932996185" BoundingBox="311.71 96.06 277.09 96.06" Z="11" GraphicType="Line" HeadSize="1000"/>
+		<graphic id="932993212" BoundingBox="276.31 110.02 202.81 81.24" Z="12" GraphicType="Rectangle" RectangleType="Plain" Center3D="239.56 95.63 0.0" MajorAxisEnd3D="276.31 95.63 0.0" MinorAxisEnd3D="239.56 110.02 0.0"/>
+		<arrow id="932996184" BoundingBox="169.54 95.56 202.18 96.56" Z="9" FillType="None" ArrowheadType="Solid" HeadSize="1000" ArrowheadCenterSize="875" ArrowheadWidth="250" Head3D="202.18 96.06 0.0" Tail3D="169.54 96.06 0.0" Center3D="322.8 114.42 0.0" MajorAxisEnd3D="355.43 114.42 0.0" MinorAxisEnd3D="322.8 162.99 0.0"/>
+		<arrow id="932996185" BoundingBox="277.09 95.56 311.71 96.56" Z="11" FillType="None" ArrowheadType="Solid" HeadSize="1000" ArrowheadCenterSize="875" ArrowheadWidth="250" Head3D="311.71 96.06 0.0" Tail3D="277.09 96.06 0.0" Center3D="277.09 96.06 0.0" MajorAxisEnd3D="278.35 96.06 0.0" MinorAxisEnd3D="277.09 98.78 0.0"/>
+		<annotation id="0" Keyword="GUID" Content="cc466264-4922-40c0-b2c4-c98728125c3f"/>
+		<annotation id="0" Keyword="Name" Content="Proteasome"/>
+	</page>
+	<page id="932996186" BoundingBox="0.0 0.0 540.0 720.0" HeaderPosition="36.0" FooterPosition="36.0" PrintTrimMarks="yes" HeightPages="1" WidthPages="1">
+		<t id="932992287" p="136.26 195.73" BoundingBox="136.26 186.78 171.88 198.28" Z="4" Warning="Chemical Interpretation is not possible for this label" LineHeight="auto">
+			<s font="3" size="10.0" face="0" color="0">100 PSI</s>
+		</t>
+		<graphic id="932992286" BoundingBox="212.57 200.25 128.68 170.25" Z="3" color="19" GraphicType="Rectangle" RectangleType="Filled" Center3D="170.62 185.25 0.0" MajorAxisEnd3D="212.57 185.25 0.0" MinorAxisEnd3D="170.62 200.25 0.0"/>
+		<annotation id="0" Keyword="GUID" Content="cc466264-4922-40c0-b2c4-c98728125c3f"/>
+		<annotation id="0" Keyword="Name" Content="Proteasome"/>
+	</page>
+	<page id="932996187" BoundingBox="0.0 0.0 540.0 720.0" HeaderPosition="36.0" FooterPosition="36.0" PrintTrimMarks="yes" HeightPages="1" WidthPages="1">
+		<t id="932992627" p="136.26 195.73" BoundingBox="136.26 186.78 171.88 198.28" Z="4" Warning="Chemical Interpretation is not possible for this label" LineHeight="auto">
+			<s font="3" size="10.0" face="0" color="0">250 PSI</s>
+		</t>
+		<graphic id="932992628" BoundingBox="212.57 200.25 128.68 170.25" Z="3" color="19" GraphicType="Rectangle" RectangleType="Filled" Center3D="170.62 185.25 0.0" MajorAxisEnd3D="212.57 185.25 0.0" MinorAxisEnd3D="170.62 200.25 0.0"/>
+		<annotation id="0" Keyword="GUID" Content="cc466264-4922-40c0-b2c4-c98728125c3f"/>
+		<annotation id="0" Keyword="Name" Content="Proteasome"/>
+	</page>
+	<page id="932996188" BoundingBox="0.0 0.0 540.0 720.0" HeaderPosition="36.0" FooterPosition="36.0" PrintTrimMarks="yes" HeightPages="1" WidthPages="1"/>
+	<page id="932996189" BoundingBox="0.0 0.0 540.0 720.0" HeaderPosition="36.0" FooterPosition="36.0" PrintTrimMarks="yes" HeightPages="1" WidthPages="1"/>
+	<page id="932996190" BoundingBox="0.0 0.0 540.0 720.0" HeaderPosition="36.0" FooterPosition="36.0" PrintTrimMarks="yes" HeightPages="1" WidthPages="1">
+		<group id="932992833" BoundingBox="136.81 153.45 245.51 243.13" Z="36" Integral="yes">
+			<t id="932973530" p="162.07 217.03" BoundingBox="155.18 191.81 163.58 217.03" Z="26" Warning="Chemical Interpretation is not possible for this label" CaptionFont="5" CaptionSize="3276.75" CaptionFace="65535" RotationAngle="17694720" LineHeight="auto">
+				<s font="3" size="6.0" face="0" color="0">FlowIR</s>
+				<s font="3" size="6.0" face="64" color="0">TM</s>
+			</t>
+			<graphic id="2" BoundingBox="244.38 242.0 138.06 154.23" Z="21" GraphicType="Rectangle" RectangleType="RoundEdge" CornerRadius="600" Center3D="191.22 198.11 0.0" MajorAxisEnd3D="244.38 198.11 0.0" MinorAxisEnd3D="191.22 242.0 0.0"/>
+			<graphic id="3" BoundingBox="211.86 189.16 191.66 189.16" Z="22" GraphicType="Oval" OvalType="Circle Filled" Center3D="191.66 189.16 0.0" MajorAxisEnd3D="211.86 189.16 0.0" MinorAxisEnd3D="191.66 209.36 0.0"/>
+			<graphic id="4" BoundingBox="202.25 189.16 191.66 189.16" Z="23" color="19" GraphicType="Oval" OvalType="Circle Filled" Center3D="191.66 189.16 0.0" MajorAxisEnd3D="202.25 189.16 0.0" MinorAxisEnd3D="191.66 199.74 0.0"/>
+			<graphic id="932973531" BoundingBox="224.72 171.88 222.57 171.88" Z="24" color="19" GraphicType="Oval" OvalType="Circle" FadePercent="300" Center3D="222.57 171.88 0.0" MajorAxisEnd3D="224.72 171.88 0.0" MinorAxisEnd3D="222.57 169.74 0.0"/>
+			<graphic id="932973550" BoundingBox="167.85 219.15 143.94 159.52" Z="27" GraphicType="Rectangle" RectangleType="RoundEdge" CornerRadius="600" Center3D="155.9 189.33 0.0" MajorAxisEnd3D="167.85 189.33 0.0" MinorAxisEnd3D="155.9 219.15 0.0"/>
+			<graphic id="932973533" BoundingBox="239.46 235.03 215.39 160.84" Z="28" GraphicType="Rectangle" RectangleType="RoundEdge" CornerRadius="600" Center3D="227.43 197.94 0.0" MajorAxisEnd3D="239.46 197.94 0.0" MinorAxisEnd3D="227.43 235.03 0.0"/>
+			<graphic id="932973536" BoundingBox="194.79 192.47 191.71 192.47" Z="31" GraphicType="Oval" OvalType="Circle Filled" Center3D="191.71 192.47 0.0" MajorAxisEnd3D="194.79 192.47 0.0" MinorAxisEnd3D="191.71 195.55 0.0"/>
+			<graphic id="932973537" BoundingBox="194.79 182.33 191.71 182.33" Z="32" GraphicType="Oval" OvalType="Circle Filled" Center3D="191.71 182.33 0.0" MajorAxisEnd3D="194.79 182.33 0.0" MinorAxisEnd3D="191.71 185.41 0.0"/>
+			<graphic id="932973538" BoundingBox="224.72 182.91 222.57 182.91" Z="33" color="8" GraphicType="Oval" OvalType="Circle" FadePercent="300" Center3D="222.57 182.91 0.0" MajorAxisEnd3D="224.72 182.91 0.0" MinorAxisEnd3D="222.57 180.76 0.0"/>
+			<graphic id="932973539" BoundingBox="224.72 194.82 222.57 194.82" Z="34" color="8" GraphicType="Oval" OvalType="Circle" FadePercent="300" Center3D="222.57 194.82 0.0" MajorAxisEnd3D="224.72 194.82 0.0" MinorAxisEnd3D="222.57 192.67 0.0"/>
+		</group>
+		<graphic id="932995933" SupersededBy="932996191" BoundingBox="191.88 130.79 97.47 130.79" Z="25" GraphicType="Line" HeadSize="1000"/>
+		<graphic id="932995934" SupersededBy="932996192" BoundingBox="191.88 181.66 191.88 130.79" Z="29" GraphicType="Line" HeadSize="1000"/>
+		<graphic id="932995935" SupersededBy="932996193" BoundingBox="191.66 268.77 191.66 192.03" Z="30" GraphicType="Line" HeadSize="1000"/>
+		<graphic id="932995936" SupersededBy="932996194" BoundingBox="284.28 268.77 191.66 268.77" Z="35" GraphicType="Line" ArrowType="FullHead" HeadSize="1000"/>
+		<arrow id="932996191" BoundingBox="97.47 130.29 191.88 131.29" Z="25" FillType="None" ArrowheadType="Solid" HeadSize="1000" ArrowheadCenterSize="875" ArrowheadWidth="250" Head3D="191.88 130.79 0.0" Tail3D="97.47 130.79 0.0" Center3D="609.94 316.52 0.0" MajorAxisEnd3D="704.36 316.52 0.0" MinorAxisEnd3D="609.94 343.98 0.0"/>
+		<arrow id="932996192" BoundingBox="191.38 130.79 192.38 181.66" Z="29" FillType="None" ArrowheadType="Solid" HeadSize="1000" ArrowheadCenterSize="875" ArrowheadWidth="250" Head3D="191.88 181.66 0.0" Tail3D="191.88 130.79 0.0" Center3D="389.36 256.56 0.0" MajorAxisEnd3D="437.0 256.56 0.0" MinorAxisEnd3D="389.36 307.43 0.0"/>
+		<arrow id="932996193" BoundingBox="191.16 192.03 192.16 268.77" Z="30" FillType="None" ArrowheadType="Solid" HeadSize="1000" ArrowheadCenterSize="875" ArrowheadWidth="250" Head3D="191.66 268.77 0.0" Tail3D="191.66 192.03 0.0" Center3D="385.83 390.5 0.0" MajorAxisEnd3D="462.58 390.5 0.0" MinorAxisEnd3D="385.83 467.24 0.0"/>
+		<arrow id="932996194" BoundingBox="191.66 265.51 284.28 271.27" Z="35" FillType="None" ArrowheadType="Solid" ArrowheadHead="Full" HeadSize="1000" ArrowheadCenterSize="875" ArrowheadWidth="250" Head3D="284.28 268.77 0.0" Tail3D="191.66 268.77 0.0" Center3D="478.78 417.62 0.0" MajorAxisEnd3D="571.4 417.62 0.0" MinorAxisEnd3D="478.78 510.24 0.0"/>
+	</page>
+	<page id="932996195" BoundingBox="0.0 0.0 540.0 720.0" HeaderPosition="36.0" FooterPosition="36.0" PrintTrimMarks="yes" HeightPages="1" WidthPages="1">
+		<group id="932992293" BoundingBox="116.42 160.09 185.83 207.41" Z="9" Integral="yes">
+			<graphic id="932992294" BoundingBox="184.58 206.16 117.67 161.34" Z="6" GraphicType="Rectangle" RectangleType="Plain" Center3D="151.12 183.75 0.0" MajorAxisEnd3D="184.58 183.75 0.0" MinorAxisEnd3D="151.12 206.16 0.0"/>
+			<curve id="932992295" Z="7" color="15" ArrowheadType="Solid" CurvePoints="115.83 202.28 119.33 202.28 122.83 202.28 120.83 202.28 124.2 202.28 127.58 202.28 129.08 166.03 131.33 166.03 133.58 166.03 132.95 202.28 137.83 202.03 142.7 201.78 180.83 201.66 182.33 201.66 183.83 201.66"/>
+			<curve id="932992296" Z="8" color="4" ArrowheadType="Solid" CurvePoints="115.95 203.16 119.45 203.16 122.95 203.16 122.95 203.03 126.33 203.03 129.7 203.03 131.08 165.41 136.08 165.41 141.08 165.41 160.83 165.53 166.45 165.53 172.08 165.53 170.08 202.66 175.83 202.66 181.58 202.66 179.08 202.66 182.33 202.66 185.58 202.66"/>
+		</group>
+		<t id="932993216" p="151.68 228.84" BoundingBox="136.93 220.54 166.43 231.04" Z="10" Warning="Chemical Interpretation is not possible for this label" CaptionJustification="Center" Justification="Center" LineHeight="auto">
+			<s font="3" size="9.0" face="3" color="3">FlowIR</s>
+		</t>
+		<annotation id="0" Keyword="GUID" Content="cc466264-4922-40c0-b2c4-c98728125c3f"/>
+		<annotation id="0" Keyword="Name" Content="Proteasome"/>
+	</page>
+	<page id="932996196" BoundingBox="0.0 0.0 540.0 720.0" HeaderPosition="36.0" FooterPosition="36.0" PrintTrimMarks="yes" HeightPages="1" WidthPages="1">
+		<group id="932995468" BoundingBox="193.16 73.72 312.86 116.0" Z="21" Integral="yes">
+			<graphic id="932992835" BoundingBox="311.61 114.75 204.32 84.75" Z="15" GraphicType="Rectangle" RectangleType="Plain" Center3D="257.97 99.75 0.0" MajorAxisEnd3D="311.61 99.75 0.0" MinorAxisEnd3D="257.97 114.75 0.0"/>
+			<graphic id="932995939" SupersededBy="932996197" BoundingBox="193.66 104.22 203.81 114.38" Z="16" GraphicType="Line" HeadSize="1000"/>
+			<graphic id="932995940" SupersededBy="932996198" BoundingBox="193.66 74.22 203.81 84.38" Z="17" GraphicType="Line" HeadSize="1000"/>
+			<graphic id="932995941" SupersededBy="932996199" BoundingBox="300.91 74.22 311.06 84.38" Z="18" GraphicType="Line" HeadSize="1000"/>
+			<graphic id="932995942" SupersededBy="932996200" BoundingBox="300.91 74.22 193.66 74.22" Z="19" GraphicType="Line" HeadSize="1000"/>
+			<graphic id="932995943" SupersededBy="932996201" BoundingBox="193.66 104.22 193.66 74.22" Z="20" GraphicType="Line" HeadSize="1000"/>
+			<arrow id="932996197" BoundingBox="193.31 103.87 204.17 114.73" Z="16" FillType="None" ArrowheadType="Solid" HeadSize="1000" ArrowheadCenterSize="875" ArrowheadWidth="250" Head3D="193.66 104.22 0.0" Tail3D="203.81 114.38 0.0" Center3D="295.57 161.41 0.0" MajorAxisEnd3D="309.92 161.41 0.0" MinorAxisEnd3D="295.57 175.77 0.0"/>
+			<arrow id="932996198" BoundingBox="193.31 73.87 204.17 84.73" Z="17" FillType="None" ArrowheadType="Solid" HeadSize="1000" ArrowheadCenterSize="875" ArrowheadWidth="250" Head3D="193.66 74.22 0.0" Tail3D="203.81 84.38 0.0" Center3D="295.57 131.41 0.0" MajorAxisEnd3D="309.92 131.41 0.0" MinorAxisEnd3D="295.57 145.77 0.0"/>
+			<arrow id="932996199" BoundingBox="300.56 73.87 311.42 84.73" Z="18" FillType="None" ArrowheadType="Solid" HeadSize="1000" ArrowheadCenterSize="875" ArrowheadWidth="250" Head3D="300.91 74.22 0.0" Tail3D="311.06 84.38 0.0" Center3D="440.13 116.41 0.0" MajorAxisEnd3D="451.39 116.41 0.0" MinorAxisEnd3D="440.13 127.67 0.0"/>
+			<arrow id="932996200" BoundingBox="193.66 73.72 300.91 74.72" Z="19" FillType="None" ArrowheadType="Solid" HeadSize="1000" ArrowheadCenterSize="875" ArrowheadWidth="250" Head3D="300.91 74.22 0.0" Tail3D="193.66 74.22 0.0" Center3D="397.74 111.33 0.0" MajorAxisEnd3D="434.37 111.33 0.0" MinorAxisEnd3D="397.74 147.97 0.0"/>
+			<arrow id="932996201" BoundingBox="193.16 74.22 194.16 104.22" Z="20" FillType="None" ArrowheadType="Solid" HeadSize="1000" ArrowheadCenterSize="875" ArrowheadWidth="250" Head3D="193.66 104.22 0.0" Tail3D="193.66 74.22 0.0" Center3D="290.49 141.33 0.0" MajorAxisEnd3D="320.49 141.33 0.0" MinorAxisEnd3D="290.49 171.33 0.0"/>
+		</group>
+		<t id="932991566" p="214.08 107.29" BoundingBox="214.08 99.19 256.6 109.54" Z="14" Warning="ChemDraw can't interpret this label." CaptionFont="5" CaptionSize="3276.75" CaptionFace="65535" LineHeight="auto">
+			<s font="3" size="9.0" face="96" color="3">Instrument</s>
+		</t>
+		<annotation id="0" Keyword="GUID" Content="cc466264-4922-40c0-b2c4-c98728125c3f"/>
+		<annotation id="0" Keyword="Name" Content="Proteasome"/>
+	</page>
+	<page id="932996202" BoundingBox="0.0 0.0 540.0 720.0" HeaderPosition="36.0" FooterPosition="36.0" PrintTrimMarks="yes" HeightPages="1" WidthPages="1"/>
+	<page id="932996203" BoundingBox="0.0 0.0 540.0 720.0" HeaderPosition="36.0" FooterPosition="36.0" PrintTrimMarks="yes" HeightPages="1" WidthPages="1"/>
+	<page id="932996204" BoundingBox="0.0 0.0 540.0 720.0" HeaderPosition="36.0" FooterPosition="36.0" PrintTrimMarks="yes" HeightPages="1" WidthPages="1"/>
+	<page id="932996205" BoundingBox="0.0 0.0 540.0 720.0" HeaderPosition="36.0" FooterPosition="36.0" PrintTrimMarks="yes" HeightPages="1" WidthPages="1">
+		<group id="932995426" BoundingBox="123.86 82.77 254.14 119.59" Z="31" Integral="yes">
+			<group id="932995427" BoundingBox="123.86 82.77 137.91 119.59" Z="20" Integral="yes">
+				<group id="932995428" BoundingBox="123.86 82.77 137.91 119.59" Z="22" Integral="yes">
+					<graphic id="932995429" BoundingBox="136.86 118.54 128.56 83.82" Z="26" color="17" LineWidth="0.6" BoldWidth="2.01" GraphicType="Rectangle" RectangleType="Filled" Center3D="132.71 101.18 0.0" MajorAxisEnd3D="136.86 101.18 0.0" MinorAxisEnd3D="132.71 118.54 0.0"/>
+					<graphic id="932995430" BoundingBox="133.21 104.11 124.91 98.12" Z="27" color="17" LineWidth="0.6" BoldWidth="2.01" GraphicType="Rectangle" RectangleType="Filled" Center3D="129.06 101.12 0.0" MajorAxisEnd3D="133.21 101.12 0.0" MinorAxisEnd3D="129.06 104.11 0.0"/>
+				</group>
+			</group>
+			<group id="932995431" BoundingBox="240.26 82.77 254.14 119.59" Z="29" Integral="yes">
+				<group id="932995432" BoundingBox="243.74 97.08 254.14 105.16" Z="19" Integral="yes">
+					<graphic id="932995433" BoundingBox="253.09 104.11 244.79 98.12" Z="28" color="17" LineWidth="0.6" BoldWidth="2.01" GraphicType="Rectangle" RectangleType="Filled" Center3D="248.94 101.12 0.0" MajorAxisEnd3D="253.09 101.12 0.0" MinorAxisEnd3D="248.94 104.11 0.0"/>
+				</group>
+				<graphic id="932995434" BoundingBox="249.6 118.54 241.31 83.82" Z="25" color="17" LineWidth="0.6" BoldWidth="2.01" GraphicType="Rectangle" RectangleType="Filled" Center3D="245.45 101.18 0.0" MajorAxisEnd3D="249.6 101.18 0.0" MinorAxisEnd3D="245.45 118.54 0.0"/>
+			</group>
+			<group id="932995435" BoundingBox="131.37 86.78 246.36 115.57" Z="30" Integral="yes">
+				<group id="932995436" BoundingBox="134.76 86.78 243.41 115.57" Z="21" Integral="yes">
+					<graphic id="932995437" BoundingBox="242.36 114.53 135.81 87.83" Z="24" LineWidth="0.6" BoldWidth="2.01" GraphicType="Rectangle" RectangleType="Plain" Center3D="189.08 101.18 0.0" MajorAxisEnd3D="242.36 101.18 0.0" MinorAxisEnd3D="189.08 114.53 0.0"/>
+				</group>
+				<graphic id="932995438" BoundingBox="245.32 114.06 132.41 88.49" Z="23" color="16" LineWidth="0.6" BoldWidth="2.01" GraphicType="Rectangle" RectangleType="Filled" Center3D="188.87 101.28 0.0" MajorAxisEnd3D="245.32 101.28 0.0" MinorAxisEnd3D="188.87 114.06 0.0"/>
+			</group>
+		</group>
+		<fragment id="932995439" BoundingBox="161.07 96.59 190.91 105.74" Z="32">
+			<n id="932995440" p="164.17 100.64" Z="33" Warning="ChemDraw can't interpret this label." NodeType="Unspecified" NeedsClean="yes" AS="N">
+				<t id="0" p="161.07 103.79" BoundingBox="161.07 96.59 190.91 105.74" LabelJustification="Left" LabelLineHeight="auto" LineHeight="auto" LabelAlignment="Left">
+					<s font="3" size="8.0" face="96" color="3">QP-BZA</s>
+				</t>
+			</n>
+		</fragment>
+		<graphic id="932995948" SupersededBy="932996206" BoundingBox="106.85 101.45 271.24 101.45" Z="18" HashSpacing="2.0" LineWidth="0.6" BoldWidth="2.01" GraphicType="Line" HeadSize="1000"/>
+		<arrow id="932996206" BoundingBox="106.85 101.15 271.24 101.75" Z="18" HashSpacing="2.0" LineWidth="0.6" BoldWidth="2.01" FillType="None" ArrowheadType="Solid" HeadSize="1000" ArrowheadCenterSize="875" ArrowheadWidth="250" Head3D="106.85 101.45 0.0" Tail3D="271.24 101.45 0.0" Center3D="516.6 485.55 0.0" MajorAxisEnd3D="516.6 471.14 0.0" MinorAxisEnd3D="454.21 485.55 0.0"/>
+		<annotation id="0" Keyword="GUID" Content="cc466264-4922-40c0-b2c4-c98728125c3f"/>
+		<annotation id="0" Keyword="Name" Content="Proteasome"/>
+	</page>
+	<page id="932996207" BoundingBox="0.0 0.0 540.0 720.0" HeaderPosition="36.0" FooterPosition="36.0" PrintTrimMarks="yes" HeightPages="1" WidthPages="1">
+		<group id="932995451" BoundingBox="185.36 121.43 315.64 158.25" Z="31" Integral="yes">
+			<group id="932995452" BoundingBox="185.36 121.43 199.41 158.25" Z="20" Integral="yes">
+				<group id="932995453" BoundingBox="185.36 121.43 199.41 158.25" Z="22" Integral="yes">
+					<graphic id="932995454" BoundingBox="198.36 157.2 190.06 122.48" Z="26" LineWidth="0.6" BoldWidth="2.01" GraphicType="Rectangle" RectangleType="Filled" Center3D="194.21 139.84 0.0" MajorAxisEnd3D="198.36 139.84 0.0" MinorAxisEnd3D="194.21 157.2 0.0"/>
+					<graphic id="932995455" BoundingBox="194.71 142.78 186.41 136.79" Z="27" LineWidth="0.6" BoldWidth="2.01" GraphicType="Rectangle" RectangleType="Filled" Center3D="190.56 139.78 0.0" MajorAxisEnd3D="194.71 139.78 0.0" MinorAxisEnd3D="190.56 142.78 0.0"/>
+				</group>
+			</group>
+			<group id="932995456" BoundingBox="301.76 121.43 315.64 158.25" Z="29" Integral="yes">
+				<group id="932995457" BoundingBox="305.24 135.74 315.64 143.82" Z="19" Integral="yes">
+					<graphic id="932995458" BoundingBox="314.59 142.78 306.29 136.79" Z="28" LineWidth="0.6" BoldWidth="2.01" GraphicType="Rectangle" RectangleType="Filled" Center3D="310.44 139.78 0.0" MajorAxisEnd3D="314.59 139.78 0.0" MinorAxisEnd3D="310.44 142.78 0.0"/>
+				</group>
+				<graphic id="932995459" BoundingBox="311.1 157.2 302.81 122.48" Z="25" LineWidth="0.6" BoldWidth="2.01" GraphicType="Rectangle" RectangleType="Filled" Center3D="306.95 139.84 0.0" MajorAxisEnd3D="311.1 139.84 0.0" MinorAxisEnd3D="306.95 157.2 0.0"/>
+			</group>
+			<group id="932995460" BoundingBox="192.87 125.44 307.86 154.24" Z="30" Integral="yes">
+				<group id="932995461" BoundingBox="196.26 125.44 304.91 154.24" Z="21" Integral="yes">
+					<graphic id="932995462" BoundingBox="303.86 153.19 197.31 126.49" Z="24" LineWidth="0.6" BoldWidth="2.01" GraphicType="Rectangle" RectangleType="Plain" Center3D="250.58 139.84 0.0" MajorAxisEnd3D="303.86 139.84 0.0" MinorAxisEnd3D="250.58 153.19 0.0"/>
+				</group>
+				<graphic id="932995463" BoundingBox="306.82 152.73 193.91 127.15" Z="23" color="16" LineWidth="0.6" BoldWidth="2.01" GraphicType="Rectangle" RectangleType="Filled" Center3D="250.37 139.94 0.0" MajorAxisEnd3D="306.82 139.94 0.0" MinorAxisEnd3D="250.37 152.73 0.0"/>
+			</group>
+		</group>
+		<fragment id="932995464" BoundingBox="222.57 135.25 252.41 144.4" Z="32">
+			<n id="932995465" p="225.67 139.3" Z="33" Warning="ChemDraw can't interpret this label." NodeType="Unspecified" NeedsClean="yes" AS="N">
+				<t id="0" p="222.57 142.45" BoundingBox="222.57 135.25 252.41 144.4" LabelJustification="Left" LabelLineHeight="auto" LineHeight="auto" LabelAlignment="Left">
+					<s font="3" size="8.0" face="96" color="3">QP-BZA</s>
+				</t>
+			</n>
+		</fragment>
+		<graphic id="932995950" SupersededBy="932996208" BoundingBox="168.35 140.11 332.74 140.11" Z="18" HashSpacing="2.0" LineWidth="0.6" BoldWidth="2.01" GraphicType="Line" HeadSize="1000"/>
+		<arrow id="932996208" BoundingBox="168.35 139.81 332.74 140.41" Z="18" HashSpacing="2.0" LineWidth="0.6" BoldWidth="2.01" FillType="None" ArrowheadType="Solid" HeadSize="1000" ArrowheadCenterSize="875" ArrowheadWidth="250" Head3D="168.35 140.11 0.0" Tail3D="332.74 140.11 0.0" Center3D="578.1 524.21 0.0" MajorAxisEnd3D="578.1 509.8 0.0" MinorAxisEnd3D="515.71 524.21 0.0"/>
+		<annotation id="0" Keyword="GUID" Content="cc466264-4922-40c0-b2c4-c98728125c3f"/>
+		<annotation id="0" Keyword="Name" Content="Proteasome"/>
+	</page>
+	<page id="932996209" BoundingBox="0.0 0.0 540.0 720.0" HeaderPosition="36.0" FooterPosition="36.0" PrintTrimMarks="yes" HeightPages="1" WidthPages="1">
+		<fragment id="932948364" BoundingBox="192.02 196.15 243.01 206.91" Z="1">
+			<n id="932948365" p="192.03 201.0" Z="2" AS="N"/>
+			<n id="932948366" p="220.48 200.71" Z="3" NodeType="Fragment" NeedsClean="yes" AS="N">
+				<fragment id="932996210">
+					<n id="932973231" p="220.48 200.71" Z="5" Element="16" NumHydrogens="0" NeedsClean="yes">
+						<t id="0" p="217.15 204.61" BoundingBox="217.15 196.15 223.82 204.71" LabelJustification="Left" LineHeight="variable">
+							<s font="3" size="10.0" face="96" color="3">S</s>
+						</t>
+					</n>
+					<n id="932973232" p="220.19 172.36" Z="6" Element="8" NumHydrogens="0" NeedsClean="yes">
+						<t id="0" p="216.29 176.26" BoundingBox="216.29 167.81 224.09 176.36" LabelJustification="Left" LineHeight="variable">
+							<s font="3" size="10.0" face="96" color="3">O</s>
+						</t>
+					</n>
+					<n id="932973233" p="220.76 229.06" Z="7" Element="8" NumHydrogens="0" NeedsClean="yes">
+						<t id="0" p="216.86 232.96" BoundingBox="216.86 224.5 224.66 233.06" LabelJustification="Left" LineHeight="variable">
+							<s font="3" size="10.0" face="96" color="3">O</s>
+						</t>
+					</n>
+					<n id="932973234" p="248.83 200.43" Z="8" Element="8" NumHydrogens="1" NeedsClean="yes">
+						<t id="0" p="244.93 204.33" BoundingBox="244.93 195.87 259.95 204.43" LabelJustification="Left" LineHeight="variable" LabelAlignment="Left">
+							<s font="3" size="10.0" face="96" color="3">OH</s>
+						</t>
+					</n>
+					<n id="932973235" p="192.13 201.0" Z="9" NodeType="ExternalConnectionPoint"/>
+					<b id="932973236" Z="10" B="932973235" E="932973231"/>
+					<b id="932973237" Z="11" B="932973231" E="932973232" Order="2"/>
+					<b id="932973238" Z="12" B="932973231" E="932973233" Order="2"/>
+					<b id="932973239" Z="13" B="932973231" E="932973234"/>
+				</fragment>
+				<t id="0" p="217.15 204.61" BoundingBox="217.15 196.15 243.01 206.91" LabelJustification="Left" LineHeight="variable" LabelAlignment="Left">
+					<s font="3" size="10.0" face="96" color="3">SO3H</s>
+				</t>
+			</n>
+			<b id="932948379" Z="14" BondSpacing="12" B="932948365" E="932948366" BS="N"/>
+		</fragment>
+		<graphic id="932995953" BoundingBox="196.69 189.62 192.03 201.0" Z="15" GraphicType="Orbital" OvalType="Circle Shaded" OrbitalType="sShaded" Center3D="192.03 201.0 0.0" MajorAxisEnd3D="196.69 189.62 0.0" MinorAxisEnd3D="180.65 196.34 0.0"/>
+	</page>
+	<page id="932996211" BoundingBox="0.0 0.0 540.0 720.0" HeaderPosition="36.0" FooterPosition="36.0" PrintTrimMarks="yes" HeightPages="1" WidthPages="1">
+		<fragment id="932989503" BoundingBox="232.08 135.52 306.48 239.22" Z="25">
+			<n id="932989500" p="232.58 192.79" Z="23" AS="N"/>
+			<n id="932989502" p="232.58 221.14" Z="24" AS="N"/>
+			<n id="932989504" p="257.13 235.32" Z="26" Element="7" NumHydrogens="0" NeedsClean="yes" AS="N">
+				<t id="0" p="253.53 239.22" BoundingBox="253.53 230.88 260.75 239.22" LabelJustification="Left" LineHeight="variable">
+					<s font="3" size="10.0" face="96" color="0">N</s>
+				</t>
+			</n>
+			<n id="932989506" p="281.68 221.14" Z="27" AS="N"/>
+			<n id="932989508" p="281.68 192.79" Z="28" AS="N"/>
+			<n id="932989510" p="257.13 178.62" Z="29"/>
+			<n id="932989518" p="257.13 150.27" Z="36" Element="7" NumHydrogens="0" NeedsClean="yes">
+				<t id="0" p="253.53 154.17" BoundingBox="253.53 145.83 260.75 154.17" LabelJustification="Left" LineHeight="variable">
+					<s font="3" size="10.0" face="96" color="0">N</s>
+				</t>
+			</n>
+			<n id="932989520" p="232.58 136.09" Z="38" AS="N"/>
+			<n id="932989522" p="281.68 136.09" Z="40" AS="N"/>
+			<n id="932989524" p="306.23 150.27" Z="42" AS="N"/>
+			<b id="932989512" Z="30" BondSpacing="12" B="932989500" E="932989502" Order="2" DoublePosition="Right" BondCircularOrdering="932989517 0 0 932989513"/>
+			<b id="932989513" Z="31" BondSpacing="12" B="932989502" E="932989504" BS="N"/>
+			<b id="932989514" Z="32" BondSpacing="12" B="932989504" E="932989506" Order="2" DoublePosition="Right" BondCircularOrdering="932989513 0 0 932989515"/>
+			<b id="932989515" Z="33" BondSpacing="12" B="932989506" E="932989508" BS="N"/>
+			<b id="932989516" Z="34" BondSpacing="12" B="932989508" E="932989510" Order="2" DoublePosition="Right" BondCircularOrdering="932989515 0 932989519 932989517"/>
+			<b id="932989517" Z="35" BondSpacing="12" B="932989510" E="932989500" BS="N"/>
+			<b id="932989519" Z="37" BondSpacing="12" B="932989510" E="932989518" BS="N"/>
+			<b id="932989521" Z="39" BondSpacing="12" B="932989518" E="932989520" BS="N"/>
+			<b id="932989523" Z="41" BondSpacing="12" B="932989518" E="932989522" BS="N"/>
+			<b id="932989525" Z="43" BondSpacing="12" B="932989522" E="932989524" BS="N"/>
+		</fragment>
+		<graphic id="932992704" BoundingBox="334.12 189.75 300.32 125.2" Z="44" GraphicType="Rectangle" RectangleType="Shaded" Center3D="317.22 157.47 0.0" MajorAxisEnd3D="334.12 157.47 0.0" MinorAxisEnd3D="317.22 189.75 0.0"/>
+	</page>
+	<page id="932996212" BoundingBox="0.0 0.0 540.0 720.0" HeaderPosition="36.0" FooterPosition="36.0" PrintTrimMarks="yes" HeightPages="1" WidthPages="1"/>
+	<page id="932996213" BoundingBox="0.0 0.0 540.0 720.0" HeaderPosition="36.0" FooterPosition="36.0" PrintTrimMarks="yes" HeightPages="1" WidthPages="1"/>
+	<page id="932996214" BoundingBox="0.0 0.0 540.0 720.0" HeaderPosition="36.0" FooterPosition="36.0" PrintTrimMarks="yes" HeightPages="1" WidthPages="1">
+		<group id="932965303" BoundingBox="248.01 154.77 303.31 192.75" Z="31" Integral="yes">
+			<group id="932965236" BoundingBox="290.59 154.77 303.31 192.49" Z="19" Integral="yes">
+				<graphic id="932965240" BoundingBox="301.95 181.01 296.95 173.76" Z="18" GraphicType="Oval" OvalType="Filled" Center3D="296.95 173.76 0.0" MajorAxisEnd3D="301.95 181.01 0.0" MinorAxisEnd3D="294.72 189.96 0.0"/>
+			</group>
+			<group id="932965293" BoundingBox="257.07 154.77 270.35 192.49" Z="23" Integral="yes">
+				<graphic id="932965294" BoundingBox="268.71 181.01 263.71 173.76" Z="22" color="18" GraphicType="Oval" OvalType="Filled" Center3D="263.71 173.76 0.0" MajorAxisEnd3D="268.71 181.01 0.0" MinorAxisEnd3D="261.48 189.96 0.0"/>
+			</group>
+			<group id="932965291" BoundingBox="248.01 154.77 261.37 192.49" Z="26" Integral="yes">
+				<graphic id="932965292" BoundingBox="259.73 181.01 254.73 173.76" Z="25" GraphicType="Oval" OvalType="Filled" Center3D="254.73 173.76 0.0" MajorAxisEnd3D="259.73 181.01 0.0" MinorAxisEnd3D="252.5 189.96 0.0"/>
+			</group>
+			<group id="932965296" BoundingBox="254.71 167.55 259.8 179.85" Z="28" Integral="yes">
+				<graphic id="932965297" BoundingBox="258.92 175.66 257.44 173.57" Z="27" color="1" GraphicType="Oval" OvalType="Filled" Center3D="257.44 173.57 0.0" MajorAxisEnd3D="258.92 175.66 0.0" MinorAxisEnd3D="256.78 178.23 0.0"/>
+			</group>
+			<graphic id="932965290" BoundingBox="254.72 191.5 296.97 156.02" Z="21" GraphicType="Rectangle" RectangleType="Filled" Center3D="275.85 173.76 0.0" MajorAxisEnd3D="254.72 173.76 0.0" MinorAxisEnd3D="275.85 191.5 0.0"/>
+			<graphic id="932965295" BoundingBox="254.62 191.5 263.3 156.02" Z="24" color="18" GraphicType="Rectangle" RectangleType="Filled" Center3D="258.96 173.76 0.0" MajorAxisEnd3D="254.62 173.76 0.0" MinorAxisEnd3D="258.96 191.5 0.0"/>
+			<graphic id="932965298" BoundingBox="292.19 159.48 295.75 158.41" Z="29" color="1" GraphicType="Rectangle" RectangleType="Filled" Center3D="293.97 158.94 0.0" MajorAxisEnd3D="292.19 158.94 0.0" MinorAxisEnd3D="293.97 159.48 0.0"/>
+		</group>
+		<group id="932965304" BoundingBox="206.57 143.27 244.82 203.39" Z="32">
+			<graphic id="932995957" SupersededBy="932996215" BoundingBox="244.68 154.53 206.71 143.76" Z="20" color="18" LineType="Dashed" GraphicType="Line" HeadSize="1000"/>
+			<graphic id="932995958" SupersededBy="932996216" BoundingBox="244.68 192.13 206.71 202.91" Z="30" color="18" LineType="Dashed" GraphicType="Line" HeadSize="1000"/>
+			<arrow id="932996215" BoundingBox="206.57 143.27 244.82 155.01" Z="20" color="18" LineType="Dashed" FillType="None" ArrowheadType="Solid" HeadSize="1000" ArrowheadCenterSize="875" ArrowheadWidth="250" Head3D="244.68 154.53 0.0" Tail3D="206.71 143.76 0.0" Center3D="950.11 1272.94 0.0" MajorAxisEnd3D="955.02 1255.61 0.0" MinorAxisEnd3D="967.56 1277.89 0.0"/>
+			<arrow id="932996216" BoundingBox="206.57 191.65 244.82 203.39" Z="30" color="18" LineType="Dashed" FillType="None" ArrowheadType="Solid" HeadSize="1000" ArrowheadCenterSize="875" ArrowheadWidth="250" Head3D="244.68 192.13 0.0" Tail3D="206.71 202.91 0.0" Center3D="950.11 -926.28 0.0" MajorAxisEnd3D="955.02 -908.95 0.0" MinorAxisEnd3D="967.56 -931.23 0.0"/>
+		</group>
+		<annotation id="0" Keyword="GUID" Content="cc466264-4922-40c0-b2c4-c98728125c3f"/>
+		<annotation id="0" Keyword="Name" Content="Proteasome"/>
+	</page>
+	<page id="932996217" BoundingBox="0.0 0.0 540.0 720.0" HeaderPosition="36.0" FooterPosition="36.0" PrintTrimMarks="yes" HeightPages="1" WidthPages="1">
+		<group id="932965369" BoundingBox="144.28 191.45 224.88 260.85" Z="14" Integral="yes">
+			<graphic id="932965305" BoundingBox="223.63 247.79 145.53 192.7" Z="8" GraphicType="Rectangle" RectangleType="Filled" Center3D="184.58 220.24 0.0" MajorAxisEnd3D="223.63 220.24 0.0" MinorAxisEnd3D="184.58 247.79 0.0"/>
+			<graphic id="932965361" BoundingBox="218.31 242.81 150.85 198.2" Z="9" color="1" GraphicType="Rectangle" RectangleType="Plain" Center3D="184.58 220.51 0.0" MajorAxisEnd3D="218.31 220.51 0.0" MinorAxisEnd3D="184.58 242.81 0.0"/>
+			<graphic id="932965362" BoundingBox="218.7 246.13 214.0 245.05" Z="10" color="1" GraphicType="Rectangle" RectangleType="Filled" Center3D="216.35 245.59 0.0" MajorAxisEnd3D="218.7 245.59 0.0" MinorAxisEnd3D="216.35 246.13 0.0"/>
+			<graphic id="932965363" BoundingBox="212.61 246.13 207.91 245.05" Z="11" color="1" GraphicType="Rectangle" RectangleType="Filled" Center3D="210.26 245.59 0.0" MajorAxisEnd3D="212.61 245.59 0.0" MinorAxisEnd3D="210.26 246.13 0.0"/>
+			<graphic id="932965364" BoundingBox="191.87 258.1 177.3 248.84" Z="12" GraphicType="Rectangle" RectangleType="Filled" Center3D="184.58 253.47 0.0" MajorAxisEnd3D="191.87 253.47 0.0" MinorAxisEnd3D="184.58 258.1 0.0"/>
+			<graphic id="932965366" BoundingBox="202.25 259.6 166.91 257.59" Z="13" GraphicType="Rectangle" RectangleType="Filled" Center3D="184.58 258.6 0.0" MajorAxisEnd3D="202.25 258.6 0.0" MinorAxisEnd3D="184.58 259.6 0.0"/>
+		</group>
+		<annotation id="0" Keyword="GUID" Content="cc466264-4922-40c0-b2c4-c98728125c3f"/>
+		<annotation id="0" Keyword="Name" Content="Proteasome"/>
+	</page>
+	<page id="932996218" BoundingBox="0.0 0.0 540.0 720.0" HeaderPosition="36.0" FooterPosition="36.0" PrintTrimMarks="yes" HeightPages="1" WidthPages="1">
+		<group id="932965395" BoundingBox="91.04 24.32 211.57 108.73" Z="40" Integral="yes">
+			<group id="932965370" BoundingBox="91.04 24.32 211.57 108.73" Z="26" Integral="yes">
+				<graphic id="932965371" BoundingBox="195.64 76.61 106.95 25.57" Z="28" GraphicType="Rectangle" RectangleType="Plain" Center3D="151.29 51.09 0.0" MajorAxisEnd3D="195.64 51.09 0.0" MinorAxisEnd3D="151.29 76.61 0.0"/>
+				<graphic id="932965372" BoundingBox="114.43 32.31 188.9 70.61" Z="29" GraphicType="Rectangle" RectangleType="Plain" Center3D="151.66 51.46 0.0" MajorAxisEnd3D="114.43 51.46 0.0" MinorAxisEnd3D="151.66 32.31 0.0"/>
+				<graphic id="932995961" SupersededBy="932996219" BoundingBox="91.54 101.22 106.92 76.24" Z="30" GraphicType="Line" HeadSize="1000"/>
+				<graphic id="932995962" SupersededBy="932996220" BoundingBox="211.14 101.22 196.01 76.73" Z="31" GraphicType="Line" HeadSize="1000"/>
+				<graphic id="932995963" SupersededBy="932996221" BoundingBox="211.14 101.22 91.54 101.22" Z="32" GraphicType="Line" HeadSize="1000"/>
+				<graphic id="932995964" SupersededBy="932996222" BoundingBox="91.54 101.22 91.54 108.6" Z="33" GraphicType="Line" HeadSize="1000"/>
+				<graphic id="932995965" SupersededBy="932996223" BoundingBox="211.14 108.23 91.54 108.23" Z="34" GraphicType="Line" HeadSize="1000"/>
+				<graphic id="932995966" SupersededBy="932996224" BoundingBox="210.77 101.22 210.77 108.6" Z="35" GraphicType="Line" HeadSize="1000"/>
+				<graphic id="932995967" SupersededBy="932996225" BoundingBox="166.17 97.53 133.81 97.53" Z="36" GraphicType="Line" HeadSize="1000"/>
+				<graphic id="932995968" SupersededBy="932996226" BoundingBox="163.59 86.46 136.39 86.46" Z="37" GraphicType="Line" HeadSize="1000"/>
+				<graphic id="932995969" SupersededBy="932996227" BoundingBox="166.17 97.53 163.65 86.58" Z="38" GraphicType="Line" HeadSize="1000"/>
+				<graphic id="932995970" SupersededBy="932996228" BoundingBox="133.93 97.53 136.39 86.46" Z="39" GraphicType="Line" HeadSize="1000"/>
+				<arrow id="932996219" BoundingBox="91.12 75.98 107.35 101.48" Z="30" FillType="None" ArrowheadType="Solid" HeadSize="1000" ArrowheadCenterSize="875" ArrowheadWidth="250" Head3D="91.54 101.22 0.0" Tail3D="106.92 76.24 0.0" Center3D="436.81 629.83 0.0" MajorAxisEnd3D="466.14 629.83 0.0" MinorAxisEnd3D="436.81 659.16 0.0"/>
+				<arrow id="932996220" BoundingBox="195.58 76.47 211.57 101.48" Z="31" FillType="None" ArrowheadType="Solid" HeadSize="1000" ArrowheadCenterSize="875" ArrowheadWidth="250" Head3D="211.14 101.22 0.0" Tail3D="196.01 76.73 0.0" Center3D="600.96 630.08 0.0" MajorAxisEnd3D="572.17 630.08 0.0" MinorAxisEnd3D="600.96 658.86 0.0"/>
+				<arrow id="932996221" BoundingBox="91.54 100.72 211.14 101.72" Z="32" FillType="None" ArrowheadType="Solid" HeadSize="1000" ArrowheadCenterSize="875" ArrowheadWidth="250" Head3D="211.14 101.22 0.0" Tail3D="91.54 101.22 0.0" Center3D="548.72 644.41 0.0" MajorAxisEnd3D="668.32 644.41 0.0" MinorAxisEnd3D="548.72 764.01 0.0"/>
+				<arrow id="932996222" BoundingBox="91.04 101.22 92.04 108.6" Z="33" FillType="None" ArrowheadType="Solid" HeadSize="1000" ArrowheadCenterSize="875" ArrowheadWidth="250" Head3D="91.54 101.22 0.0" Tail3D="91.54 108.6 0.0" Center3D="429.12 648.1 0.0" MajorAxisEnd3D="436.5 648.1 0.0" MinorAxisEnd3D="429.12 655.49 0.0"/>
+				<arrow id="932996223" BoundingBox="91.54 107.73 211.14 108.73" Z="34" FillType="None" ArrowheadType="Solid" HeadSize="1000" ArrowheadCenterSize="875" ArrowheadWidth="250" Head3D="211.14 108.23 0.0" Tail3D="91.54 108.23 0.0" Center3D="548.72 651.42 0.0" MajorAxisEnd3D="668.32 651.42 0.0" MinorAxisEnd3D="548.72 771.03 0.0"/>
+				<arrow id="932996224" BoundingBox="210.27 101.22 211.27 108.6" Z="35" FillType="None" ArrowheadType="Solid" HeadSize="1000" ArrowheadCenterSize="875" ArrowheadWidth="250" Head3D="210.77 101.22 0.0" Tail3D="210.77 108.6 0.0" Center3D="548.35 648.1 0.0" MajorAxisEnd3D="555.74 648.1 0.0" MinorAxisEnd3D="548.35 655.49 0.0"/>
+				<arrow id="932996225" BoundingBox="133.81 97.03 166.17 98.03" Z="36" FillType="None" ArrowheadType="Solid" HeadSize="1000" ArrowheadCenterSize="875" ArrowheadWidth="250" Head3D="166.17 97.53 0.0" Tail3D="133.81 97.53 0.0" Center3D="524.91 638.87 0.0" MajorAxisEnd3D="557.27 638.87 0.0" MinorAxisEnd3D="524.91 671.24 0.0"/>
+				<arrow id="932996226" BoundingBox="136.39 85.96 163.59 86.96" Z="37" FillType="None" ArrowheadType="Solid" HeadSize="1000" ArrowheadCenterSize="875" ArrowheadWidth="250" Head3D="163.59 86.46 0.0" Tail3D="136.39 86.46 0.0" Center3D="523.56 622.26 0.0" MajorAxisEnd3D="550.75 622.26 0.0" MinorAxisEnd3D="523.56 649.46 0.0"/>
+				<arrow id="932996227" BoundingBox="163.16 86.47 166.66 97.64" Z="38" FillType="None" ArrowheadType="Solid" HeadSize="1000" ArrowheadCenterSize="875" ArrowheadWidth="250" Head3D="166.17 97.53 0.0" Tail3D="163.65 86.58 0.0" Center3D="539.8 633.4 0.0" MajorAxisEnd3D="528.56 633.4 0.0" MinorAxisEnd3D="539.8 644.64 0.0"/>
+				<arrow id="932996228" BoundingBox="133.44 86.35 136.88 97.64" Z="39" FillType="None" ArrowheadType="Solid" HeadSize="1000" ArrowheadCenterSize="875" ArrowheadWidth="250" Head3D="133.93 97.53 0.0" Tail3D="136.39 86.46 0.0" Center3D="493.94 633.34 0.0" MajorAxisEnd3D="482.59 633.34 0.0" MinorAxisEnd3D="493.94 644.68 0.0"/>
+			</group>
+			<graphic id="932965394" BoundingBox="188.48 70.2 115.19 32.59" Z="27" color="1" GraphicType="Rectangle" RectangleType="Filled" Center3D="151.84 51.39 0.0" MajorAxisEnd3D="188.48 51.39 0.0" MinorAxisEnd3D="151.84 70.2 0.0"/>
+		</group>
+	</page>
+	<page id="932996229" BoundingBox="0.0 0.0 540.0 720.0" HeaderPosition="36.0" FooterPosition="36.0" PrintTrimMarks="yes" HeightPages="1" WidthPages="1">
+		<group id="932965396" BoundingBox="50.59 39.22 76.15 70.44" Z="1" Integral="yes">
+			<graphic id="932995972" SupersededBy="932996230" BoundingBox="73.77 49.4 76.41 64.84" Z="5" GraphicType="Arc" HeadSize="1000" AngularSize="90.0"/>
+			<graphic id="932995973" SupersededBy="932996231" BoundingBox="72.25 40.47 75.14 64.09" Z="6" GraphicType="Arc" HeadSize="1000" AngularSize="90.0"/>
+			<graphic id="932995974" SupersededBy="932996232" BoundingBox="74.9 58.48 76.13 64.16" Z="7" GraphicType="Arc" HeadSize="1000" AngularSize="90.0"/>
+			<arrow id="932996230" BoundingBox="59.53 48.15 75.02 68.72" Z="5" FillType="None" ArrowheadType="Solid" HeadSize="800" ArrowheadCenterSize="700" ArrowheadWidth="200" AngularSize="-90.0" Head3D="73.77 49.4 0.0" Tail3D="60.97 67.47 0.0" Center3D="76.41 64.84 0.0" MajorAxisEnd3D="85.46 52.06 0.0" MinorAxisEnd3D="89.18 73.89 0.0"/>
+			<arrow id="932996231" BoundingBox="50.59 39.22 73.5 70.44" Z="6" FillType="None" ArrowheadType="Solid" HeadSize="800" ArrowheadCenterSize="700" ArrowheadWidth="200" AngularSize="-90.0" Head3D="72.25 40.47 0.0" Tail3D="51.9 69.19 0.0" Center3D="75.14 64.09 0.0" MajorAxisEnd3D="89.53 43.79 0.0" MinorAxisEnd3D="93.62 77.18 0.0"/>
+			<arrow id="932996232" BoundingBox="69.11 57.23 76.15 66.14" Z="7" FillType="None" ArrowheadType="Solid" HeadSize="800" ArrowheadCenterSize="700" ArrowheadWidth="200" AngularSize="-90.0" Head3D="74.9 58.48 0.0" Tail3D="70.36 64.89 0.0" Center3D="76.13 64.16 0.0" MajorAxisEnd3D="79.35 59.63 0.0" MinorAxisEnd3D="81.09 67.68 0.0"/>
+		</group>
+	</page>
+	<page id="932996233" BoundingBox="0.0 0.0 540.0 720.0" HeaderPosition="36.0" FooterPosition="36.0" PrintTrimMarks="yes" HeightPages="1" WidthPages="1">
+		<group id="932965571" BoundingBox="214.64 194.66 294.94 250.03" Z="8" Integral="yes">
+			<graphic id="932965569" BoundingBox="293.81 249.25 215.89 195.44" Z="5" GraphicType="Rectangle" RectangleType="RoundEdge Filled" CornerRadius="600" Center3D="254.85 222.35 0.0" MajorAxisEnd3D="293.81 222.35 0.0" MinorAxisEnd3D="254.85 249.25 0.0"/>
+			<graphic id="932965564" BoundingBox="285.5 244.65 220.6 200.04" Z="6" color="1" GraphicType="Rectangle" RectangleType="Plain" Center3D="253.05 222.35 0.0" MajorAxisEnd3D="285.5 222.35 0.0" MinorAxisEnd3D="253.05 244.65 0.0"/>
+			<graphic id="932965570" BoundingBox="292.03 222.35 289.79 222.35" Z="7" color="1" GraphicType="Oval" OvalType="Circle Filled" Center3D="289.79 222.35 0.0" MajorAxisEnd3D="292.03 222.35 0.0" MinorAxisEnd3D="289.79 224.59 0.0"/>
+		</group>
+		<annotation id="0" Keyword="GUID" Content="cc466264-4922-40c0-b2c4-c98728125c3f"/>
+		<annotation id="0" Keyword="Name" Content="Proteasome"/>
+	</page>
+	<page id="932996234" BoundingBox="0.0 0.0 540.0 720.0" HeaderPosition="36.0" FooterPosition="36.0" PrintTrimMarks="yes" HeightPages="1" WidthPages="1"/>
+	<page id="932996235" BoundingBox="0.0 0.0 540.0 720.0" HeaderPosition="36.0" FooterPosition="36.0" PrintTrimMarks="yes" HeightPages="1" WidthPages="1">
+		<group id="932965554" BoundingBox="282.79 125.07 313.75 214.62" Z="8" Integral="yes">
+			<graphic id="932965551" BoundingBox="312.97 213.38 284.04 135.7" Z="5" GraphicType="Rectangle" RectangleType="RoundEdge Filled" CornerRadius="600" Center3D="298.51 174.54 0.0" MajorAxisEnd3D="312.97 174.54 0.0" MinorAxisEnd3D="298.51 213.38 0.0"/>
+			<graphic id="932965552" BoundingBox="303.53 137.25 293.36 129.7" Z="6" GraphicType="Rectangle" RectangleType="Filled" Center3D="298.44 133.47 0.0" MajorAxisEnd3D="303.53 133.47 0.0" MinorAxisEnd3D="298.44 137.25 0.0"/>
+			<graphic id="932965553" BoundingBox="308.78 130.5 288.11 126.32" Z="7" GraphicType="Rectangle" RectangleType="Filled" Center3D="298.44 128.41 0.0" MajorAxisEnd3D="308.78 128.41 0.0" MinorAxisEnd3D="298.44 130.5 0.0"/>
+		</group>
+		<annotation id="0" Keyword="GUID" Content="cc466264-4922-40c0-b2c4-c98728125c3f"/>
+		<annotation id="0" Keyword="Name" Content="Proteasome"/>
+	</page>
+	<page id="932996236" BoundingBox="0.0 0.0 540.0 720.0" HeaderPosition="36.0" FooterPosition="36.0" PrintTrimMarks="yes" HeightPages="1" WidthPages="1">
+		<group id="932956689" BoundingBox="161.7 113.1 182.39 163.33" Z="52">
+			<group id="932956690" BoundingBox="161.7 113.1 182.39 163.33" Z="53">
+				<graphic id="932956691" BoundingBox="172.05 162.08 172.05 138.21" Z="79" GraphicType="Oval" OvalType="" Center3D="172.05 138.21 0.0" MajorAxisEnd3D="172.05 162.08 0.0" MinorAxisEnd3D="162.76 138.21 0.0"/>
+			</group>
+			<graphic id="932956692" BoundingBox="171.96 161.65 171.96 138.21" Z="78" color="13" GraphicType="Oval" OvalType="Filled" Center3D="171.96 138.21 0.0" MajorAxisEnd3D="171.96 161.65 0.0" MinorAxisEnd3D="163.21 138.21 0.0"/>
+		</group>
+		<group id="932956693" BoundingBox="157.84 113.1 178.72 163.33" Z="54">
+			<group id="932956694" BoundingBox="157.84 113.1 178.72 163.33" Z="55">
+				<graphic id="932956695" BoundingBox="168.19 162.08 168.19 138.21" Z="81" GraphicType="Oval" OvalType="" Center3D="168.19 138.21 0.0" MajorAxisEnd3D="168.19 162.08 0.0" MinorAxisEnd3D="158.9 138.21 0.0"/>
+			</group>
+			<graphic id="932956696" BoundingBox="168.1 161.65 168.1 138.21" Z="80" color="13" GraphicType="Oval" OvalType="Filled" Center3D="168.1 138.21 0.0" MajorAxisEnd3D="168.1 161.65 0.0" MinorAxisEnd3D="159.35 138.21 0.0"/>
+		</group>
+		<group id="932956697" BoundingBox="153.91 113.1 174.6 163.33" Z="56">
+			<group id="932956698" BoundingBox="153.91 113.1 174.6 163.33" Z="57">
+				<graphic id="932956699" BoundingBox="164.25 162.08 164.25 138.21" Z="83" GraphicType="Oval" OvalType="" Center3D="164.25 138.21 0.0" MajorAxisEnd3D="164.25 162.08 0.0" MinorAxisEnd3D="154.97 138.21 0.0"/>
+			</group>
+			<graphic id="932956700" BoundingBox="164.16 161.65 164.16 138.21" Z="82" color="13" GraphicType="Oval" OvalType="Filled" Center3D="164.16 138.21 0.0" MajorAxisEnd3D="164.16 161.65 0.0" MinorAxisEnd3D="155.42 138.21 0.0"/>
+		</group>
+		<group id="932956701" BoundingBox="149.82 113.1 170.7 163.33" Z="58">
+			<group id="932956702" BoundingBox="149.82 113.1 170.7 163.33" Z="59">
+				<graphic id="932956703" BoundingBox="160.36 162.08 160.36 138.21" Z="85" GraphicType="Oval" OvalType="" Center3D="160.36 138.21 0.0" MajorAxisEnd3D="160.36 162.08 0.0" MinorAxisEnd3D="151.07 138.21 0.0"/>
+			</group>
+			<graphic id="932956704" BoundingBox="160.27 161.65 160.27 138.21" Z="84" color="13" GraphicType="Oval" OvalType="Filled" Center3D="160.27 138.21 0.0" MajorAxisEnd3D="160.27 161.65 0.0" MinorAxisEnd3D="151.52 138.21 0.0"/>
+		</group>
+		<group id="932956705" BoundingBox="145.96 113.1 166.84 163.33" Z="60">
+			<group id="932956706" BoundingBox="145.96 113.1 166.84 163.33" Z="61">
+				<graphic id="932956707" BoundingBox="156.5 162.08 156.5 138.21" Z="87" GraphicType="Oval" OvalType="" Center3D="156.5 138.21 0.0" MajorAxisEnd3D="156.5 162.08 0.0" MinorAxisEnd3D="147.21 138.21 0.0"/>
+			</group>
+			<graphic id="932956708" BoundingBox="156.41 161.65 156.41 138.21" Z="86" color="13" GraphicType="Oval" OvalType="Filled" Center3D="156.41 138.21 0.0" MajorAxisEnd3D="156.41 161.65 0.0" MinorAxisEnd3D="147.66 138.21 0.0"/>
+		</group>
+		<group id="932956709" BoundingBox="142.25 113.1 162.94 163.33" Z="62">
+			<group id="932956710" BoundingBox="142.25 113.1 162.94 163.33" Z="63">
+				<graphic id="932956711" BoundingBox="152.6 162.08 152.6 138.21" Z="89" GraphicType="Oval" OvalType="" Center3D="152.6 138.21 0.0" MajorAxisEnd3D="152.6 162.08 0.0" MinorAxisEnd3D="143.31 138.21 0.0"/>
+			</group>
+			<graphic id="932956712" BoundingBox="152.51 161.65 152.51 138.21" Z="88" color="13" GraphicType="Oval" OvalType="Filled" Center3D="152.51 138.21 0.0" MajorAxisEnd3D="152.51 161.65 0.0" MinorAxisEnd3D="143.76 138.21 0.0"/>
+		</group>
+		<group id="932956713" BoundingBox="138.32 113.1 159.2 163.33" Z="64">
+			<group id="932956714" BoundingBox="138.32 113.1 159.2 163.33" Z="65">
+				<graphic id="932956715" BoundingBox="148.66 162.08 148.66 138.21" Z="91" GraphicType="Oval" OvalType="" Center3D="148.66 138.21 0.0" MajorAxisEnd3D="148.66 162.08 0.0" MinorAxisEnd3D="139.38 138.21 0.0"/>
+			</group>
+			<graphic id="932956716" BoundingBox="148.57 161.65 148.57 138.21" Z="90" color="13" GraphicType="Oval" OvalType="Filled" Center3D="148.57 138.21 0.0" MajorAxisEnd3D="148.57 161.65 0.0" MinorAxisEnd3D="139.83 138.21 0.0"/>
+		</group>
+		<group id="932956717" BoundingBox="134.42 113.1 155.11 163.33" Z="66">
+			<group id="932956718" BoundingBox="134.42 113.1 155.11 163.33" Z="67">
+				<graphic id="932956719" BoundingBox="144.76 162.08 144.76 138.21" Z="93" GraphicType="Oval" OvalType="" Center3D="144.76 138.21 0.0" MajorAxisEnd3D="144.76 162.08 0.0" MinorAxisEnd3D="135.48 138.21 0.0"/>
+			</group>
+			<graphic id="932956720" BoundingBox="144.68 161.65 144.68 138.21" Z="92" color="13" GraphicType="Oval" OvalType="Filled" Center3D="144.68 138.21 0.0" MajorAxisEnd3D="144.68 161.65 0.0" MinorAxisEnd3D="135.93 138.21 0.0"/>
+		</group>
+		<group id="932956721" BoundingBox="119.68 137.27 196.12 138.27" Z="68">
+			<group id="932956722" BoundingBox="119.68 137.27 139.7 138.27" Z="69">
+				<group id="932956723" BoundingBox="119.68 137.27 139.7 138.27" Z="70">
+					<group id="932956724" BoundingBox="119.68 137.27 139.7 138.27" Z="71">
+						<graphic id="932995979" SupersededBy="932996237" BoundingBox="139.7 137.77 119.68 137.77" Z="99" GraphicType="Line" HeadSize="1000"/>
+						<arrow id="932996237" BoundingBox="119.68 137.27 139.7 138.27" Z="99" FillType="None" ArrowheadType="Solid" HeadSize="1000" ArrowheadCenterSize="875" ArrowheadWidth="250" Head3D="139.7 137.77 0.0" Tail3D="119.68 137.77 0.0" Center3D="119.68 137.77 0.0" MajorAxisEnd3D="119.68 132.75 0.0" MinorAxisEnd3D="124.7 137.77 0.0"/>
+					</group>
+				</group>
+			</group>
+			<graphic id="932995980" SupersededBy="932996238" BoundingBox="196.12 137.77 181.34 137.77" Z="94" GraphicType="Line" HeadSize="1000"/>
+			<arrow id="932996238" BoundingBox="181.34 137.27 196.12 138.27" Z="94" FillType="None" ArrowheadType="Solid" HeadSize="1000" ArrowheadCenterSize="875" ArrowheadWidth="250" Head3D="196.12 137.77 0.0" Tail3D="181.34 137.77 0.0" Center3D="286.98 206.66 0.0" MajorAxisEnd3D="286.98 202.95 0.0" MinorAxisEnd3D="290.69 206.66 0.0"/>
+		</group>
+		<group id="932956729" BoundingBox="130.2 113.1 151.08 163.33" Z="72">
+			<group id="932956730" BoundingBox="130.2 113.1 151.08 163.33" Z="73">
+				<graphic id="932956731" BoundingBox="140.73 162.08 140.73 138.21" Z="96" GraphicType="Oval" OvalType="" Center3D="140.73 138.21 0.0" MajorAxisEnd3D="140.73 162.08 0.0" MinorAxisEnd3D="131.45 138.21 0.0"/>
+			</group>
+			<graphic id="932956732" BoundingBox="140.64 161.65 140.64 138.21" Z="95" color="13" GraphicType="Oval" OvalType="Filled" Center3D="140.64 138.21 0.0" MajorAxisEnd3D="140.64 161.65 0.0" MinorAxisEnd3D="131.9 138.21 0.0"/>
+		</group>
+		<group id="932956733" BoundingBox="133.1 119.87 147.48 156.21" Z="74">
+			<graphic id="932956734" BoundingBox="140.07 154.96 140.07 138.18" Z="97" color="1" GraphicType="Oval" OvalType="Filled" Center3D="140.07 138.18 0.0" MajorAxisEnd3D="140.07 154.96 0.0" MinorAxisEnd3D="134.23 138.18 0.0"/>
+			<graphic id="932956735" BoundingBox="140.15 155.3 140.15 138.21" Z="98" GraphicType="Oval" OvalType="" Center3D="140.15 138.21 0.0" MajorAxisEnd3D="140.15 155.3 0.0" MinorAxisEnd3D="133.95 138.21 0.0"/>
+		</group>
+		<graphic id="932995981" SupersededBy="932996239" BoundingBox="156.57 86.27 156.57 104.72" Z="75" GraphicType="Line" ArrowType="Hollow" HeadSize="600"/>
+		<graphic id="932956682" BoundingBox="187.8 104.73 126.09 171.75" Z="76" GraphicType="Rectangle" RectangleType="RoundEdge" CornerRadius="600" Center3D="156.94 138.24 0.0" MajorAxisEnd3D="187.8 138.24 0.0" MinorAxisEnd3D="156.94 104.73 0.0"/>
+		<graphic id="932956683" BoundingBox="158.53 99.85 154.69 107.75" Z="77" color="1" GraphicType="Rectangle" RectangleType="Filled" Center3D="156.61 103.8 0.0" MajorAxisEnd3D="158.53 103.8 0.0" MinorAxisEnd3D="156.61 99.85 0.0"/>
+		<arrow id="932996239" BoundingBox="149.79 85.02 163.82 105.97" Z="75" FillType="None" ArrowheadType="Hollow" ArrowheadHead="Full" HeadSize="600" ArrowheadCenterSize="600" ArrowheadWidth="150" ArrowShaftSpacing="600" Head3D="156.57 86.27 0.0" Tail3D="156.57 104.72 0.0" Center3D="387.27 -30.19 0.0" MajorAxisEnd3D="415.62 -30.19 0.0" MinorAxisEnd3D="387.27 -48.64 0.0"/>
+	</page>
+	<page id="932996240" BoundingBox="0.0 0.0 540.0 720.0" HeaderPosition="36.0" FooterPosition="36.0" PrintTrimMarks="yes" HeightPages="1" WidthPages="1">
+		<group id="932956633" BoundingBox="130.89 115.72 182.42 176.02" Z="29">
+			<group id="932956634" BoundingBox="130.89 115.72 182.42 172.68" Z="30">
+				<group id="932956635" BoundingBox="130.89 115.72 182.42 172.68" Z="31">
+					<fragment id="932956636" BoundingBox="130.89 123.5 182.42 172.68" Z="32">
+						<graphic id="932995983" BoundingBox="132.38 161.67 156.78 161.67" Z="38" GraphicType="Orbital" OrbitalType="oval" FadePercent="300" Center3D="156.78 161.67 0.0" MajorAxisEnd3D="132.38 161.67 0.0" MinorAxisEnd3D="156.78 171.43 0.0"/>
+						<graphic id="932995984" BoundingBox="132.38 157.79 156.78 157.79" Z="39" GraphicType="Orbital" OrbitalType="oval" FadePercent="300" Center3D="156.78 157.79 0.0" MajorAxisEnd3D="132.38 157.79 0.0" MinorAxisEnd3D="156.78 167.54 0.0"/>
+						<graphic id="932995985" BoundingBox="132.38 153.9 156.78 153.9" Z="40" GraphicType="Orbital" OrbitalType="oval" FadePercent="300" Center3D="156.78 153.9 0.0" MajorAxisEnd3D="132.38 153.9 0.0" MinorAxisEnd3D="156.78 163.66 0.0"/>
+						<graphic id="932995986" BoundingBox="132.14 150.02 156.53 150.02" Z="41" GraphicType="Orbital" OrbitalType="oval" FadePercent="300" Center3D="156.53 150.02 0.0" MajorAxisEnd3D="132.14 150.02 0.0" MinorAxisEnd3D="156.53 159.78 0.0"/>
+						<graphic id="932995987" BoundingBox="132.14 146.14 156.53 146.14" Z="42" GraphicType="Orbital" OrbitalType="oval" FadePercent="300" Center3D="156.53 146.14 0.0" MajorAxisEnd3D="132.14 146.14 0.0" MinorAxisEnd3D="156.53 155.9 0.0"/>
+						<graphic id="932995988" BoundingBox="132.38 142.26 156.78 142.26" Z="43" GraphicType="Orbital" OrbitalType="oval" FadePercent="300" Center3D="156.78 142.26 0.0" MajorAxisEnd3D="132.38 142.26 0.0" MinorAxisEnd3D="156.78 152.02 0.0"/>
+						<graphic id="932995989" BoundingBox="132.38 138.38 156.78 138.38" Z="44" GraphicType="Orbital" OrbitalType="oval" FadePercent="300" Center3D="156.78 138.38 0.0" MajorAxisEnd3D="132.38 138.38 0.0" MinorAxisEnd3D="156.78 148.13 0.0"/>
+						<graphic id="932995990" BoundingBox="132.38 134.31 156.78 134.31" Z="45" GraphicType="Orbital" OrbitalType="oval" FadePercent="300" Center3D="156.78 134.31 0.0" MajorAxisEnd3D="132.38 134.31 0.0" MinorAxisEnd3D="156.78 144.07 0.0"/>
+						<graphic id="932995991" BoundingBox="155.38 135.59 156.65 135.34" Z="46" GraphicType="Orbital" OrbitalType="oval" Center3D="156.65 135.34 0.0" MajorAxisEnd3D="155.38 135.59 0.0" MinorAxisEnd3D="154.68 135.18 0.0"/>
+						<graphic id="932995992" BoundingBox="139.24 134.14 156.31 134.14" Z="47" GraphicType="Orbital" OrbitalType="oval" Center3D="156.31 134.14 0.0" MajorAxisEnd3D="139.24 134.14 0.0" MinorAxisEnd3D="156.31 140.97 0.0"/>
+					</fragment>
+					<graphic id="932995993" SupersededBy="932996241" BoundingBox="139.56 135.74 139.56 115.72" Z="48" GraphicType="Line" HeadSize="1000"/>
+					<arrow id="932996241" BoundingBox="139.06 115.72 140.06 135.74" Z="48" FillType="None" ArrowheadType="Solid" HeadSize="1000" ArrowheadCenterSize="875" ArrowheadWidth="250" Head3D="139.56 135.74 0.0" Tail3D="139.56 115.72 0.0" Center3D="292.04 176.45 0.0" MajorAxisEnd3D="312.06 176.45 0.0" MinorAxisEnd3D="292.04 196.46 0.0"/>
+				</group>
+				<graphic id="932995994" SupersededBy="932996242" BoundingBox="173.58 135.74 173.58 115.72" Z="49" GraphicType="Line" HeadSize="1000"/>
+				<arrow id="932996242" BoundingBox="173.08 115.72 174.08 135.74" Z="49" FillType="None" ArrowheadType="Solid" HeadSize="1000" ArrowheadCenterSize="875" ArrowheadWidth="250" Head3D="173.58 135.74 0.0" Tail3D="173.58 115.72 0.0" Center3D="326.06 176.45 0.0" MajorAxisEnd3D="346.08 176.45 0.0" MinorAxisEnd3D="326.06 196.46 0.0"/>
+			</group>
+			<fragment id="932956654" BoundingBox="131.13 154.2 182.42 176.02" Z="33">
+				<graphic id="932995995" BoundingBox="132.38 165.21 156.78 165.21" Z="37" GraphicType="Orbital" OrbitalType="oval" FadePercent="300" Center3D="156.78 165.21 0.0" MajorAxisEnd3D="132.38 165.21 0.0" MinorAxisEnd3D="156.78 174.97 0.0"/>
+			</fragment>
+		</group>
+		<graphic id="932995996" SupersededBy="932996243" BoundingBox="155.82 86.27 155.82 104.72" Z="34" GraphicType="Line" ArrowType="Hollow" HeadSize="600"/>
+		<graphic id="932956656" BoundingBox="187.8 104.73 126.09 186.28" Z="35" GraphicType="Rectangle" RectangleType="RoundEdge" CornerRadius="600" Center3D="156.94 145.5 0.0" MajorAxisEnd3D="187.8 145.5 0.0" MinorAxisEnd3D="156.94 104.73 0.0"/>
+		<graphic id="932956657" BoundingBox="157.78 99.85 153.94 107.75" Z="36" color="1" GraphicType="Rectangle" RectangleType="Filled" Center3D="155.86 103.8 0.0" MajorAxisEnd3D="157.78 103.8 0.0" MinorAxisEnd3D="155.86 99.85 0.0"/>
+		<graphic id="932995997" SupersededBy="932996244" BoundingBox="139.56 115.72 108.62 115.72" Z="50" GraphicType="Line" HeadSize="1000"/>
+		<graphic id="932995998" SupersededBy="932996245" BoundingBox="204.44 115.72 173.5 115.72" Z="51" GraphicType="Line" HeadSize="1000"/>
+		<arrow id="932996243" BoundingBox="149.04 85.02 163.07 105.97" Z="34" FillType="None" ArrowheadType="Hollow" ArrowheadHead="Full" HeadSize="600" ArrowheadCenterSize="600" ArrowheadWidth="150" ArrowShaftSpacing="600" Head3D="155.82 86.27 0.0" Tail3D="155.82 104.72 0.0" Center3D="386.52 -30.19 0.0" MajorAxisEnd3D="414.87 -30.19 0.0" MinorAxisEnd3D="386.52 -48.64 0.0"/>
+		<arrow id="932996244" BoundingBox="108.62 115.22 139.56 116.22" Z="50" FillType="None" ArrowheadType="Solid" HeadSize="1000" ArrowheadCenterSize="875" ArrowheadWidth="250" Head3D="139.56 115.72 0.0" Tail3D="108.62 115.72 0.0" Center3D="193.47 173.75 0.0" MajorAxisEnd3D="224.4 173.75 0.0" MinorAxisEnd3D="193.47 204.69 0.0"/>
+		<arrow id="932996245" BoundingBox="173.5 115.22 204.44 116.22" Z="51" FillType="None" ArrowheadType="Solid" HeadSize="1000" ArrowheadCenterSize="875" ArrowheadWidth="250" Head3D="204.44 115.72 0.0" Tail3D="173.5 115.72 0.0" Center3D="258.34 173.75 0.0" MajorAxisEnd3D="289.28 173.75 0.0" MinorAxisEnd3D="258.34 204.69 0.0"/>
+	</page>
+	<page id="932996246" BoundingBox="0.0 0.0 540.0 720.0" HeaderPosition="36.0" FooterPosition="36.0" PrintTrimMarks="yes" HeightPages="1" WidthPages="1">
+		<group id="932995728" BoundingBox="155.15 400.69 335.12 494.01" Z="52" Integral="yes">
+			<group id="932995729" BoundingBox="155.15 400.69 335.12 494.01" Z="53" Integral="yes">
+				<graphic id="932996000" SupersededBy="932996247" BoundingBox="175.6 409.89 179.74 426.09" Z="69" GraphicType="Arc" HeadSize="1000" AngularSize="90.0"/>
+				<graphic id="932996001" SupersededBy="932996248" BoundingBox="173.79 403.35 179.44 426.09" Z="70" GraphicType="Arc" HeadSize="1000" AngularSize="90.0"/>
+				<graphic id="932996002" SupersededBy="932996249" BoundingBox="313.41 485.06 308.85 468.99" Z="71" GraphicType="Arc" HeadSize="1000" AngularSize="90.0"/>
+				<graphic id="932996003" SupersededBy="932996250" BoundingBox="314.57 491.78 309.16 468.99" Z="72" GraphicType="Arc" HeadSize="1000" AngularSize="90.0"/>
+				<graphic id="932996004" SupersededBy="932996251" BoundingBox="326.74 421.85 310.36 425.08" Z="73" GraphicType="Arc" HeadSize="1000" AngularSize="90.0"/>
+				<graphic id="932996005" SupersededBy="932996252" BoundingBox="333.87 421.89 310.68 425.08" Z="74" GraphicType="Arc" HeadSize="1000" AngularSize="90.0"/>
+				<graphic id="932996006" SupersededBy="932996253" BoundingBox="163.76 472.59 180.25 469.99" Z="75" GraphicType="Arc" HeadSize="1000" AngularSize="90.0"/>
+				<graphic id="932996007" SupersededBy="932996254" BoundingBox="156.8 473.71 179.93 469.99" Z="76" GraphicType="Arc" HeadSize="1000" AngularSize="90.0"/>
+				<arrow id="932996247" BoundingBox="162.2 408.64 176.85 423.67" Z="69" FillType="None" ArrowheadType="Solid" HeadSize="800" ArrowheadCenterSize="700" ArrowheadWidth="200" AngularSize="-63.0" Head3D="175.6 409.89 0.0" Tail3D="163.45 422.42 0.0" Center3D="179.74 426.09 0.0" MajorAxisEnd3D="196.43 426.09 0.0" MinorAxisEnd3D="179.74 442.8 0.0"/>
+				<arrow id="932996248" BoundingBox="155.15 402.1 175.04 423.21" Z="70" FillType="None" ArrowheadType="Solid" HeadSize="800" ArrowheadCenterSize="700" ArrowheadWidth="200" AngularSize="-65.9" Head3D="173.79 403.35 0.0" Tail3D="156.4 421.96 0.0" Center3D="179.44 426.09 0.0" MajorAxisEnd3D="202.85 426.09 0.0" MinorAxisEnd3D="179.44 449.52 0.0"/>
+				<arrow id="932996249" BoundingBox="312.16 470.19 326.61 486.31" Z="71" FillType="None" ArrowheadType="Solid" HeadSize="800" ArrowheadCenterSize="700" ArrowheadWidth="200" AngularSize="-65.7" Head3D="313.41 485.06 0.0" Tail3D="325.36 471.44 0.0" Center3D="308.85 468.99 0.0" MajorAxisEnd3D="292.15 468.99 0.0" MinorAxisEnd3D="308.85 452.27 0.0"/>
+				<arrow id="932996250" BoundingBox="313.32 470.68 333.63 493.03" Z="72" FillType="None" ArrowheadType="Solid" HeadSize="800" ArrowheadCenterSize="700" ArrowheadWidth="200" AngularSize="-69.4" Head3D="314.57 491.78 0.0" Tail3D="332.38 471.93 0.0" Center3D="309.16 468.99 0.0" MajorAxisEnd3D="285.75 468.99 0.0" MinorAxisEnd3D="309.16 445.56 0.0"/>
+				<arrow id="932996251" BoundingBox="312.51 407.49 327.99 423.1" Z="73" FillType="None" ArrowheadType="Solid" HeadSize="800" ArrowheadCenterSize="700" ArrowheadWidth="200" AngularSize="-67.1" Head3D="326.74 421.85 0.0" Tail3D="313.76 408.74 0.0" Center3D="310.36 425.08 0.0" MajorAxisEnd3D="293.67 425.08 0.0" MinorAxisEnd3D="310.36 441.78 0.0"/>
+				<arrow id="932996252" BoundingBox="312.96 400.69 335.12 423.14" Z="74" FillType="None" ArrowheadType="Solid" HeadSize="800" ArrowheadCenterSize="700" ArrowheadWidth="200" AngularSize="-73.5" Head3D="333.87 421.89 0.0" Tail3D="314.21 401.94 0.0" Center3D="310.68 425.08 0.0" MajorAxisEnd3D="287.27 425.08 0.0" MinorAxisEnd3D="310.68 448.49 0.0"/>
+				<arrow id="932996253" BoundingBox="162.51 471.34 176.94 487.3" Z="75" FillType="None" ArrowheadType="Solid" HeadSize="800" ArrowheadCenterSize="700" ArrowheadWidth="200" AngularSize="-65.2" Head3D="163.76 472.59 0.0" Tail3D="175.69 486.05 0.0" Center3D="180.25 469.99 0.0" MajorAxisEnd3D="196.94 469.99 0.0" MinorAxisEnd3D="180.25 453.3 0.0"/>
+				<arrow id="932996254" BoundingBox="155.55 472.46 175.73 494.01" Z="76" FillType="None" ArrowheadType="Solid" HeadSize="800" ArrowheadCenterSize="700" ArrowheadWidth="200" AngularSize="-67.4" Head3D="156.8 473.71 0.0" Tail3D="174.48 492.76 0.0" Center3D="179.93 469.99 0.0" MajorAxisEnd3D="203.36 469.99 0.0" MinorAxisEnd3D="179.93 446.58 0.0"/>
+			</group>
+			<group id="932995744" BoundingBox="171.1 416.77 318.46 477.89" Z="54" Integral="yes">
+				<group id="932995745" BoundingBox="177.62 421.43 310.0 471.85" Z="55" Integral="yes">
+					<group id="932995746" BoundingBox="177.62 421.43 202.72 446.53" Z="56" Integral="yes">
+						<graphic id="932995747" BoundingBox="202.22 433.98 190.17 433.98" Z="63" GraphicType="Oval" OvalType="Circle" Center3D="190.17 433.98 0.0" MajorAxisEnd3D="202.22 433.98 0.0" MinorAxisEnd3D="190.17 446.03 0.0"/>
+						<graphic id="932996008" SupersededBy="932996255" BoundingBox="189.99 426.12 190.98 434.59" Z="77" GraphicType="Arc" HeadSize="1000" AngularSize="90.0"/>
+						<arrow id="932996255" BoundingBox="181.23 424.87 191.24 435.19" Z="77" FillType="None" ArrowheadType="Solid" HeadSize="800" ArrowheadCenterSize="700" ArrowheadWidth="200" AngularSize="-79.0" Head3D="189.99 426.12 0.0" Tail3D="182.48 433.94 0.0" Center3D="190.98 434.59 0.0" MajorAxisEnd3D="199.5 434.59 0.0" MinorAxisEnd3D="190.98 443.12 0.0"/>
+					</group>
+					<group id="932995750" BoundingBox="198.9 446.77 223.96 471.83" Z="57" Integral="yes">
+						<graphic id="932995751" BoundingBox="223.46 459.3 211.43 459.3" Z="64" GraphicType="Oval" OvalType="Circle" Center3D="211.43 459.3 0.0" MajorAxisEnd3D="223.46 459.3 0.0" MinorAxisEnd3D="211.43 471.33 0.0"/>
+						<graphic id="932996009" SupersededBy="932996256" BoundingBox="210.94 451.29 211.93 459.73" Z="79" GraphicType="Arc" HeadSize="1000" AngularSize="90.0"/>
+						<arrow id="932996256" BoundingBox="202.21 450.04 212.19 460.34" Z="79" FillType="None" ArrowheadType="Solid" HeadSize="800" ArrowheadCenterSize="700" ArrowheadWidth="200" AngularSize="-79.0" Head3D="210.94 451.29 0.0" Tail3D="203.46 459.09 0.0" Center3D="211.93 459.73 0.0" MajorAxisEnd3D="220.41 459.73 0.0" MinorAxisEnd3D="211.93 468.24 0.0"/>
+					</group>
+					<group id="932995754" BoundingBox="220.88 421.43 245.97 446.53" Z="58" Integral="yes">
+						<graphic id="932995755" BoundingBox="245.47 433.98 233.42 433.98" Z="65" GraphicType="Oval" OvalType="Circle" Center3D="233.42 433.98 0.0" MajorAxisEnd3D="245.47 433.98 0.0" MinorAxisEnd3D="233.42 446.03 0.0"/>
+						<graphic id="932995999" SupersededBy="932996257" BoundingBox="233.13 425.91 234.11 434.38" Z="78" GraphicType="Arc" HeadSize="1000" AngularSize="90.0"/>
+						<arrow id="932996257" BoundingBox="224.38 424.66 234.38 434.98" Z="78" FillType="None" ArrowheadType="Solid" HeadSize="800" ArrowheadCenterSize="700" ArrowheadWidth="200" AngularSize="-79.0" Head3D="233.13 425.91 0.0" Tail3D="225.63 433.73 0.0" Center3D="234.11 434.38 0.0" MajorAxisEnd3D="242.62 434.38 0.0" MinorAxisEnd3D="234.11 442.9 0.0"/>
+					</group>
+					<group id="932995758" BoundingBox="241.88 446.75 266.98 471.85" Z="59" Integral="yes">
+						<graphic id="932995759" BoundingBox="266.48 459.3 254.43 459.3" Z="66" GraphicType="Oval" OvalType="Circle" Center3D="254.43 459.3 0.0" MajorAxisEnd3D="266.48 459.3 0.0" MinorAxisEnd3D="254.43 471.33 0.0"/>
+						<graphic id="932996010" SupersededBy="932996258" BoundingBox="253.92 451.28 254.88 459.73" Z="81" GraphicType="Arc" HeadSize="1000" AngularSize="90.0"/>
+						<arrow id="932996258" BoundingBox="245.13 450.03 255.17 460.32" Z="81" FillType="None" ArrowheadType="Solid" HeadSize="800" ArrowheadCenterSize="700" ArrowheadWidth="200" AngularSize="-79.0" Head3D="253.92 451.28 0.0" Tail3D="246.38 459.07 0.0" Center3D="254.88 459.73 0.0" MajorAxisEnd3D="263.41 459.73 0.0" MinorAxisEnd3D="254.88 468.24 0.0"/>
+					</group>
+					<group id="932995762" BoundingBox="264.15 421.43 289.25 446.53" Z="60" Integral="yes">
+						<graphic id="932995763" BoundingBox="288.75 433.98 276.7 433.98" Z="67" GraphicType="Oval" OvalType="Circle" Center3D="276.7 433.98 0.0" MajorAxisEnd3D="288.75 433.98 0.0" MinorAxisEnd3D="276.7 446.03 0.0"/>
+						<graphic id="932996011" SupersededBy="932996259" BoundingBox="276.7 425.91 277.68 434.38" Z="80" GraphicType="Arc" HeadSize="1000" AngularSize="90.0"/>
+						<arrow id="932996259" BoundingBox="267.95 424.66 277.95 434.98" Z="80" FillType="None" ArrowheadType="Solid" HeadSize="800" ArrowheadCenterSize="700" ArrowheadWidth="200" AngularSize="-79.0" Head3D="276.7 425.91 0.0" Tail3D="269.2 433.73 0.0" Center3D="277.68 434.38 0.0" MajorAxisEnd3D="286.19 434.38 0.0" MinorAxisEnd3D="277.68 442.9 0.0"/>
+					</group>
+					<group id="932995766" BoundingBox="284.9 446.75 310.0 471.85" Z="61" Integral="yes">
+						<graphic id="932995767" BoundingBox="309.5 459.3 297.45 459.3" Z="68" GraphicType="Oval" OvalType="Circle" Center3D="297.45 459.3 0.0" MajorAxisEnd3D="309.5 459.3 0.0" MinorAxisEnd3D="297.45 471.33 0.0"/>
+						<graphic id="932996012" SupersededBy="932996260" BoundingBox="297.05 451.28 298.02 459.73" Z="82" GraphicType="Arc" HeadSize="1000" AngularSize="90.0"/>
+						<arrow id="932996260" BoundingBox="288.29 450.03 298.3 460.32" Z="82" FillType="None" ArrowheadType="Solid" HeadSize="800" ArrowheadCenterSize="700" ArrowheadWidth="200" AngularSize="-79.0" Head3D="297.05 451.28 0.0" Tail3D="289.54 459.07 0.0" Center3D="298.02 459.73 0.0" MajorAxisEnd3D="306.52 459.73 0.0" MinorAxisEnd3D="298.02 468.24 0.0"/>
+					</group>
+				</group>
+				<graphic id="932995770" BoundingBox="317.33 476.64 172.35 417.9" Z="62" GraphicType="Rectangle" RectangleType="RoundEdge" CornerRadius="600" Center3D="244.84 447.27 0.0" MajorAxisEnd3D="317.33 447.27 0.0" MinorAxisEnd3D="244.84 476.64 0.0"/>
+			</group>
+		</group>
+		<fragment id="932995771" BoundingBox="230.35 386.92 236.46 398.42" Z="83">
+			<n id="932995772" p="233.4 391.97" Z="86" Warning="An atom in this label has an invalid valence." Element="1" NumHydrogens="0" Isotope="3" NeedsClean="yes" AS="N">
+				<t id="0" p="230.35 395.87" BoundingBox="230.35 386.92 236.46 398.42" LabelJustification="Left" LabelLineHeight="auto" LineHeight="auto">
+					<s font="3" size="10.0" face="96" color="3">T</s>
+				</t>
+			</n>
+		</fragment>
+		<t id="932995773" p="244.43 505.1" BoundingBox="219.82 484.4 269.04 534.5" Z="87" Warning="Chemical Interpretation is not possible for this label" CaptionJustification="Center" Justification="Center" LineHeight="auto" LineStarts="6 10">
+			<s font="3" size="17.7" face="0" color="3">20 mL
+X </s>
+			<s font="3" size="17.7" face="64" color="3">o</s>
+			<s font="3" size="17.7" face="0" color="3">C</s>
+		</t>
+		<graphic id="932996013" SupersededBy="932996261" BoundingBox="233.07 433.76 233.07 409.06" Z="84" GraphicType="Line" HeadSize="1000"/>
+		<graphic id="932995775" BoundingBox="248.11 408.65 219.35 376.25" Z="85" GraphicType="Rectangle" RectangleType="Plain" Center3D="233.73 392.45 0.0" MajorAxisEnd3D="248.11 392.45 0.0" MinorAxisEnd3D="233.73 408.65 0.0"/>
+		<arrow id="932996261" BoundingBox="232.57 409.06 233.57 433.76" Z="84" FillType="None" ArrowheadType="Solid" HeadSize="1000" ArrowheadCenterSize="875" ArrowheadWidth="250" Head3D="233.07 433.76 0.0" Tail3D="233.07 409.06 0.0" Center3D="389.11 642.66 0.0" MajorAxisEnd3D="425.64 642.66 0.0" MinorAxisEnd3D="389.11 667.35 0.0"/>
+		<annotation id="0" Keyword="GUID" Content="cc466264-4922-40c0-b2c4-c98728125c3f"/>
+		<annotation id="0" Keyword="Name" Content="Proteasome"/>
+	</page>
+	<page id="932996262" BoundingBox="0.0 0.0 540.0 720.0" HeaderPosition="36.0" FooterPosition="36.0" PrintTrimMarks="yes" HeightPages="1" WidthPages="1">
+		<group id="932995471" BoundingBox="157.2 514.72 359.32 608.03" Z="72" Integral="yes">
+			<group id="932995472" BoundingBox="157.61 585.36 179.0 608.03" Z="73" Integral="yes">
+				<graphic id="932996015" SupersededBy="932996263" BoundingBox="165.81 586.61 182.3 584.01" Z="101" GraphicType="Arc" HeadSize="1000" AngularSize="90.0"/>
+				<graphic id="932996016" SupersededBy="932996264" BoundingBox="158.86 587.74 181.99 584.01" Z="102" GraphicType="Arc" HeadSize="1000" AngularSize="90.0"/>
+				<arrow id="932996263" BoundingBox="164.56 585.36 179.0 601.33" Z="101" FillType="None" ArrowheadType="Solid" HeadSize="800" ArrowheadCenterSize="700" ArrowheadWidth="200" AngularSize="-65.2" Head3D="165.81 586.61 0.0" Tail3D="177.75 600.08 0.0" Center3D="182.3 584.01 0.0" MajorAxisEnd3D="199.0 584.01 0.0" MinorAxisEnd3D="182.3 567.32 0.0"/>
+				<arrow id="932996264" BoundingBox="157.61 586.49 177.79 608.03" Z="102" FillType="None" ArrowheadType="Solid" HeadSize="800" ArrowheadCenterSize="700" ArrowheadWidth="200" AngularSize="-67.4" Head3D="158.86 587.74 0.0" Tail3D="176.54 606.78 0.0" Center3D="181.99 584.01 0.0" MajorAxisEnd3D="205.42 584.01 0.0" MinorAxisEnd3D="181.99 560.61 0.0"/>
+			</group>
+			<group id="932995680" BoundingBox="336.35 584.23 357.84 607.06" Z="74" Integral="yes">
+				<graphic id="932996017" SupersededBy="932996265" BoundingBox="337.6 599.09 333.05 583.01" Z="97" GraphicType="Arc" HeadSize="1000" AngularSize="90.0"/>
+				<graphic id="932996018" SupersededBy="932996266" BoundingBox="338.76 605.81 333.37 583.01" Z="98" GraphicType="Arc" HeadSize="1000" AngularSize="90.0"/>
+				<arrow id="932996265" BoundingBox="336.35 584.23 350.81 600.34" Z="97" FillType="None" ArrowheadType="Solid" HeadSize="800" ArrowheadCenterSize="700" ArrowheadWidth="200" AngularSize="-65.7" Head3D="337.6 599.09 0.0" Tail3D="349.56 585.48 0.0" Center3D="333.05 583.01 0.0" MajorAxisEnd3D="316.36 583.01 0.0" MinorAxisEnd3D="333.05 566.3 0.0"/>
+				<arrow id="932996266" BoundingBox="337.51 584.73 357.84 607.06" Z="98" FillType="None" ArrowheadType="Solid" HeadSize="800" ArrowheadCenterSize="700" ArrowheadWidth="200" AngularSize="-69.4" Head3D="338.76 605.81 0.0" Tail3D="356.59 585.98 0.0" Center3D="333.37 583.01 0.0" MajorAxisEnd3D="309.96 583.01 0.0" MinorAxisEnd3D="333.37 559.58 0.0"/>
+			</group>
+			<group id="932995683" BoundingBox="336.72 514.72 359.32 537.17" Z="75" Integral="yes">
+				<graphic id="932996019" SupersededBy="932996267" BoundingBox="350.95 535.88 334.57 539.11" Z="99" GraphicType="Arc" HeadSize="1000" AngularSize="90.0"/>
+				<graphic id="932996020" SupersededBy="932996268" BoundingBox="358.07 535.92 334.88 539.11" Z="100" GraphicType="Arc" HeadSize="1000" AngularSize="90.0"/>
+				<arrow id="932996267" BoundingBox="336.72 521.51 352.2 537.13" Z="99" FillType="None" ArrowheadType="Solid" HeadSize="800" ArrowheadCenterSize="700" ArrowheadWidth="200" AngularSize="-67.1" Head3D="350.95 535.88 0.0" Tail3D="337.97 522.76 0.0" Center3D="334.57 539.11 0.0" MajorAxisEnd3D="317.87 539.11 0.0" MinorAxisEnd3D="334.57 555.8 0.0"/>
+				<arrow id="932996268" BoundingBox="337.16 514.72 359.32 537.17" Z="100" FillType="None" ArrowheadType="Solid" HeadSize="800" ArrowheadCenterSize="700" ArrowheadWidth="200" AngularSize="-73.5" Head3D="358.07 535.92 0.0" Tail3D="338.41 515.97 0.0" Center3D="334.88 539.11 0.0" MajorAxisEnd3D="311.47 539.11 0.0" MinorAxisEnd3D="334.88 562.52 0.0"/>
+			</group>
+			<group id="932995686" BoundingBox="157.2 516.13 178.91 537.7" Z="76" Integral="yes">
+				<graphic id="932996021" SupersededBy="932996269" BoundingBox="177.66 523.92 181.79 540.11" Z="95" GraphicType="Arc" HeadSize="1000" AngularSize="90.0"/>
+				<graphic id="932996022" SupersededBy="932996270" BoundingBox="175.85 517.38 181.5 540.11" Z="96" GraphicType="Arc" HeadSize="1000" AngularSize="90.0"/>
+				<arrow id="932996269" BoundingBox="164.25 522.67 178.91 537.7" Z="95" FillType="None" ArrowheadType="Solid" HeadSize="800" ArrowheadCenterSize="700" ArrowheadWidth="200" AngularSize="-63.0" Head3D="177.66 523.92 0.0" Tail3D="165.5 536.45 0.0" Center3D="181.79 540.11 0.0" MajorAxisEnd3D="198.49 540.11 0.0" MinorAxisEnd3D="181.79 556.83 0.0"/>
+				<arrow id="932996270" BoundingBox="157.2 516.13 177.1 537.24" Z="96" FillType="None" ArrowheadType="Solid" HeadSize="800" ArrowheadCenterSize="700" ArrowheadWidth="200" AngularSize="-65.9" Head3D="175.85 517.38 0.0" Tail3D="158.45 535.99 0.0" Center3D="181.5 540.11 0.0" MajorAxisEnd3D="204.91 540.11 0.0" MinorAxisEnd3D="181.5 563.54 0.0"/>
+			</group>
+		</group>
+		<group id="932995689" BoundingBox="173.18 530.79 343.93 591.92" Z="77" Integral="yes">
+			<group id="932995690" BoundingBox="179.68 535.83 336.76 586.25" Z="78" Integral="yes">
+				<group id="932995691" BoundingBox="179.68 535.83 204.78 560.93" Z="79" Integral="yes">
+					<graphic id="932995692" BoundingBox="204.28 548.38 192.23 548.38" Z="91" GraphicType="Oval" OvalType="Circle" Center3D="192.23 548.38 0.0" MajorAxisEnd3D="204.28 548.38 0.0" MinorAxisEnd3D="192.23 560.43 0.0"/>
+					<graphic id="932996023" SupersededBy="932996271" BoundingBox="192.05 540.52 193.03 548.99" Z="103" GraphicType="Arc" HeadSize="1000" AngularSize="90.0"/>
+					<arrow id="932996271" BoundingBox="183.28 539.27 193.3 549.59" Z="103" FillType="None" ArrowheadType="Solid" HeadSize="800" ArrowheadCenterSize="700" ArrowheadWidth="200" AngularSize="-79.0" Head3D="192.05 540.52 0.0" Tail3D="184.53 548.34 0.0" Center3D="193.03 548.99 0.0" MajorAxisEnd3D="201.56 548.99 0.0" MinorAxisEnd3D="193.03 557.52 0.0"/>
+				</group>
+				<group id="932995694" BoundingBox="193.54 561.15 218.64 586.25" Z="80" Integral="yes">
+					<graphic id="932995695" BoundingBox="218.14 573.7 206.09 573.7" Z="92" GraphicType="Oval" OvalType="Circle" Center3D="206.09 573.7 0.0" MajorAxisEnd3D="218.14 573.7 0.0" MinorAxisEnd3D="206.09 585.73 0.0"/>
+					<graphic id="932996014" SupersededBy="932996272" BoundingBox="205.59 565.68 206.58 574.13" Z="105" GraphicType="Arc" HeadSize="1000" AngularSize="90.0"/>
+					<arrow id="932996272" BoundingBox="196.85 564.43 206.84 574.74" Z="105" FillType="None" ArrowheadType="Solid" HeadSize="800" ArrowheadCenterSize="700" ArrowheadWidth="200" AngularSize="-79.0" Head3D="205.59 565.68 0.0" Tail3D="198.1 573.49 0.0" Center3D="206.58 574.13 0.0" MajorAxisEnd3D="215.08 574.13 0.0" MinorAxisEnd3D="206.58 582.64 0.0"/>
+				</group>
+				<group id="932995697" BoundingBox="223.07 561.15 248.17 586.25" Z="81" Integral="yes">
+					<graphic id="932995698" BoundingBox="247.67 573.7 235.62 573.7" Z="94" GraphicType="Oval" OvalType="Circle" Center3D="235.62 573.7 0.0" MajorAxisEnd3D="247.67 573.7 0.0" MinorAxisEnd3D="235.62 585.73 0.0"/>
+					<graphic id="932996024" SupersededBy="932996273" BoundingBox="235.09 565.68 236.07 574.13" Z="106" GraphicType="Arc" HeadSize="1000" AngularSize="90.0"/>
+					<arrow id="932996273" BoundingBox="226.32 564.43 236.34 574.73" Z="106" FillType="None" ArrowheadType="Solid" HeadSize="800" ArrowheadCenterSize="700" ArrowheadWidth="200" AngularSize="-79.0" Head3D="235.09 565.68 0.0" Tail3D="227.57 573.48 0.0" Center3D="236.07 574.13 0.0" MajorAxisEnd3D="244.6 574.13 0.0" MinorAxisEnd3D="236.07 582.64 0.0"/>
+				</group>
+				<group id="932995700" BoundingBox="238.74 535.83 263.84 560.93" Z="82" Integral="yes">
+					<graphic id="932995701" BoundingBox="263.34 548.38 251.29 548.38" Z="107" GraphicType="Oval" OvalType="Circle" Center3D="251.29 548.38 0.0" MajorAxisEnd3D="263.34 548.38 0.0" MinorAxisEnd3D="251.29 560.43 0.0"/>
+					<graphic id="932996025" SupersededBy="932996274" BoundingBox="251.11 540.52 252.1 548.99" Z="111" GraphicType="Arc" HeadSize="1000" AngularSize="90.0"/>
+					<arrow id="932996274" BoundingBox="242.35 539.27 252.36 549.59" Z="111" FillType="None" ArrowheadType="Solid" HeadSize="800" ArrowheadCenterSize="700" ArrowheadWidth="200" AngularSize="-79.0" Head3D="251.11 540.52 0.0" Tail3D="243.6 548.34 0.0" Center3D="252.1 548.99 0.0" MajorAxisEnd3D="260.62 548.99 0.0" MinorAxisEnd3D="252.1 557.52 0.0"/>
+				</group>
+				<group id="932995703" BoundingBox="252.6 561.15 277.7 586.25" Z="83" Integral="yes">
+					<graphic id="932995704" BoundingBox="277.2 573.7 265.15 573.7" Z="108" GraphicType="Oval" OvalType="Circle" Center3D="265.15 573.7 0.0" MajorAxisEnd3D="277.2 573.7 0.0" MinorAxisEnd3D="265.15 585.73 0.0"/>
+					<graphic id="932996026" SupersededBy="932996275" BoundingBox="264.34 565.73 265.64 574.13" Z="113" GraphicType="Arc" HeadSize="1000" AngularSize="90.0"/>
+					<arrow id="932996275" BoundingBox="255.91 564.48 265.59 574.73" Z="113" FillType="None" ArrowheadType="Solid" HeadSize="800" ArrowheadCenterSize="700" ArrowheadWidth="200" AngularSize="-76.8" Head3D="264.34 565.73 0.0" Tail3D="257.16 573.48 0.0" Center3D="265.64 574.13 0.0" MajorAxisEnd3D="274.15 574.13 0.0" MinorAxisEnd3D="265.64 582.64 0.0"/>
+				</group>
+				<group id="932995706" BoundingBox="268.27 535.83 293.37 560.93" Z="84" Integral="yes">
+					<graphic id="932995707" BoundingBox="292.87 548.38 280.82 548.38" Z="109" GraphicType="Oval" OvalType="Circle" Center3D="280.82 548.38 0.0" MajorAxisEnd3D="292.87 548.38 0.0" MinorAxisEnd3D="280.82 560.43 0.0"/>
+					<graphic id="932996027" SupersededBy="932996276" BoundingBox="280.53 540.31 281.51 548.77" Z="112" GraphicType="Arc" HeadSize="1000" AngularSize="90.0"/>
+					<arrow id="932996276" BoundingBox="271.78 539.06 281.78 549.38" Z="112" FillType="None" ArrowheadType="Solid" HeadSize="800" ArrowheadCenterSize="700" ArrowheadWidth="200" AngularSize="-79.0" Head3D="280.53 540.31 0.0" Tail3D="273.03 548.13 0.0" Center3D="281.51 548.77 0.0" MajorAxisEnd3D="290.02 548.77 0.0" MinorAxisEnd3D="281.51 557.3 0.0"/>
+				</group>
+				<group id="932995709" BoundingBox="282.13 561.15 307.23 586.25" Z="85" Integral="yes">
+					<graphic id="932995710" BoundingBox="306.73 573.7 294.68 573.7" Z="110" GraphicType="Oval" OvalType="Circle" Center3D="294.68 573.7 0.0" MajorAxisEnd3D="306.73 573.7 0.0" MinorAxisEnd3D="294.68 585.73 0.0"/>
+					<graphic id="932996028" SupersededBy="932996277" BoundingBox="294.15 565.68 295.13 574.13" Z="114" GraphicType="Arc" HeadSize="1000" AngularSize="90.0"/>
+					<arrow id="932996277" BoundingBox="285.38 564.43 295.4 574.73" Z="114" FillType="None" ArrowheadType="Solid" HeadSize="800" ArrowheadCenterSize="700" ArrowheadWidth="200" AngularSize="-79.0" Head3D="294.15 565.68 0.0" Tail3D="286.63 573.48 0.0" Center3D="295.13 574.13 0.0" MajorAxisEnd3D="303.66 574.13 0.0" MinorAxisEnd3D="295.13 582.64 0.0"/>
+				</group>
+				<group id="932995712" BoundingBox="297.8 535.83 322.9 560.93" Z="86" Integral="yes">
+					<graphic id="932995713" BoundingBox="322.4 548.38 310.35 548.38" Z="115" GraphicType="Oval" OvalType="Circle" Center3D="310.35 548.38 0.0" MajorAxisEnd3D="322.4 548.38 0.0" MinorAxisEnd3D="310.35 560.43 0.0"/>
+					<graphic id="932996029" SupersededBy="932996278" BoundingBox="310.17 540.52 311.16 548.99" Z="117" GraphicType="Arc" HeadSize="1000" AngularSize="90.0"/>
+					<arrow id="932996278" BoundingBox="301.41 539.27 311.42 549.59" Z="117" FillType="None" ArrowheadType="Solid" HeadSize="800" ArrowheadCenterSize="700" ArrowheadWidth="200" AngularSize="-79.0" Head3D="310.17 540.52 0.0" Tail3D="302.66 548.34 0.0" Center3D="311.16 548.99 0.0" MajorAxisEnd3D="319.68 548.99 0.0" MinorAxisEnd3D="311.16 557.52 0.0"/>
+				</group>
+				<group id="932995715" BoundingBox="311.66 561.15 336.76 586.25" Z="87" Integral="yes">
+					<graphic id="932995716" BoundingBox="336.26 573.7 324.21 573.7" Z="116" GraphicType="Oval" OvalType="Circle" Center3D="324.21 573.7 0.0" MajorAxisEnd3D="336.26 573.7 0.0" MinorAxisEnd3D="324.21 585.73 0.0"/>
+					<graphic id="932996030" SupersededBy="932996279" BoundingBox="323.72 565.68 324.7 574.13" Z="118" GraphicType="Arc" HeadSize="1000" AngularSize="90.0"/>
+					<arrow id="932996279" BoundingBox="314.97 564.43 324.97 574.74" Z="118" FillType="None" ArrowheadType="Solid" HeadSize="800" ArrowheadCenterSize="700" ArrowheadWidth="200" AngularSize="-79.0" Head3D="323.72 565.68 0.0" Tail3D="316.22 573.49 0.0" Center3D="324.7 574.13 0.0" MajorAxisEnd3D="333.21 574.13 0.0" MinorAxisEnd3D="324.7 582.64 0.0"/>
+				</group>
+				<group id="932995718" BoundingBox="209.21 535.83 234.31 560.93" Z="88" Integral="yes">
+					<group id="932995719" BoundingBox="212.72 539.06 222.71 549.38" Z="89" Integral="yes">
+						<graphic id="932996031" SupersededBy="932996280" BoundingBox="221.46 540.31 222.45 548.77" Z="104" GraphicType="Arc" HeadSize="1000" AngularSize="90.0"/>
+						<arrow id="932996280" BoundingBox="212.72 539.06 222.71 549.38" Z="104" FillType="None" ArrowheadType="Solid" HeadSize="800" ArrowheadCenterSize="700" ArrowheadWidth="200" AngularSize="-79.0" Head3D="221.46 540.31 0.0" Tail3D="213.97 548.13 0.0" Center3D="222.45 548.77 0.0" MajorAxisEnd3D="230.95 548.77 0.0" MinorAxisEnd3D="222.45 557.3 0.0"/>
+					</group>
+					<graphic id="932995721" BoundingBox="233.81 548.38 221.76 548.38" Z="93" GraphicType="Oval" OvalType="Circle" Center3D="221.76 548.38 0.0" MajorAxisEnd3D="233.81 548.38 0.0" MinorAxisEnd3D="221.76 560.43 0.0"/>
+				</group>
+			</group>
+			<graphic id="932995722" BoundingBox="342.8 590.67 174.43 531.92" Z="90" GraphicType="Rectangle" RectangleType="RoundEdge" CornerRadius="600" Center3D="258.61 561.3 0.0" MajorAxisEnd3D="342.8 561.3 0.0" MinorAxisEnd3D="258.61 590.67 0.0"/>
+		</group>
+		<fragment id="932995723" BoundingBox="277.37 499.05 283.47 510.55" Z="119">
+			<n id="932995724" p="280.42 504.1" Z="122" Warning="An atom in this label has an invalid valence." Element="1" NumHydrogens="0" Isotope="3" NeedsClean="yes" AS="N">
+				<t id="0" p="277.37 508.0" BoundingBox="277.37 499.05 283.47 510.55" LabelJustification="Left" LabelLineHeight="auto" LineHeight="auto">
+					<s font="3" size="10.0" face="96" color="3">T</s>
+				</t>
+			</n>
+		</fragment>
+		<t id="932995725" p="258.82 616.82" BoundingBox="234.21 596.12 283.43 646.22" Z="123" Warning="Chemical Interpretation is not possible for this label" CaptionJustification="Center" Justification="Center" LineHeight="auto" LineStarts="6 10">
+			<s font="3" size="17.7" face="0" color="3">20 mL
+X </s>
+			<s font="3" size="17.7" face="64" color="3">o</s>
+			<s font="3" size="17.7" face="0" color="3">C</s>
+		</t>
+		<graphic id="932996032" SupersededBy="932996281" BoundingBox="280.46 546.26 280.46 521.56" Z="120" GraphicType="Line" HeadSize="1000"/>
+		<graphic id="932995726" BoundingBox="295.12 521.15 266.37 488.75" Z="121" GraphicType="Rectangle" RectangleType="Plain" Center3D="280.74 504.95 0.0" MajorAxisEnd3D="295.12 504.95 0.0" MinorAxisEnd3D="280.74 521.15 0.0"/>
+		<arrow id="932996281" BoundingBox="279.96 521.56 280.96 546.26" Z="120" FillType="None" ArrowheadType="Solid" HeadSize="1000" ArrowheadCenterSize="875" ArrowheadWidth="250" Head3D="280.46 546.26 0.0" Tail3D="280.46 521.56 0.0" Center3D="436.49 755.16 0.0" MajorAxisEnd3D="473.02 755.16 0.0" MinorAxisEnd3D="436.49 779.85 0.0"/>
+		<annotation id="0" Keyword="GUID" Content="cc466264-4922-40c0-b2c4-c98728125c3f"/>
+		<annotation id="0" Keyword="Name" Content="Proteasome"/>
+	</page>
+	<page id="932996282" BoundingBox="0.0 0.0 540.0 720.0" HeaderPosition="36.0" FooterPosition="36.0" PrintTrimMarks="yes" HeightPages="1" WidthPages="1">
+		<group id="932993225" BoundingBox="144.07 117.29 288.68 308.73" Z="67" Integral="yes">
+			<group id="932993226" BoundingBox="183.71 117.29 258.02 289.1" Z="46" Integral="yes">
+				<graphic id="932993227" BoundingBox="256.77 250.63 254.5 152.82" Z="36" color="4" GraphicType="Rectangle" RectangleType="Filled" Center3D="255.63 201.72 0.0" MajorAxisEnd3D="256.77 201.72 0.0" MinorAxisEnd3D="255.63 250.63 0.0"/>
+				<graphic id="932993228" BoundingBox="251.84 250.63 249.57 152.82" Z="37" color="4" GraphicType="Rectangle" RectangleType="Filled" Center3D="250.71 201.72 0.0" MajorAxisEnd3D="251.84 201.72 0.0" MinorAxisEnd3D="250.71 250.63 0.0"/>
+				<graphic id="932993229" BoundingBox="192.15 250.78 189.88 152.96" Z="38" color="4" GraphicType="Rectangle" RectangleType="Filled" Center3D="191.02 201.87 0.0" MajorAxisEnd3D="192.15 201.87 0.0" MinorAxisEnd3D="191.02 250.78 0.0"/>
+				<graphic id="932993230" BoundingBox="256.92 153.88 220.83 153.88" Z="39" color="4" GraphicType="Oval" OvalType="Circle Filled" Center3D="220.83 153.88 0.0" MajorAxisEnd3D="256.92 153.88 0.0" MinorAxisEnd3D="220.83 189.96 0.0"/>
+				<graphic id="932993231" BoundingBox="254.36 153.88 220.83 153.88" Z="40" color="8" GraphicType="Oval" OvalType="Circle Filled" Center3D="220.83 153.88 0.0" MajorAxisEnd3D="254.36 153.88 0.0" MinorAxisEnd3D="220.83 187.41 0.0"/>
+				<graphic id="932993232" BoundingBox="251.83 153.88 220.83 153.88" Z="41" color="4" GraphicType="Oval" OvalType="Circle Filled" Center3D="220.83 153.88 0.0" MajorAxisEnd3D="251.83 153.88 0.0" MinorAxisEnd3D="220.83 184.87 0.0"/>
+				<graphic id="932993233" BoundingBox="249.16 153.88 220.83 153.88" Z="42" color="1" GraphicType="Oval" OvalType="Circle Filled" Center3D="220.83 153.88 0.0" MajorAxisEnd3D="249.16 153.88 0.0" MinorAxisEnd3D="220.83 182.21 0.0"/>
+				<graphic id="932993234" BoundingBox="189.69 287.85 187.42 152.96" Z="43" color="8" GraphicType="Rectangle" RectangleType="Filled" Center3D="188.55 220.41 0.0" MajorAxisEnd3D="189.69 220.41 0.0" MinorAxisEnd3D="188.55 287.85 0.0"/>
+				<graphic id="932993235" BoundingBox="254.3 287.85 252.04 152.96" Z="44" color="8" GraphicType="Rectangle" RectangleType="Filled" Center3D="253.17 220.41 0.0" MajorAxisEnd3D="254.3 220.41 0.0" MinorAxisEnd3D="253.17 287.85 0.0"/>
+				<graphic id="932993236" BoundingBox="187.23 250.78 184.96 152.96" Z="45" color="4" GraphicType="Rectangle" RectangleType="Filled" Center3D="186.09 201.87 0.0" MajorAxisEnd3D="187.23 201.87 0.0" MinorAxisEnd3D="186.09 250.78 0.0"/>
+			</group>
+			<graphic id="932993237" BoundingBox="269.84 279.56 171.89 212.11" Z="35" color="21" GraphicType="Rectangle" RectangleType="Plain" FadePercent="300" Center3D="220.86 245.83 0.0" MajorAxisEnd3D="269.84 245.83 0.0" MinorAxisEnd3D="220.86 279.56 0.0"/>
+			<graphic id="932993238" BoundingBox="254.79 250.71 277.89 248.44" Z="47" color="4" GraphicType="Rectangle" RectangleType="Filled" Center3D="266.34 249.57 0.0" MajorAxisEnd3D="266.34 250.71 0.0" MinorAxisEnd3D="254.79 249.57 0.0"/>
+			<graphic id="932993239" BoundingBox="164.33 251.01 221.81 248.74" Z="48" color="4" GraphicType="Rectangle" RectangleType="Filled" Center3D="193.07 249.88 0.0" MajorAxisEnd3D="193.07 251.01 0.0" MinorAxisEnd3D="164.33 249.88 0.0"/>
+			<graphic id="932993240" BoundingBox="222.0 287.53 219.73 207.58" Z="49" color="4" GraphicType="Rectangle" RectangleType="Filled" Center3D="220.86 247.56 0.0" MajorAxisEnd3D="222.0 247.56 0.0" MinorAxisEnd3D="220.86 287.53 0.0"/>
+			<graphic id="932993241" BoundingBox="191.93 297.33 184.56 288.5" Z="50" color="21" GraphicType="Rectangle" RectangleType="Plain" FadePercent="300" Center3D="188.24 292.91 0.0" MajorAxisEnd3D="191.93 292.91 0.0" MinorAxisEnd3D="188.24 297.33 0.0"/>
+			<graphic id="932993242" BoundingBox="256.75 297.33 249.38 288.5" Z="51" color="21" GraphicType="Rectangle" RectangleType="Plain" FadePercent="300" Center3D="253.06 292.91 0.0" MajorAxisEnd3D="256.75 292.91 0.0" MinorAxisEnd3D="253.06 297.33 0.0"/>
+			<graphic id="932993243" BoundingBox="225.25 307.48 216.36 288.09" Z="52" color="21" GraphicType="Rectangle" RectangleType="Plain" FadePercent="300" Center3D="220.8 297.79 0.0" MajorAxisEnd3D="225.25 297.79 0.0" MinorAxisEnd3D="220.8 307.48 0.0"/>
+			<graphic id="932993244" BoundingBox="278.6 253.31 287.43 245.95" Z="53" color="21" GraphicType="Rectangle" RectangleType="Plain" FadePercent="300" Center3D="283.01 249.63 0.0" MajorAxisEnd3D="283.01 253.31 0.0" MinorAxisEnd3D="278.6 249.63 0.0"/>
+			<graphic id="932993245" BoundingBox="227.9 200.0 220.88 200.0" Z="54" color="21" GraphicType="Oval" OvalType="Circle" FadePercent="300" Center3D="220.88 200.0 0.0" MajorAxisEnd3D="227.9 200.0 0.0" MinorAxisEnd3D="220.88 207.02 0.0"/>
+			<graphic id="932996034" SupersededBy="932996283" BoundingBox="215.79 195.12 220.85 200.17" Z="55" color="21" GraphicType="Line" HeadSize="1000"/>
+			<graphic id="932993247" BoundingBox="192.03 256.84 185.18 242.76" Z="56" color="21" GraphicType="Rectangle" RectangleType="Plain" FadePercent="300" Center3D="188.61 249.8 0.0" MajorAxisEnd3D="192.03 249.8 0.0" MinorAxisEnd3D="188.61 256.84 0.0"/>
+			<graphic id="932993248" BoundingBox="224.24 257.04 217.38 242.96" Z="57" color="21" GraphicType="Rectangle" RectangleType="Plain" FadePercent="300" Center3D="220.81 250.0 0.0" MajorAxisEnd3D="224.24 250.0 0.0" MinorAxisEnd3D="220.81 257.04 0.0"/>
+			<graphic id="932993249" BoundingBox="256.65 256.63 249.79 242.55" Z="58" color="21" GraphicType="Rectangle" RectangleType="Plain" FadePercent="300" Center3D="253.22 249.59 0.0" MajorAxisEnd3D="256.65 249.59 0.0" MinorAxisEnd3D="253.22 256.63 0.0"/>
+			<graphic id="932993250" BoundingBox="185.25 252.7 182.51 247.06" Z="59" color="21" GraphicType="Rectangle" RectangleType="Plain" FadePercent="300" Center3D="183.88 249.88 0.0" MajorAxisEnd3D="185.25 249.88 0.0" MinorAxisEnd3D="183.88 252.7 0.0"/>
+			<graphic id="932993251" BoundingBox="217.25 252.7 214.51 247.06" Z="60" color="21" GraphicType="Rectangle" RectangleType="Plain" FadePercent="300" Center3D="215.88 249.88 0.0" MajorAxisEnd3D="217.25 249.88 0.0" MinorAxisEnd3D="215.88 252.7 0.0"/>
+			<graphic id="932993252" BoundingBox="259.51 252.49 256.77 246.86" Z="61" color="21" GraphicType="Rectangle" RectangleType="Plain" FadePercent="300" Center3D="258.14 249.67 0.0" MajorAxisEnd3D="259.51 249.67 0.0" MinorAxisEnd3D="258.14 252.49 0.0"/>
+			<graphic id="932993253" BoundingBox="164.15 272.79 145.32 226.67" Z="62" color="21" GraphicType="Rectangle" RectangleType="RoundEdge Filled" CornerRadius="600" Center3D="154.74 249.73 0.0" MajorAxisEnd3D="164.15 249.73 0.0" MinorAxisEnd3D="154.74 272.79 0.0"/>
+			<graphic id="932993254" BoundingBox="163.91 268.48 154.68 268.48" Z="63" color="21" GraphicType="Oval" OvalType="Circle Filled" Center3D="154.68 268.48 0.0" MajorAxisEnd3D="163.91 268.48 0.0" MinorAxisEnd3D="154.68 277.71 0.0"/>
+			<graphic id="932993255" BoundingBox="163.91 230.33 154.68 230.33" Z="64" color="21" GraphicType="Oval" OvalType="Circle Filled" Center3D="154.68 230.33 0.0" MajorAxisEnd3D="163.91 230.33 0.0" MinorAxisEnd3D="154.68 239.56 0.0"/>
+			<graphic id="932993256" BoundingBox="157.6 232.17 151.75 218.71" Z="65" color="21" GraphicType="Rectangle" RectangleType="Filled" Center3D="154.68 225.44 0.0" MajorAxisEnd3D="157.6 225.44 0.0" MinorAxisEnd3D="154.68 232.17 0.0"/>
+			<graphic id="932993257" BoundingBox="146.17 218.52 163.18 211.39" Z="66" color="21" GraphicType="Rectangle" RectangleType="Filled" Center3D="154.68 214.95 0.0" MajorAxisEnd3D="154.68 218.52 0.0" MinorAxisEnd3D="146.17 214.95 0.0"/>
+			<arrow id="932996283" BoundingBox="215.44 194.76 221.2 200.52" Z="55" color="21" FillType="None" ArrowheadType="Solid" HeadSize="1000" ArrowheadCenterSize="875" ArrowheadWidth="250" Head3D="215.79 195.12 0.0" Tail3D="220.85 200.17 0.0" Center3D="366.18 322.62 0.0" MajorAxisEnd3D="373.33 322.62 0.0" MinorAxisEnd3D="366.18 329.77 0.0"/>
+		</group>
+		<annotation id="0" Keyword="GUID" Content="cc466264-4922-40c0-b2c4-c98728125c3f"/>
+		<annotation id="0" Keyword="Name" Content="Proteasome"/>
+	</page>
+	<templategrid id="0" PaneHeight="24.75" NumRows="8" NumColumns="6" extent="2.75 2.75"/>
+</CDXML>

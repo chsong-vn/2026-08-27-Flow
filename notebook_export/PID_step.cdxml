@@ -1,0 +1,250 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE CDXML SYSTEM "https://static.chemistry.revvitycloud.com/cdxml/CDXML.dtd" >
+<CDXML CreationProgram="VORONOI FlowChem" BondLength="14.40" LabelFont="3" LabelSize="10"
+ CaptionFont="3" CaptionSize="9" LineWidth="0.60" BoldWidth="2" HashSpacing="2.50"
+ MarginWidth="1.60" color="0" bgcolor="1">
+<colortable><color r="1" g="1" b="1"/><color r="0" g="0" b="0"/><color r="1" g="0" b="0"/>
+<color r="1" g="1" b="0"/><color r="0" g="1" b="0"/><color r="0" g="1" b="1"/>
+<color r="0" g="0" b="1"/><color r="1" g="0" b="1"/></colortable>
+<fonttable><font id="3" charset="iso-8859-1" name="Arial"/></fonttable>
+<page id="1" BoundingBox="0 0 1010 966" Width="1010" Height="966" DrawingSpace="poster">
+<fragment id="1001">
+<n id="1002" p="1.06 77.56" Element="35"/>
+<n id="1003" p="14.49 82.74"/>
+<n id="1004" p="16.72 96.97"/>
+<n id="1005" p="30.15 102.15"/>
+<n id="1006" p="41.36 93.11"/>
+<n id="1007" p="54.79 98.30"/>
+<n id="1008" p="66.00 89.26"/>
+<n id="1009" p="63.77 75.03" Element="7"/>
+<n id="1010" p="50.34 69.85"/>
+<n id="1011" p="39.13 78.89"/>
+<n id="1012" p="25.70 73.70"/>
+<b id="1013" B="1002" E="1003"/>
+<b id="1014" B="1003" E="1004" Order="2"/>
+<b id="1015" B="1004" E="1005"/>
+<b id="1016" B="1005" E="1006" Order="2"/>
+<b id="1017" B="1006" E="1007"/>
+<b id="1018" B="1007" E="1008" Order="2"/>
+<b id="1019" B="1008" E="1009"/>
+<b id="1020" B="1009" E="1010" Order="2"/>
+<b id="1021" B="1010" E="1011"/>
+<b id="1022" B="1011" E="1012" Order="2"/>
+<b id="1023" B="1012" E="1003"/>
+<b id="1024" B="1011" E="1006"/>
+</fragment>
+<t id="1025" p="44.00 120.00" Justification="Center" LineHeight="auto"><s font="3" size="8" face="0">6-Bromoisoquinoline</s></t>
+<graphic id="1026" GraphicType="Oval" OvalType="Circle" BoundingBox="164.00 70.00 196.00 102.00" Center3D="180.00 86.00 0" MajorAxisEnd3D="196.00 86.00 0" MinorAxisEnd3D="180.00 102.00 0"/>
+<graphic id="1027" GraphicType="Oval" OvalType="Circle Filled" BoundingBox="178.60 70.60 181.40 73.40" Center3D="180.00 72.00 0" MajorAxisEnd3D="181.40 72.00 0" MinorAxisEnd3D="180.00 73.40 0"/>
+<graphic id="1028" GraphicType="Oval" OvalType="Circle Filled" BoundingBox="185.60 72.48 188.40 75.28" Center3D="187.00 73.88 0" MajorAxisEnd3D="188.40 73.88 0" MinorAxisEnd3D="187.00 75.28 0"/>
+<graphic id="1029" GraphicType="Oval" OvalType="Circle Filled" BoundingBox="190.72 77.60 193.52 80.40" Center3D="192.12 79.00 0" MajorAxisEnd3D="193.52 79.00 0" MinorAxisEnd3D="192.12 80.40 0"/>
+<graphic id="1030" GraphicType="Oval" OvalType="Circle Filled" BoundingBox="192.60 84.60 195.40 87.40" Center3D="194.00 86.00 0" MajorAxisEnd3D="195.40 86.00 0" MinorAxisEnd3D="194.00 87.40 0"/>
+<graphic id="1031" GraphicType="Oval" OvalType="Circle Filled" BoundingBox="190.72 91.60 193.52 94.40" Center3D="192.12 93.00 0" MajorAxisEnd3D="193.52 93.00 0" MinorAxisEnd3D="192.12 94.40 0"/>
+<graphic id="1032" GraphicType="Oval" OvalType="Circle Filled" BoundingBox="185.60 96.72 188.40 99.52" Center3D="187.00 98.12 0" MajorAxisEnd3D="188.40 98.12 0" MinorAxisEnd3D="187.00 99.52 0"/>
+<graphic id="1033" GraphicType="Oval" OvalType="Circle Filled" BoundingBox="178.60 98.60 181.40 101.40" Center3D="180.00 100.00 0" MajorAxisEnd3D="181.40 100.00 0" MinorAxisEnd3D="180.00 101.40 0"/>
+<graphic id="1034" GraphicType="Oval" OvalType="Circle Filled" BoundingBox="171.60 96.72 174.40 99.52" Center3D="173.00 98.12 0" MajorAxisEnd3D="174.40 98.12 0" MinorAxisEnd3D="173.00 99.52 0"/>
+<graphic id="1035" GraphicType="Oval" OvalType="Circle Filled" BoundingBox="166.48 91.60 169.28 94.40" Center3D="167.88 93.00 0" MajorAxisEnd3D="169.28 93.00 0" MinorAxisEnd3D="167.88 94.40 0"/>
+<graphic id="1036" GraphicType="Oval" OvalType="Circle Filled" BoundingBox="164.60 84.60 167.40 87.40" Center3D="166.00 86.00 0" MajorAxisEnd3D="167.40 86.00 0" MinorAxisEnd3D="166.00 87.40 0"/>
+<graphic id="1037" GraphicType="Oval" OvalType="Circle Filled" BoundingBox="166.48 77.60 169.28 80.40" Center3D="167.88 79.00 0" MajorAxisEnd3D="169.28 79.00 0" MinorAxisEnd3D="167.88 80.40 0"/>
+<graphic id="1038" GraphicType="Oval" OvalType="Circle Filled" BoundingBox="171.60 72.48 174.40 75.28" Center3D="173.00 73.88 0" MajorAxisEnd3D="174.40 73.88 0" MinorAxisEnd3D="173.00 75.28 0"/>
+<graphic id="1039" GraphicType="Oval" OvalType="Circle Filled" BoundingBox="177.60 83.60 182.40 88.40" Center3D="180.00 86.00 0" MajorAxisEnd3D="182.40 86.00 0" MinorAxisEnd3D="180.00 88.40 0"/>
+<t id="1040" p="180.00 112.00" Justification="Center" LineHeight="auto"><s font="3" size="8" face="0">12-Way</s></t>
+<arrow id="1041" ArrowheadHead="Full" ArrowheadType="Solid" Head3D="164.00 86.00 0" Tail3D="69.00 86.00 0" BoundingBox="69.00 86.00 164.00 86.00"/>
+<graphic id="1042" GraphicType="Oval" OvalType="Circle" BoundingBox="273.00 75.00 295.00 97.00" Center3D="284.00 86.00 0" MajorAxisEnd3D="295.00 86.00 0" MinorAxisEnd3D="284.00 97.00 0"/>
+<graphic id="1043" GraphicType="Line" BoundingBox="273.00 86.00 267.00 86.00"/>
+<graphic id="1044" GraphicType="Line" BoundingBox="295.00 86.00 301.00 86.00"/>
+<graphic id="1045" GraphicType="Line" BoundingBox="284.00 97.00 284.00 103.00"/>
+<graphic id="1046" GraphicType="Oval" OvalType="Circle Filled" BoundingBox="282.00 84.00 286.00 88.00" Center3D="284.00 86.00 0" MajorAxisEnd3D="286.00 86.00 0" MinorAxisEnd3D="284.00 88.00 0"/>
+<t id="1047" p="284.00 110.00" Justification="Center" LineHeight="auto"><s font="3" size="8" face="0">3-Way</s></t>
+<arrow id="1048" ArrowheadHead="Full" ArrowheadType="Solid" Head3D="267.00 86.00 0" Tail3D="196.00 86.00 0" BoundingBox="196.00 86.00 267.00 86.00"/>
+<graphic id="1049" GraphicType="Oval" OvalType="Circle" BoundingBox="406.00 72.00 434.00 100.00" Center3D="420.00 86.00 0" MajorAxisEnd3D="434.00 86.00 0" MinorAxisEnd3D="420.00 100.00 0"/>
+<graphic id="1050" GraphicType="Line" BoundingBox="410.20 95.80 429.80 76.20"/>
+<t id="1051" p="420.00 116.00" Justification="Center" LineHeight="auto"><s font="3" size="9" face="1">Group A</s></t>
+<arrow id="1052" ArrowheadHead="Full" ArrowheadType="Solid" Head3D="406.00 86.00 0" Tail3D="301.00 86.00 0" BoundingBox="301.00 86.00 406.00 86.00"/>
+<arrow id="1053" ArrowheadHead="Full" ArrowheadType="Solid" Head3D="560.00 86.00 0" Tail3D="434.00 86.00 0" BoundingBox="434.00 86.00 560.00 86.00"/>
+<fragment id="1054">
+<n id="1055" p="13.35 253.79" Element="8"/>
+<n id="1056" p="17.86 240.12"/>
+<n id="1057" p="8.28 229.37" Element="8"/>
+<n id="1058" p="-5.82 232.30"/>
+<n id="1059" p="-8.75 218.21"/>
+<n id="1060" p="-2.89 246.40"/>
+<n id="1061" p="-19.92 235.23"/>
+<n id="1062" p="31.96 237.19" Element="7"/>
+<n id="1063" p="39.86 225.15"/>
+<n id="1064" p="51.90 233.05"/>
+<n id="1065" p="66.00 230.12" Element="35"/>
+<n id="1066" p="44.00 245.09"/>
+<b id="1067" B="1055" E="1056" Order="2"/>
+<b id="1068" B="1056" E="1057"/>
+<b id="1069" B="1057" E="1058"/>
+<b id="1070" B="1058" E="1059"/>
+<b id="1071" B="1058" E="1060"/>
+<b id="1072" B="1058" E="1061"/>
+<b id="1073" B="1056" E="1062"/>
+<b id="1074" B="1062" E="1063"/>
+<b id="1075" B="1063" E="1064"/>
+<b id="1076" B="1064" E="1065"/>
+<b id="1077" B="1064" E="1066"/>
+<b id="1078" B="1066" E="1062"/>
+</fragment>
+<t id="1079" p="44.00 270.00" Justification="Center" LineHeight="auto"><s font="3" size="8" face="0">Boc-azetidine-Br</s></t>
+<graphic id="1080" GraphicType="Oval" OvalType="Circle" BoundingBox="164.00 220.00 196.00 252.00" Center3D="180.00 236.00 0" MajorAxisEnd3D="196.00 236.00 0" MinorAxisEnd3D="180.00 252.00 0"/>
+<graphic id="1081" GraphicType="Oval" OvalType="Circle Filled" BoundingBox="178.60 220.60 181.40 223.40" Center3D="180.00 222.00 0" MajorAxisEnd3D="181.40 222.00 0" MinorAxisEnd3D="180.00 223.40 0"/>
+<graphic id="1082" GraphicType="Oval" OvalType="Circle Filled" BoundingBox="185.60 222.48 188.40 225.28" Center3D="187.00 223.88 0" MajorAxisEnd3D="188.40 223.88 0" MinorAxisEnd3D="187.00 225.28 0"/>
+<graphic id="1083" GraphicType="Oval" OvalType="Circle Filled" BoundingBox="190.72 227.60 193.52 230.40" Center3D="192.12 229.00 0" MajorAxisEnd3D="193.52 229.00 0" MinorAxisEnd3D="192.12 230.40 0"/>
+<graphic id="1084" GraphicType="Oval" OvalType="Circle Filled" BoundingBox="192.60 234.60 195.40 237.40" Center3D="194.00 236.00 0" MajorAxisEnd3D="195.40 236.00 0" MinorAxisEnd3D="194.00 237.40 0"/>
+<graphic id="1085" GraphicType="Oval" OvalType="Circle Filled" BoundingBox="190.72 241.60 193.52 244.40" Center3D="192.12 243.00 0" MajorAxisEnd3D="193.52 243.00 0" MinorAxisEnd3D="192.12 244.40 0"/>
+<graphic id="1086" GraphicType="Oval" OvalType="Circle Filled" BoundingBox="185.60 246.72 188.40 249.52" Center3D="187.00 248.12 0" MajorAxisEnd3D="188.40 248.12 0" MinorAxisEnd3D="187.00 249.52 0"/>
+<graphic id="1087" GraphicType="Oval" OvalType="Circle Filled" BoundingBox="178.60 248.60 181.40 251.40" Center3D="180.00 250.00 0" MajorAxisEnd3D="181.40 250.00 0" MinorAxisEnd3D="180.00 251.40 0"/>
+<graphic id="1088" GraphicType="Oval" OvalType="Circle Filled" BoundingBox="171.60 246.72 174.40 249.52" Center3D="173.00 248.12 0" MajorAxisEnd3D="174.40 248.12 0" MinorAxisEnd3D="173.00 249.52 0"/>
+<graphic id="1089" GraphicType="Oval" OvalType="Circle Filled" BoundingBox="166.48 241.60 169.28 244.40" Center3D="167.88 243.00 0" MajorAxisEnd3D="169.28 243.00 0" MinorAxisEnd3D="167.88 244.40 0"/>
+<graphic id="1090" GraphicType="Oval" OvalType="Circle Filled" BoundingBox="164.60 234.60 167.40 237.40" Center3D="166.00 236.00 0" MajorAxisEnd3D="167.40 236.00 0" MinorAxisEnd3D="166.00 237.40 0"/>
+<graphic id="1091" GraphicType="Oval" OvalType="Circle Filled" BoundingBox="166.48 227.60 169.28 230.40" Center3D="167.88 229.00 0" MajorAxisEnd3D="169.28 229.00 0" MinorAxisEnd3D="167.88 230.40 0"/>
+<graphic id="1092" GraphicType="Oval" OvalType="Circle Filled" BoundingBox="171.60 222.48 174.40 225.28" Center3D="173.00 223.88 0" MajorAxisEnd3D="174.40 223.88 0" MinorAxisEnd3D="173.00 225.28 0"/>
+<graphic id="1093" GraphicType="Oval" OvalType="Circle Filled" BoundingBox="177.60 233.60 182.40 238.40" Center3D="180.00 236.00 0" MajorAxisEnd3D="182.40 236.00 0" MinorAxisEnd3D="180.00 238.40 0"/>
+<t id="1094" p="180.00 262.00" Justification="Center" LineHeight="auto"><s font="3" size="8" face="0">12-Way</s></t>
+<arrow id="1095" ArrowheadHead="Full" ArrowheadType="Solid" Head3D="164.00 236.00 0" Tail3D="69.00 236.00 0" BoundingBox="69.00 236.00 164.00 236.00"/>
+<graphic id="1096" GraphicType="Oval" OvalType="Circle" BoundingBox="273.00 225.00 295.00 247.00" Center3D="284.00 236.00 0" MajorAxisEnd3D="295.00 236.00 0" MinorAxisEnd3D="284.00 247.00 0"/>
+<graphic id="1097" GraphicType="Line" BoundingBox="273.00 236.00 267.00 236.00"/>
+<graphic id="1098" GraphicType="Line" BoundingBox="295.00 236.00 301.00 236.00"/>
+<graphic id="1099" GraphicType="Line" BoundingBox="284.00 247.00 284.00 253.00"/>
+<graphic id="1100" GraphicType="Oval" OvalType="Circle Filled" BoundingBox="282.00 234.00 286.00 238.00" Center3D="284.00 236.00 0" MajorAxisEnd3D="286.00 236.00 0" MinorAxisEnd3D="284.00 238.00 0"/>
+<t id="1101" p="284.00 260.00" Justification="Center" LineHeight="auto"><s font="3" size="8" face="0">3-Way</s></t>
+<arrow id="1102" ArrowheadHead="Full" ArrowheadType="Solid" Head3D="267.00 236.00 0" Tail3D="196.00 236.00 0" BoundingBox="196.00 236.00 267.00 236.00"/>
+<graphic id="1103" GraphicType="Oval" OvalType="Circle" BoundingBox="406.00 222.00 434.00 250.00" Center3D="420.00 236.00 0" MajorAxisEnd3D="434.00 236.00 0" MinorAxisEnd3D="420.00 250.00 0"/>
+<graphic id="1104" GraphicType="Line" BoundingBox="410.20 245.80 429.80 226.20"/>
+<t id="1105" p="420.00 266.00" Justification="Center" LineHeight="auto"><s font="3" size="9" face="1">Group_B</s></t>
+<arrow id="1106" ArrowheadHead="Full" ArrowheadType="Solid" Head3D="406.00 236.00 0" Tail3D="301.00 236.00 0" BoundingBox="301.00 236.00 406.00 236.00"/>
+<arrow id="1107" ArrowheadHead="Full" ArrowheadType="Solid" Head3D="560.00 236.00 0" Tail3D="434.00 236.00 0" BoundingBox="434.00 236.00 560.00 236.00"/>
+<graphic id="1108" GraphicType="Rectangle" BoundingBox="36.00 375.00 52.00 397.00"/>
+<graphic id="1109" GraphicType="Line" BoundingBox="39.00 375.00 49.00 375.00"/>
+<graphic id="1110" GraphicType="Rectangle" BoundingBox="38.00 387.00 50.00 395.00"/>
+<t id="1111" p="44.00 405.00" Justification="Center" LineHeight="auto"><s font="3" size="8" face="0">2,6-Lutidine (no SMILES)</s></t>
+<graphic id="1112" GraphicType="Oval" OvalType="Circle" BoundingBox="164.00 370.00 196.00 402.00" Center3D="180.00 386.00 0" MajorAxisEnd3D="196.00 386.00 0" MinorAxisEnd3D="180.00 402.00 0"/>
+<graphic id="1113" GraphicType="Oval" OvalType="Circle Filled" BoundingBox="178.60 370.60 181.40 373.40" Center3D="180.00 372.00 0" MajorAxisEnd3D="181.40 372.00 0" MinorAxisEnd3D="180.00 373.40 0"/>
+<graphic id="1114" GraphicType="Oval" OvalType="Circle Filled" BoundingBox="185.60 372.48 188.40 375.28" Center3D="187.00 373.88 0" MajorAxisEnd3D="188.40 373.88 0" MinorAxisEnd3D="187.00 375.28 0"/>
+<graphic id="1115" GraphicType="Oval" OvalType="Circle Filled" BoundingBox="190.72 377.60 193.52 380.40" Center3D="192.12 379.00 0" MajorAxisEnd3D="193.52 379.00 0" MinorAxisEnd3D="192.12 380.40 0"/>
+<graphic id="1116" GraphicType="Oval" OvalType="Circle Filled" BoundingBox="192.60 384.60 195.40 387.40" Center3D="194.00 386.00 0" MajorAxisEnd3D="195.40 386.00 0" MinorAxisEnd3D="194.00 387.40 0"/>
+<graphic id="1117" GraphicType="Oval" OvalType="Circle Filled" BoundingBox="190.72 391.60 193.52 394.40" Center3D="192.12 393.00 0" MajorAxisEnd3D="193.52 393.00 0" MinorAxisEnd3D="192.12 394.40 0"/>
+<graphic id="1118" GraphicType="Oval" OvalType="Circle Filled" BoundingBox="185.60 396.72 188.40 399.52" Center3D="187.00 398.12 0" MajorAxisEnd3D="188.40 398.12 0" MinorAxisEnd3D="187.00 399.52 0"/>
+<graphic id="1119" GraphicType="Oval" OvalType="Circle Filled" BoundingBox="178.60 398.60 181.40 401.40" Center3D="180.00 400.00 0" MajorAxisEnd3D="181.40 400.00 0" MinorAxisEnd3D="180.00 401.40 0"/>
+<graphic id="1120" GraphicType="Oval" OvalType="Circle Filled" BoundingBox="171.60 396.72 174.40 399.52" Center3D="173.00 398.12 0" MajorAxisEnd3D="174.40 398.12 0" MinorAxisEnd3D="173.00 399.52 0"/>
+<graphic id="1121" GraphicType="Oval" OvalType="Circle Filled" BoundingBox="166.48 391.60 169.28 394.40" Center3D="167.88 393.00 0" MajorAxisEnd3D="169.28 393.00 0" MinorAxisEnd3D="167.88 394.40 0"/>
+<graphic id="1122" GraphicType="Oval" OvalType="Circle Filled" BoundingBox="164.60 384.60 167.40 387.40" Center3D="166.00 386.00 0" MajorAxisEnd3D="167.40 386.00 0" MinorAxisEnd3D="166.00 387.40 0"/>
+<graphic id="1123" GraphicType="Oval" OvalType="Circle Filled" BoundingBox="166.48 377.60 169.28 380.40" Center3D="167.88 379.00 0" MajorAxisEnd3D="169.28 379.00 0" MinorAxisEnd3D="167.88 380.40 0"/>
+<graphic id="1124" GraphicType="Oval" OvalType="Circle Filled" BoundingBox="171.60 372.48 174.40 375.28" Center3D="173.00 373.88 0" MajorAxisEnd3D="174.40 373.88 0" MinorAxisEnd3D="173.00 375.28 0"/>
+<graphic id="1125" GraphicType="Oval" OvalType="Circle Filled" BoundingBox="177.60 383.60 182.40 388.40" Center3D="180.00 386.00 0" MajorAxisEnd3D="182.40 386.00 0" MinorAxisEnd3D="180.00 388.40 0"/>
+<t id="1126" p="180.00 412.00" Justification="Center" LineHeight="auto"><s font="3" size="8" face="0">12-Way</s></t>
+<arrow id="1127" ArrowheadHead="Full" ArrowheadType="Solid" Head3D="164.00 386.00 0" Tail3D="52.00 386.00 0" BoundingBox="52.00 386.00 164.00 386.00"/>
+<graphic id="1128" GraphicType="Oval" OvalType="Circle" BoundingBox="273.00 375.00 295.00 397.00" Center3D="284.00 386.00 0" MajorAxisEnd3D="295.00 386.00 0" MinorAxisEnd3D="284.00 397.00 0"/>
+<graphic id="1129" GraphicType="Line" BoundingBox="273.00 386.00 267.00 386.00"/>
+<graphic id="1130" GraphicType="Line" BoundingBox="295.00 386.00 301.00 386.00"/>
+<graphic id="1131" GraphicType="Line" BoundingBox="284.00 397.00 284.00 403.00"/>
+<graphic id="1132" GraphicType="Oval" OvalType="Circle Filled" BoundingBox="282.00 384.00 286.00 388.00" Center3D="284.00 386.00 0" MajorAxisEnd3D="286.00 386.00 0" MinorAxisEnd3D="284.00 388.00 0"/>
+<t id="1133" p="284.00 410.00" Justification="Center" LineHeight="auto"><s font="3" size="8" face="0">3-Way</s></t>
+<arrow id="1134" ArrowheadHead="Full" ArrowheadType="Solid" Head3D="267.00 386.00 0" Tail3D="196.00 386.00 0" BoundingBox="196.00 386.00 267.00 386.00"/>
+<graphic id="1135" GraphicType="Oval" OvalType="Circle" BoundingBox="406.00 372.00 434.00 400.00" Center3D="420.00 386.00 0" MajorAxisEnd3D="434.00 386.00 0" MinorAxisEnd3D="420.00 400.00 0"/>
+<graphic id="1136" GraphicType="Line" BoundingBox="410.20 395.80 429.80 376.20"/>
+<t id="1137" p="420.00 416.00" Justification="Center" LineHeight="auto"><s font="3" size="9" face="1">Group_C</s></t>
+<arrow id="1138" ArrowheadHead="Full" ArrowheadType="Solid" Head3D="406.00 386.00 0" Tail3D="301.00 386.00 0" BoundingBox="301.00 386.00 406.00 386.00"/>
+<arrow id="1139" ArrowheadHead="Full" ArrowheadType="Solid" Head3D="560.00 386.00 0" Tail3D="434.00 386.00 0" BoundingBox="434.00 386.00 560.00 386.00"/>
+<graphic id="1140" GraphicType="Rectangle" BoundingBox="36.00 525.00 52.00 547.00"/>
+<graphic id="1141" GraphicType="Line" BoundingBox="39.00 525.00 49.00 525.00"/>
+<graphic id="1142" GraphicType="Rectangle" BoundingBox="38.00 537.00 50.00 545.00"/>
+<t id="1143" p="44.00 555.00" Justification="Center" LineHeight="auto"><s font="3" size="8" face="0">DMA</s></t>
+<graphic id="1144" GraphicType="Oval" OvalType="Circle" BoundingBox="164.00 520.00 196.00 552.00" Center3D="180.00 536.00 0" MajorAxisEnd3D="196.00 536.00 0" MinorAxisEnd3D="180.00 552.00 0"/>
+<graphic id="1145" GraphicType="Oval" OvalType="Circle Filled" BoundingBox="178.60 520.60 181.40 523.40" Center3D="180.00 522.00 0" MajorAxisEnd3D="181.40 522.00 0" MinorAxisEnd3D="180.00 523.40 0"/>
+<graphic id="1146" GraphicType="Oval" OvalType="Circle Filled" BoundingBox="185.60 522.48 188.40 525.28" Center3D="187.00 523.88 0" MajorAxisEnd3D="188.40 523.88 0" MinorAxisEnd3D="187.00 525.28 0"/>
+<graphic id="1147" GraphicType="Oval" OvalType="Circle Filled" BoundingBox="190.72 527.60 193.52 530.40" Center3D="192.12 529.00 0" MajorAxisEnd3D="193.52 529.00 0" MinorAxisEnd3D="192.12 530.40 0"/>
+<graphic id="1148" GraphicType="Oval" OvalType="Circle Filled" BoundingBox="192.60 534.60 195.40 537.40" Center3D="194.00 536.00 0" MajorAxisEnd3D="195.40 536.00 0" MinorAxisEnd3D="194.00 537.40 0"/>
+<graphic id="1149" GraphicType="Oval" OvalType="Circle Filled" BoundingBox="190.72 541.60 193.52 544.40" Center3D="192.12 543.00 0" MajorAxisEnd3D="193.52 543.00 0" MinorAxisEnd3D="192.12 544.40 0"/>
+<graphic id="1150" GraphicType="Oval" OvalType="Circle Filled" BoundingBox="185.60 546.72 188.40 549.52" Center3D="187.00 548.12 0" MajorAxisEnd3D="188.40 548.12 0" MinorAxisEnd3D="187.00 549.52 0"/>
+<graphic id="1151" GraphicType="Oval" OvalType="Circle Filled" BoundingBox="178.60 548.60 181.40 551.40" Center3D="180.00 550.00 0" MajorAxisEnd3D="181.40 550.00 0" MinorAxisEnd3D="180.00 551.40 0"/>
+<graphic id="1152" GraphicType="Oval" OvalType="Circle Filled" BoundingBox="171.60 546.72 174.40 549.52" Center3D="173.00 548.12 0" MajorAxisEnd3D="174.40 548.12 0" MinorAxisEnd3D="173.00 549.52 0"/>
+<graphic id="1153" GraphicType="Oval" OvalType="Circle Filled" BoundingBox="166.48 541.60 169.28 544.40" Center3D="167.88 543.00 0" MajorAxisEnd3D="169.28 543.00 0" MinorAxisEnd3D="167.88 544.40 0"/>
+<graphic id="1154" GraphicType="Oval" OvalType="Circle Filled" BoundingBox="164.60 534.60 167.40 537.40" Center3D="166.00 536.00 0" MajorAxisEnd3D="167.40 536.00 0" MinorAxisEnd3D="166.00 537.40 0"/>
+<graphic id="1155" GraphicType="Oval" OvalType="Circle Filled" BoundingBox="166.48 527.60 169.28 530.40" Center3D="167.88 529.00 0" MajorAxisEnd3D="169.28 529.00 0" MinorAxisEnd3D="167.88 530.40 0"/>
+<graphic id="1156" GraphicType="Oval" OvalType="Circle Filled" BoundingBox="171.60 522.48 174.40 525.28" Center3D="173.00 523.88 0" MajorAxisEnd3D="174.40 523.88 0" MinorAxisEnd3D="173.00 525.28 0"/>
+<graphic id="1157" GraphicType="Oval" OvalType="Circle Filled" BoundingBox="177.60 533.60 182.40 538.40" Center3D="180.00 536.00 0" MajorAxisEnd3D="182.40 536.00 0" MinorAxisEnd3D="180.00 538.40 0"/>
+<t id="1158" p="180.00 562.00" Justification="Center" LineHeight="auto"><s font="3" size="8" face="0">12-Way</s></t>
+<arrow id="1159" ArrowheadHead="Full" ArrowheadType="Solid" Head3D="164.00 536.00 0" Tail3D="52.00 536.00 0" BoundingBox="52.00 536.00 164.00 536.00"/>
+<graphic id="1160" GraphicType="Oval" OvalType="Circle" BoundingBox="273.00 525.00 295.00 547.00" Center3D="284.00 536.00 0" MajorAxisEnd3D="295.00 536.00 0" MinorAxisEnd3D="284.00 547.00 0"/>
+<graphic id="1161" GraphicType="Line" BoundingBox="273.00 536.00 267.00 536.00"/>
+<graphic id="1162" GraphicType="Line" BoundingBox="295.00 536.00 301.00 536.00"/>
+<graphic id="1163" GraphicType="Line" BoundingBox="284.00 547.00 284.00 553.00"/>
+<graphic id="1164" GraphicType="Oval" OvalType="Circle Filled" BoundingBox="282.00 534.00 286.00 538.00" Center3D="284.00 536.00 0" MajorAxisEnd3D="286.00 536.00 0" MinorAxisEnd3D="284.00 538.00 0"/>
+<t id="1165" p="284.00 560.00" Justification="Center" LineHeight="auto"><s font="3" size="8" face="0">3-Way</s></t>
+<arrow id="1166" ArrowheadHead="Full" ArrowheadType="Solid" Head3D="267.00 536.00 0" Tail3D="196.00 536.00 0" BoundingBox="196.00 536.00 267.00 536.00"/>
+<graphic id="1167" GraphicType="Oval" OvalType="Circle" BoundingBox="406.00 522.00 434.00 550.00" Center3D="420.00 536.00 0" MajorAxisEnd3D="434.00 536.00 0" MinorAxisEnd3D="420.00 550.00 0"/>
+<graphic id="1168" GraphicType="Line" BoundingBox="410.20 545.80 429.80 526.20"/>
+<t id="1169" p="420.00 566.00" Justification="Center" LineHeight="auto"><s font="3" size="9" face="1">Group_D</s></t>
+<arrow id="1170" ArrowheadHead="Full" ArrowheadType="Solid" Head3D="406.00 536.00 0" Tail3D="301.00 536.00 0" BoundingBox="301.00 536.00 406.00 536.00"/>
+<arrow id="1171" ArrowheadHead="Full" ArrowheadType="Solid" Head3D="560.00 536.00 0" Tail3D="434.00 536.00 0" BoundingBox="434.00 536.00 560.00 536.00"/>
+<graphic id="1172" GraphicType="Rectangle" BoundingBox="405.00 675.00 435.00 697.00"/>
+<graphic id="1173" GraphicType="Oval" OvalType="Circle" BoundingBox="415.00 681.00 425.00 691.00" Center3D="420.00 686.00 0" MajorAxisEnd3D="425.00 686.00 0" MinorAxisEnd3D="420.00 691.00 0"/>
+<t id="1174" p="420.00 706.00" Justification="Center" LineHeight="auto"><s font="3" size="8" face="0">Push pump</s></t>
+<t id="1175" p="44.00 686.00" Justification="Center" LineHeight="auto"><s font="3" size="8" face="0">Solvent</s></t>
+<arrow id="1176" ArrowheadHead="Full" ArrowheadType="Solid" Head3D="405.00 686.00 0" Tail3D="68.00 686.00 0" BoundingBox="68.00 686.00 405.00 686.00"/>
+<arrow id="1177" ArrowheadHead="Full" ArrowheadType="Solid" Head3D="560.00 686.00 0" Tail3D="435.00 686.00 0" BoundingBox="435.00 686.00 560.00 686.00"/>
+<graphic id="1178" GraphicType="Rectangle" BoundingBox="36.00 821.00 52.00 851.00"/>
+<graphic id="1179" GraphicType="Oval" OvalType="Circle" BoundingBox="36.00 813.00 52.00 829.00" Center3D="44.00 821.00 0" MajorAxisEnd3D="52.00 821.00 0" MinorAxisEnd3D="44.00 829.00 0"/>
+<t id="1180" p="44.00 859.00" Justification="Center" LineHeight="auto"><s font="3" size="8" face="1">N2</s></t>
+<graphic id="1181" GraphicType="Rectangle" BoundingBox="165.00 827.00 195.00 845.00"/>
+<t id="1182" p="180.00 836.00" Justification="Center" LineHeight="auto"><s font="3" size="7" face="0">MFC</s></t>
+<arrow id="1183" ArrowheadHead="Full" ArrowheadType="Solid" Head3D="165.00 836.00 0" Tail3D="52.00 836.00 0" BoundingBox="52.00 836.00 165.00 836.00"/>
+<arrow id="1184" ArrowheadHead="Full" ArrowheadType="Solid" Head3D="560.00 836.00 0" Tail3D="195.00 836.00 0" BoundingBox="195.00 836.00 560.00 836.00"/>
+<graphic id="1185" GraphicType="Line" BoundingBox="560.00 86.00 560.00 836.00"/>
+<graphic id="1186" GraphicType="Oval" OvalType="Circle Filled" BoundingBox="556.50 82.50 563.50 89.50" Center3D="560.00 86.00 0" MajorAxisEnd3D="563.50 86.00 0" MinorAxisEnd3D="560.00 89.50 0"/>
+<graphic id="1187" GraphicType="Oval" OvalType="Circle Filled" BoundingBox="556.50 232.50 563.50 239.50" Center3D="560.00 236.00 0" MajorAxisEnd3D="563.50 236.00 0" MinorAxisEnd3D="560.00 239.50 0"/>
+<graphic id="1188" GraphicType="Oval" OvalType="Circle Filled" BoundingBox="556.50 382.50 563.50 389.50" Center3D="560.00 386.00 0" MajorAxisEnd3D="563.50 386.00 0" MinorAxisEnd3D="560.00 389.50 0"/>
+<graphic id="1189" GraphicType="Oval" OvalType="Circle Filled" BoundingBox="556.50 532.50 563.50 539.50" Center3D="560.00 536.00 0" MajorAxisEnd3D="563.50 536.00 0" MinorAxisEnd3D="560.00 539.50 0"/>
+<graphic id="1190" GraphicType="Oval" OvalType="Circle Filled" BoundingBox="556.50 682.50 563.50 689.50" Center3D="560.00 686.00 0" MajorAxisEnd3D="563.50 686.00 0" MinorAxisEnd3D="560.00 689.50 0"/>
+<graphic id="1191" GraphicType="Oval" OvalType="Circle Filled" BoundingBox="556.50 832.50 563.50 839.50" Center3D="560.00 836.00 0" MajorAxisEnd3D="563.50 836.00 0" MinorAxisEnd3D="560.00 839.50 0"/>
+<arrow id="1192" ArrowheadHead="Full" ArrowheadType="Solid" Head3D="662.00 461.00 0" Tail3D="560.00 461.00 0" BoundingBox="560.00 461.00 662.00 461.00"/>
+<graphic id="1193" GraphicType="Oval" OvalType="Circle" BoundingBox="664.00 446.00 675.00 476.00" Center3D="669.50 461.00 0" MajorAxisEnd3D="675.00 461.00 0" MinorAxisEnd3D="669.50 476.00 0"/>
+<graphic id="1194" GraphicType="Oval" OvalType="Circle" BoundingBox="673.00 446.00 684.00 476.00" Center3D="678.50 461.00 0" MajorAxisEnd3D="684.00 461.00 0" MinorAxisEnd3D="678.50 476.00 0"/>
+<graphic id="1195" GraphicType="Oval" OvalType="Circle" BoundingBox="682.00 446.00 693.00 476.00" Center3D="687.50 461.00 0" MajorAxisEnd3D="693.00 461.00 0" MinorAxisEnd3D="687.50 476.00 0"/>
+<graphic id="1196" GraphicType="Oval" OvalType="Circle" BoundingBox="691.00 446.00 702.00 476.00" Center3D="696.50 461.00 0" MajorAxisEnd3D="702.00 461.00 0" MinorAxisEnd3D="696.50 476.00 0"/>
+<graphic id="1197" GraphicType="Oval" OvalType="Circle" BoundingBox="700.00 446.00 711.00 476.00" Center3D="705.50 461.00 0" MajorAxisEnd3D="711.00 461.00 0" MinorAxisEnd3D="705.50 476.00 0"/>
+<graphic id="1198" GraphicType="Oval" OvalType="Circle" BoundingBox="709.00 446.00 720.00 476.00" Center3D="714.50 461.00 0" MajorAxisEnd3D="720.00 461.00 0" MinorAxisEnd3D="714.50 476.00 0"/>
+<t id="1199" p="692.00 487.00" Justification="Center" LineHeight="auto"><s font="3" size="9" face="1">Reactor</s></t>
+<t id="1200" p="692.00 499.00" Justification="Center" LineHeight="auto"><s font="3" size="7" face="0">3.82 m x 1.0 mm</s></t>
+<t id="1201" p="692.00 435.00" Justification="Center" LineHeight="auto"><s font="3" size="7" face="0">Heater</s></t>
+<arrow id="1202" ArrowheadHead="Full" ArrowheadType="Solid" Head3D="812.00 461.00 0" Tail3D="722.00 461.00 0" BoundingBox="722.00 461.00 812.00 461.00"/>
+<graphic id="1203" GraphicType="Oval" OvalType="Circle" BoundingBox="818.00 449.00 842.00 473.00" Center3D="830.00 461.00 0" MajorAxisEnd3D="842.00 461.00 0" MinorAxisEnd3D="830.00 473.00 0"/>
+<graphic id="1204" GraphicType="Line" BoundingBox="818.00 461.00 812.00 461.00"/>
+<graphic id="1205" GraphicType="Line" BoundingBox="842.00 461.00 848.00 461.00"/>
+<graphic id="1206" GraphicType="Line" BoundingBox="830.00 473.00 830.00 479.00"/>
+<graphic id="1207" GraphicType="Line" BoundingBox="830.00 461.00 830.00 469.40"/>
+<t id="1208" p="830.00 487.00" Justification="Center" LineHeight="auto"><s font="3" size="8" face="0">Outlet 3-Way</s></t>
+<arrow id="1209" ArrowheadHead="Full" ArrowheadType="Solid" Head3D="830.00 431.00 0" Tail3D="830.00 453.00 0" BoundingBox="830.00 431.00 830.00 453.00"/>
+<t id="1210" p="830.00 423.00" Justification="Center" LineHeight="auto"><s font="3" size="8" face="0">Waste</s></t>
+<arrow id="1211" ArrowheadHead="Full" ArrowheadType="Solid" Head3D="914.00 461.00 0" Tail3D="848.00 461.00 0" BoundingBox="848.00 461.00 914.00 461.00"/>
+<graphic id="1212" GraphicType="Rectangle" BoundingBox="914.00 444.00 966.00 478.00"/>
+<graphic id="1213" GraphicType="Oval" OvalType="Circle Filled" BoundingBox="916.40 447.40 919.60 450.60" Center3D="918.00 449.00 0" MajorAxisEnd3D="919.60 449.00 0" MinorAxisEnd3D="918.00 450.60 0"/>
+<graphic id="1214" GraphicType="Oval" OvalType="Circle Filled" BoundingBox="925.40 447.40 928.60 450.60" Center3D="927.00 449.00 0" MajorAxisEnd3D="928.60 449.00 0" MinorAxisEnd3D="927.00 450.60 0"/>
+<graphic id="1215" GraphicType="Oval" OvalType="Circle Filled" BoundingBox="934.40 447.40 937.60 450.60" Center3D="936.00 449.00 0" MajorAxisEnd3D="937.60 449.00 0" MinorAxisEnd3D="936.00 450.60 0"/>
+<graphic id="1216" GraphicType="Oval" OvalType="Circle Filled" BoundingBox="943.40 447.40 946.60 450.60" Center3D="945.00 449.00 0" MajorAxisEnd3D="946.60 449.00 0" MinorAxisEnd3D="945.00 450.60 0"/>
+<graphic id="1217" GraphicType="Oval" OvalType="Circle Filled" BoundingBox="952.40 447.40 955.60 450.60" Center3D="954.00 449.00 0" MajorAxisEnd3D="955.60 449.00 0" MinorAxisEnd3D="954.00 450.60 0"/>
+<graphic id="1218" GraphicType="Oval" OvalType="Circle Filled" BoundingBox="961.40 447.40 964.60 450.60" Center3D="963.00 449.00 0" MajorAxisEnd3D="964.60 449.00 0" MinorAxisEnd3D="963.00 450.60 0"/>
+<graphic id="1219" GraphicType="Oval" OvalType="Circle Filled" BoundingBox="916.40 455.40 919.60 458.60" Center3D="918.00 457.00 0" MajorAxisEnd3D="919.60 457.00 0" MinorAxisEnd3D="918.00 458.60 0"/>
+<graphic id="1220" GraphicType="Oval" OvalType="Circle Filled" BoundingBox="925.40 455.40 928.60 458.60" Center3D="927.00 457.00 0" MajorAxisEnd3D="928.60 457.00 0" MinorAxisEnd3D="927.00 458.60 0"/>
+<graphic id="1221" GraphicType="Oval" OvalType="Circle Filled" BoundingBox="934.40 455.40 937.60 458.60" Center3D="936.00 457.00 0" MajorAxisEnd3D="937.60 457.00 0" MinorAxisEnd3D="936.00 458.60 0"/>
+<graphic id="1222" GraphicType="Oval" OvalType="Circle Filled" BoundingBox="943.40 455.40 946.60 458.60" Center3D="945.00 457.00 0" MajorAxisEnd3D="946.60 457.00 0" MinorAxisEnd3D="945.00 458.60 0"/>
+<graphic id="1223" GraphicType="Oval" OvalType="Circle Filled" BoundingBox="952.40 455.40 955.60 458.60" Center3D="954.00 457.00 0" MajorAxisEnd3D="955.60 457.00 0" MinorAxisEnd3D="954.00 458.60 0"/>
+<graphic id="1224" GraphicType="Oval" OvalType="Circle Filled" BoundingBox="961.40 455.40 964.60 458.60" Center3D="963.00 457.00 0" MajorAxisEnd3D="964.60 457.00 0" MinorAxisEnd3D="963.00 458.60 0"/>
+<graphic id="1225" GraphicType="Oval" OvalType="Circle Filled" BoundingBox="916.40 463.40 919.60 466.60" Center3D="918.00 465.00 0" MajorAxisEnd3D="919.60 465.00 0" MinorAxisEnd3D="918.00 466.60 0"/>
+<graphic id="1226" GraphicType="Oval" OvalType="Circle Filled" BoundingBox="925.40 463.40 928.60 466.60" Center3D="927.00 465.00 0" MajorAxisEnd3D="928.60 465.00 0" MinorAxisEnd3D="927.00 466.60 0"/>
+<graphic id="1227" GraphicType="Oval" OvalType="Circle Filled" BoundingBox="934.40 463.40 937.60 466.60" Center3D="936.00 465.00 0" MajorAxisEnd3D="937.60 465.00 0" MinorAxisEnd3D="936.00 466.60 0"/>
+<graphic id="1228" GraphicType="Oval" OvalType="Circle Filled" BoundingBox="943.40 463.40 946.60 466.60" Center3D="945.00 465.00 0" MajorAxisEnd3D="946.60 465.00 0" MinorAxisEnd3D="945.00 466.60 0"/>
+<graphic id="1229" GraphicType="Oval" OvalType="Circle Filled" BoundingBox="952.40 463.40 955.60 466.60" Center3D="954.00 465.00 0" MajorAxisEnd3D="955.60 465.00 0" MinorAxisEnd3D="954.00 466.60 0"/>
+<graphic id="1230" GraphicType="Oval" OvalType="Circle Filled" BoundingBox="961.40 463.40 964.60 466.60" Center3D="963.00 465.00 0" MajorAxisEnd3D="964.60 465.00 0" MinorAxisEnd3D="963.00 466.60 0"/>
+<graphic id="1231" GraphicType="Oval" OvalType="Circle Filled" BoundingBox="916.40 471.40 919.60 474.60" Center3D="918.00 473.00 0" MajorAxisEnd3D="919.60 473.00 0" MinorAxisEnd3D="918.00 474.60 0"/>
+<graphic id="1232" GraphicType="Oval" OvalType="Circle Filled" BoundingBox="925.40 471.40 928.60 474.60" Center3D="927.00 473.00 0" MajorAxisEnd3D="928.60 473.00 0" MinorAxisEnd3D="927.00 474.60 0"/>
+<graphic id="1233" GraphicType="Oval" OvalType="Circle Filled" BoundingBox="934.40 471.40 937.60 474.60" Center3D="936.00 473.00 0" MajorAxisEnd3D="937.60 473.00 0" MinorAxisEnd3D="936.00 474.60 0"/>
+<graphic id="1234" GraphicType="Oval" OvalType="Circle Filled" BoundingBox="943.40 471.40 946.60 474.60" Center3D="945.00 473.00 0" MajorAxisEnd3D="946.60 473.00 0" MinorAxisEnd3D="945.00 474.60 0"/>
+<graphic id="1235" GraphicType="Oval" OvalType="Circle Filled" BoundingBox="952.40 471.40 955.60 474.60" Center3D="954.00 473.00 0" MajorAxisEnd3D="955.60 473.00 0" MinorAxisEnd3D="954.00 474.60 0"/>
+<graphic id="1236" GraphicType="Oval" OvalType="Circle Filled" BoundingBox="961.40 471.40 964.60 474.60" Center3D="963.00 473.00 0" MajorAxisEnd3D="964.60 473.00 0" MinorAxisEnd3D="963.00 474.60 0"/>
+<t id="1237" p="940.00 487.00" Justification="Center" LineHeight="auto"><s font="3" size="8" face="0">96-well</s></t>
+</page></CDXML>

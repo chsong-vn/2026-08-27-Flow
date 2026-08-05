@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 70 70" fill="none" aria-label="12-way Valve">
+  <g stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" vector-effect="non-scaling-stroke">
+    <!-- main body -->
+    <circle cx="35" cy="35" r="21"/>
+    <circle cx="35" cy="35" r="3.2"/>
+
+    <!-- port stub (schematic connection) -->
+    <line x1="56" y1="35" x2="70" y2="35"/>
+
+    <!-- 12 holes: cleaner spacing -->
+    <g>
+      <circle cx="35" cy="14.0" r="2.0"/>
+      <circle cx="45.5" cy="16.8" r="2.0"/>
+      <circle cx="53.2" cy="24.5" r="2.0"/>
+      <circle cx="56.0" cy="35.0" r="2.0"/>
+      <circle cx="53.2" cy="45.5" r="2.0"/>
+      <circle cx="45.5" cy="53.2" r="2.0"/>
+      <circle cx="35.0" cy="56.0" r="2.0"/>
+      <circle cx="24.5" cy="53.2" r="2.0"/>
+      <circle cx="16.8" cy="45.5" r="2.0"/>
+      <circle cx="14.0" cy="35.0" r="2.0"/>
+      <circle cx="16.8" cy="24.5" r="2.0"/>
+      <circle cx="24.5" cy="16.8" r="2.0"/>
+    </g>
+
+    <!-- selector pointer -->
+    <path d="M35 35 L50 28"/>
+    <path d="M50 28 L47.2 27.4"/>
+    <path d="M50 28 L48.6 30.6"/>
+  </g>
+</svg>

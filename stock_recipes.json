@@ -1,0 +1,23 @@
+{
+  "presets": {},
+  "assignments": {
+    "Group A|2": {
+      "name": "",
+      "total_volume_ml": 0.0,
+      "solvents": [],
+      "components": [
+        {
+          "reagent": "",
+          "molarity": 1.0,
+          "smiles": "",
+          "limiting": true
+        },
+        {
+          "reagent": "",
+          "molarity": 0.0,
+          "smiles": ""
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 50" fill="none" aria-label="HPLC Pump">
+  <g stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" vector-effect="non-scaling-stroke">
+    <!-- inlet line -->
+    <line x1="0" y1="25" x2="10" y2="25"/>
+
+    <!-- pump housing -->
+    <rect x="10" y="10" width="46" height="30" rx="3"/>
+    <rect x="10" y="10" width="46" height="30" rx="3" fill="currentColor" opacity="0.06"/>
+
+    <!-- pressure gauge (top-left) -->
+    <circle cx="20" cy="16" r="5"/>
+    <path d="M20 16 L23 14" />
+    <path d="M17.5 16.5 C18.6 18.2 21.4 18.2 22.5 16.5" opacity="0.7"/>
+
+    <!-- check valve symbol (inlet) -->
+    <path d="M14 25 L18 22 L18 28 Z"/>
+    <line x1="18" y1="22" x2="18" y2="28"/>
+
+    <!-- dual piston chamber -->
+    <rect x="28" y="18" width="20" height="14" rx="2" fill="currentColor" opacity="0.08"/>
+    <rect x="28" y="18" width="20" height="14" rx="2"/>
+
+    <!-- pistons -->
+    <line x1="30" y1="21" x2="30" y2="29"/>
+    <line x1="34" y1="21" x2="34" y2="29"/>
+    <line x1="42" y1="21" x2="42" y2="29"/>
+    <line x1="46" y1="21" x2="46" y2="29"/>
+
+    <!-- outlet check valve (small) -->
+    <path d="M52 25 L48 22 L48 28 Z"/>
+    <line x1="48" y1="22" x2="48" y2="28"/>
+
+    <!-- outlet line + fitting -->
+    <line x1="56" y1="25" x2="80" y2="25"/>
+    <line x1="60" y1="21" x2="60" y2="29" opacity="0.9"/>
+  </g>
+</svg>

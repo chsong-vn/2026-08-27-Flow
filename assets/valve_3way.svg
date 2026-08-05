@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 60 50" fill="none" aria-label="3-way Valve (rotary)">
+  <g stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" vector-effect="non-scaling-stroke">
+    <!-- port stubs -->
+    <line x1="0" y1="26" x2="14" y2="26"/>
+    <line x1="46" y1="26" x2="60" y2="26"/>
+    <line x1="30" y1="0" x2="30" y2="12"/>
+
+    <!-- valve body -->
+    <circle cx="30" cy="26" r="14.5"/>
+    <circle cx="30" cy="26" r="3.2"/>
+
+    <!-- three port holes (family look with 12-way) -->
+    <circle cx="30" cy="12.8" r="2.0"/>
+    <circle cx="43.2" cy="26" r="2.0"/>
+    <circle cx="16.8" cy="26" r="2.0"/>
+
+    <!-- selector channel (more "valve" feel than arrow only) -->
+    <path d="M30 26 C34 23, 36 22, 41 20"/>
+    <path d="M41 20 L38.2 19.4"/>
+    <path d="M41 20 L39.6 22.6"/>
+
+    <!-- actuator dome -->
+    <path d="M21.5 12 Q30 5.2 38.5 12" fill="currentColor" opacity="0.14"/>
+    <path d="M21.5 12 Q30 5.2 38.5 12"/>
+    <line x1="30" y1="12" x2="30" y2="16"/>
+  </g>
+</svg>

@@ -1,0 +1,235 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <link rel="stylesheet" href="vendor/tab_tabulator.min.css">
+  <script src="vendor/tab_tabulator.min.js"></script>
+  <script src="qrc:///qtwebchannel/qwebchannel.js"></script>
+  <style>
+    :root {
+      --bg: #121418; --card: #181b22;
+      --tx: #edf1fa; --tx2: #9ea7bb; --tx3: #687188;
+      --line: #212736; --line2: #344055; --band: #1e2431;
+      --row: #181b22; --row-alt: #171d28; --row-hover: #2a3243; --header-tx: #9ea7bb;
+      --brand: #3b9eff; --brand-weak: rgba(59,158,255,.16);
+      --inp: #131722; --smiles: #79839a; --edit: #3b9eff;
+      --chip-bg: #222733; --chip-tx: #9ea7bb; --hdr: #cfd5e4; --font: "Segoe UI";
+      --run: #3fb950; --run-weak: rgba(63,185,80,.12);
+      --ga: #3b9eff; --gb: #3fb950; --gc: #9d95ff; --gd: #59b0ff;
+    }
+    * { box-sizing: border-box; }
+    html, body { height: 100%; margin: 0;
+      font-family: var(--font), "Segoe UI", "Malgun Gothic", sans-serif;
+      background: var(--bg); color: var(--tx); -webkit-font-smoothing: antialiased; }
+    .page { padding: 10px 12px 8px; height: 100%; }
+    .card { background: var(--card); border: 1px solid var(--line2); border-radius: 14px;
+      padding: 12px 14px 6px; height: 100%; display: flex; flex-direction: column; }
+    .hd { display: flex; align-items: center; justify-content: space-between; margin: 0 2px 10px; gap: 10px; }
+    .title { font-size: 15px; font-weight: 700; letter-spacing: .01em; color: var(--tx); }
+    #grid { flex: 1; }
+
+    /* 위계: 본문 13.5 / 헤더 12.5 (계산기·시약 그리드와 통일) */
+    .tabulator { border: none; background: transparent; font-size: 13.5px; color: var(--tx); }
+    .tabulator .tabulator-header { border: none; border-bottom: 1px solid var(--line2);
+      background: transparent; color: var(--header-tx); }
+    .tabulator .tabulator-header .tabulator-col { background: transparent; border: none; }
+    .tabulator .tabulator-header .tabulator-col .tabulator-col-content { padding-left: 12px !important; padding-right: 12px !important; }
+    .tabulator .tabulator-col-title { color: var(--hdr); font-weight: 700; font-size: 12.5px; letter-spacing: .02em; }
+    .tabulator .tabulator-row { border-bottom: 1px solid var(--line); background: var(--row); }
+    .tabulator .tabulator-row.tabulator-row-even { background: var(--row-alt); }
+    .tabulator .tabulator-row:hover { background: var(--row-hover); }
+    .tabulator .tabulator-cell { border: none; padding: 7px 12px; color: var(--tx); vertical-align: middle; }
+    .tabulator .tabulator-cell.tabulator-editing { border: 1px solid var(--edit) !important;
+      background: var(--card) !important; padding: 6px 11px; }
+    .tabulator .tabulator-cell input { color: var(--tx); background: var(--card); }
+    .c-muted { color: var(--tx2); }
+    .c-inp { background: var(--inp); }
+    .c-res { color: var(--brand); font-weight: 600; }
+
+    /* 2줄 헤더 (라벨 + 단위) — calc_grid 규격 */
+    .hcell { display: flex; flex-direction: column; line-height: 1.15; }
+    .hcell .h-main { font-size: 12.5px; font-weight: 700; color: var(--hdr); }
+    .hcell .h-unit { font-size: 10.5px; font-weight: 500; color: var(--hdr); opacity: .75; }
+
+    /* 상태 배지 */
+    .st-badge { display: inline-block; padding: 1px 9px; border-radius: 9px;
+      font-size: 11px; font-weight: 600; white-space: nowrap; }
+    .st-ok { background: var(--run-weak); color: var(--run); }
+    .st-err { background: rgba(229,83,75,.14); color: #e5534b; }
+
+    /* 그룹 밴드 */
+    .tabulator .tabulator-group { background: var(--band); border: none;
+      border-top: 1px solid var(--line2); border-bottom: 1px solid var(--line2); padding: 0; }
+    .tabulator .tabulator-group .tabulator-arrow,
+    .tabulator .tabulator-group .tabulator-group-toggle { display: none !important; }
+    .grp-band { display: flex; align-items: center; height: 100%; min-height: 33px; padding: 0 14px; }
+    .grp-name { font-weight: 700; font-size: 12.5px; letter-spacing: .03em; }
+    .tabulator .tabulator-group span { margin-left: 0 !important; color: inherit; }
+
+    /* Tabulator 기본 하드코딩색 → 팔레트 */
+    .tabulator .tabulator-tableholder .tabulator-table { background-color: transparent !important; color: var(--tx) !important; }
+    .tabulator .tabulator-row.tabulator-selectable:hover { background-color: var(--row-hover) !important; }
+    .tabulator .tabulator-row.tabulator-selected,
+    .tabulator .tabulator-row.tabulator-selected:hover { background-color: var(--brand-weak) !important; }
+    .tabulator .tabulator-range-highlight { background-color: transparent !important; color: inherit !important; }
+    .tabulator .tabulator-cell.tabulator-range-row-header,
+    .tabulator .tabulator-range-highlight .tabulator-cell.tabulator-range-row-header,
+    .tabulator .tabulator-row-header { background-color: transparent !important; color: var(--tx3) !important; }
+    .tabulator .tabulator-header .tabulator-col.tabulator-range-selected,
+    .tabulator .tabulator-col.tabulator-range-highlight { background-color: transparent !important; }
+    .tabulator .tabulator-header .tabulator-col.tabulator-range-selected .tabulator-col-title,
+    .tabulator .tabulator-col.tabulator-range-highlight .tabulator-col-title { color: var(--tx2) !important; }
+    .tabulator .tabulator-cell.tabulator-range-selected,
+    .tabulator-row.tabulator-range-selected .tabulator-cell.tabulator-range-row-header,
+    .tabulator-range-selected:not(.tabulator-range-only-cell-selected):not(.tabulator-range-row-header) {
+      background-color: var(--brand-weak) !important; color: var(--tx) !important; }
+    .tabulator .tabulator-range-overlay .tabulator-range { border: 1.5px solid var(--brand); }
+
+    .tabulator-tableholder::-webkit-scrollbar { width: 10px; height: 10px; }
+    .tabulator-tableholder::-webkit-scrollbar-thumb { background: var(--line2); border-radius: 5px; }
+    .tabulator-tableholder::-webkit-scrollbar-track { background: transparent; }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <div class="card">
+      <div class="hd">
+        <div class="title">일괄 희석</div>
+      </div>
+      <div id="grid"></div>
+    </div>
+  </div>
+  <script>
+    const num = (v) => { const f = parseFloat(String(v).replace(',', '.')); return isFinite(f) ? f : 0; };
+    const rnd = (v, d = 4) => Math.round(v * 10 ** d) / 10 ** d;
+
+    function gcolor(v) {
+      const cs = getComputedStyle(document.documentElement);
+      return cs.getPropertyValue('--g' + String(v).toLowerCase()).trim() ||
+             cs.getPropertyValue('--brand').trim();
+    }
+    function setVars(t) {
+      const r = document.documentElement.style;
+      for (const k in t) r.setProperty('--' + k, t[k]);
+      if (table) table.redraw(true);
+    }
+
+    // V1(원액량) = C2·V2 / C1,  용매 = V2 − V1.  C2 > C1 → 원액 부족(농축 불가).
+    function recalc(d) {
+      const C1 = num(d.c1), C2 = num(d.c2), V2 = num(d.v2);
+      d.v1 = null; d.solv = null; d.status = "";
+      if (C1 > 0 && C2 > 0 && V2 > 0) {
+        const v1 = rnd(C2 * V2 / C1);
+        if (v1 > V2 + 1e-9) {
+          d.v1 = v1; d.status = "short";
+        } else {
+          d.v1 = v1; d.solv = rnd(V2 - v1); d.status = "ok";
+        }
+      }
+    }
+
+    function recalcAll() {
+      if (!table) return;
+      const rows = [];
+      table.getRows().forEach(function (r) { const d = r.getData(); recalc(d); r.update(d); rows.push(d); });
+      gridBridge && gridBridge.onCell(JSON.stringify({ _bulk: true, _rows: rows }));
+    }
+
+    const dash = (c) => { const v = c.getValue(); return (v === null || v === undefined || v === "")
+      ? `<span style="color:var(--tx3)">–</span>` : v; };
+    const statusFmt = (c) => {
+      const s = c.getValue();
+      if (s === "ok") return `<span class="st-badge st-ok">● 완료</span>`;
+      if (s === "short") return `<span class="st-badge st-err">원액 부족</span>`;
+      return "";
+    };
+
+    const uCol = (main, unit, field, opts) => Object.assign(
+      { title: `${main} (${unit})`, field, hozAlign: "right",
+        headerHozAlign: "right", editor: "number",
+        titleFormatter: () =>
+          `<div class="hcell"><span class="h-main">${main}</span>` +
+          `<span class="h-unit">(${unit})</span></div>` },
+      opts || {});
+
+    const COLUMNS = [
+      { title: "포트", field: "port", width: 58, cssClass: "c-muted" },
+      { title: "시약명", field: "name", widthGrow: 1.2, minWidth: 140, editor: "input",
+        tooltip: true, editorParams: { placeholder: "시약명" } },
+      uCol("원액 C1", "M", "c1", { width: 100, cssClass: "c-inp", formatter: dash }),
+      uCol("목표 C2", "M", "c2", { width: 100, cssClass: "c-inp", formatter: dash }),
+      uCol("총 부피", "mL", "v2", { width: 96, cssClass: "c-inp", formatter: dash }),
+      uCol("원액량", "mL", "v1", { width: 100, cssClass: "c-res", editor: false, formatter: dash }),
+      uCol("용매량", "mL", "solv", { width: 100, cssClass: "c-res", editor: false, formatter: dash }),
+      { title: "상태", field: "status", width: 104, headerHozAlign: "center",
+        hozAlign: "center", formatter: statusFmt },
+    ];
+
+    let table = null, gridBridge = null;
+
+    new QWebChannel(qt.webChannelTransport, function (channel) {
+      const bridge = channel.objects.bridge;
+      gridBridge = bridge;
+
+      bridge.applyTheme.connect(function (json) {
+        try { setVars(JSON.parse(json)); } catch (e) {}
+      });
+      bridge.updateRows.connect(function (json) {
+        if (!table) return;
+        const rows = JSON.parse(json);
+        table.updateOrAddData(rows).then(function () {
+          rows.forEach(function (u) {
+            const row = table.getRow(u._id);
+            if (row) { const d = row.getData(); recalc(d); row.update(d); }
+          });
+        });
+      });
+      bridge.replaceRows.connect(function (json) {
+        if (!table) return;
+        const rows = JSON.parse(json);
+        rows.forEach(recalc);
+        table.replaceData(rows);
+      });
+      bridge.configReady.connect(function (rowsJson) {
+        const rows = JSON.parse(rowsJson);
+        rows.forEach(recalc);
+        table = new Tabulator("#grid", {
+          data: rows,
+          height: "100%",
+          layout: "fitColumns",
+          columns: COLUMNS,
+          columnDefaults: { headerSort: false },
+          index: "_id",
+          groupBy: "grp",
+          groupStartOpen: true,
+          groupHeader: function (value, count, data) {
+            const c = gcolor(value);
+            return `<div class="grp-band" style="box-shadow:inset 3px 0 0 ${c}">` +
+              `<span class="grp-name" style="color:${c}">GROUP ${value}</span></div>`;
+          },
+          clipboard: true,
+          clipboardCopyStyled: false,
+          clipboardPasteAction: "range",
+          selectableRange: true,
+          selectableRangeColumns: true,
+          selectableRangeRows: true,
+          editTriggerEvent: "dblclick",
+          rowHeight: 36,
+        });
+
+        table.on("cellEdited", function (cell) {
+          const row = cell.getRow(), d = row.getData();
+          recalc(d); row.update(d);
+          gridBridge && gridBridge.onCell(JSON.stringify(d));
+        });
+        table.on("clipboardPasted", function () {
+          const rows = [];
+          table.getRows().forEach(r => { const d = r.getData(); recalc(d); r.update(d); rows.push(d); });
+          gridBridge && gridBridge.onCell(JSON.stringify({ _bulk: true, _rows: rows }));
+        });
+      });
+      bridge.onReady();
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,18 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python:*)",
+      "Bash(find:*)",
+      "Bash(dir:*)",
+      "Bash(set:*)",
+      "Bash(findstr:*)",
+      "Bash(grep:*)",
+      "WebFetch(domain:chemyx.com)",
+      "Bash(gh api:*)",
+      "WebFetch(domain:github.com)",
+      "WebFetch(domain:raw.githubusercontent.com)",
+      "WebFetch(domain:pachterlab.github.io)",
+      "WebFetch(domain:www.biorxiv.org)"
+    ]
+  }
+}

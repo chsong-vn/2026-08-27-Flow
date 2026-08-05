@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 50" fill="none" aria-label="Vapourtec SF-10 Pump (icon)">
+  <g stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" vector-effect="non-scaling-stroke">
+    <!-- inlet / outlet lines -->
+    <line x1="0" y1="25" x2="10" y2="25"/>
+    <line x1="70" y1="25" x2="80" y2="25"/>
+
+    <!-- module body -->
+    <rect x="10" y="9" width="60" height="32" rx="3"/>
+    <rect x="10" y="9" width="60" height="32" rx="3" fill="currentColor" opacity="0.06"/>
+
+    <!-- front panel area -->
+    <rect x="14" y="13" width="38" height="24" rx="2" fill="currentColor" opacity="0.04"/>
+    <rect x="14" y="13" width="38" height="24" rx="2" opacity="0.9"/>
+
+    <!-- display -->
+    <rect x="17" y="16" width="18" height="8" rx="1.8" fill="currentColor" opacity="0.10"/>
+    <rect x="17" y="16" width="18" height="8" rx="1.8"/>
+    <!-- small UI lines -->
+    <line x1="19" y1="27" x2="33" y2="27" opacity="0.8"/>
+    <line x1="19" y1="30.5" x2="30" y2="30.5" opacity="0.7"/>
+
+    <!-- control knob -->
+    <circle cx="58" cy="25" r="6.2" fill="currentColor" opacity="0.08"/>
+    <circle cx="58" cy="25" r="6.2"/>
+    <path d="M58 25 L61.5 22.5" />
+    <circle cx="58" cy="25" r="1.2" />
+
+    <!-- ports/fittings on front (stylized) -->
+    <circle cx="12" cy="25" r="1.6"/>
+    <circle cx="68" cy="25" r="1.6"/>
+    <line x1="66" y1="21" x2="66" y2="29" opacity="0.85"/>
+
+    <!-- subtle feet -->
+    <line x1="16" y1="41" x2="22" y2="41" opacity="0.75"/>
+    <line x1="58" y1="41" x2="64" y2="41" opacity="0.75"/>
+  </g>
+</svg>

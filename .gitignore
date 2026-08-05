@@ -1,0 +1,16 @@
+# Python
+__pycache__/
+*.pyc
+
+# 런타임 산출물 (코드 아님 — 실험/시뮬레이션 출력)
+logs/
+results/
+temp/
+remote_cmd.txt
+
+# 수동 백업/아카이브 (git이 이 역할을 대체)
+_backup/
+_archive_20260805/
+*.bak
+*.bak[0-9]
+*.bak_*

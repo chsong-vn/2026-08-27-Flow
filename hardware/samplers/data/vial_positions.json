@@ -1,0 +1,30 @@
+{
+    "_comment": "Cartesian Sampler vial positions (mm, machine work coordinates). After Grbl homing, $H sets origin and G92 sets X0/Y0/Z0. All vials shown here as TEMPLATE - measure your own coordinates.",
+    "safe_z": -2.0,
+    "vials_top_z": -25.0,
+    "vials": {
+        "A1": {"x":  10.0, "y":  10.0},
+        "A2": {"x":  30.0, "y":  10.0},
+        "A3": {"x":  50.0, "y":  10.0},
+        "A4": {"x":  70.0, "y":  10.0},
+        "B1": {"x":  10.0, "y":  30.0},
+        "B2": {"x":  30.0, "y":  30.0},
+        "B3": {"x":  50.0, "y":  30.0},
+        "B4": {"x":  70.0, "y":  30.0},
+        "waste":   {"x": 120.0, "y":  10.0},
+        "rinse":   {"x": 120.0, "y":  30.0},
+        "gas":     {"x": 120.0, "y":  50.0}
+    },
+    "injection_ports": {
+        "injection_flow": {
+            "x": 150.0, "y":  10.0, "z": -35.0,
+            "valve": "ON",
+            "comment": "Main flow injection — aux valve to system"
+        },
+        "injection_waste": {
+            "x": 150.0, "y":  30.0, "z": -35.0,
+            "valve": "OFF",
+            "comment": "Waste injection — aux valve to waste"
+        }
+    }
+}

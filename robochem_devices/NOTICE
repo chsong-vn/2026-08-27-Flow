@@ -1,0 +1,33 @@
+Copyright 2025 Noël Research Group (https://www.noelresearchgroup.com)
+
+Robochem-Flex is a low-cost, modular self-driving laboratory platform 
+designed to democratize autonomous chemical experimentation.
+The system combines customizable, in-house-built hardware with a flexible
+Python-based software framework that integrates real-time device control 
+and advanced Bayesian optimization strategies, including multi-objective
+and transfer learning workflows. 
+
+Robochem-Flex is licensed under the Apache License, Version 2.0 (the "License");
+you may not use these files except in compliance with the License.
+You may obtain a copy of the License at
+
+	 http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+
+
+--- 2026-07-04 추가 (참고자료 확장) ---
+_reference/originals/unit_tasks_sampling/ :
+  Robochem_Flex (github.com/Noel-Research-Group/Robochem_Flex, master) 의
+  Control Software/OmniPlatypus/OmniPlatypus/omniplatypus/procedures/unit_tasks/
+  에서 무수정 사본으로 보존 (Apache-2.0):
+    - sampling/liquid_handler_sampling.py  (PumpSample/PrepareReactionSlug/CleanNeedle 등)
+    - sampling/liquid_handler_injecting.py (Inject/ConnectInjectionPort)
+    - sampling/liquid_handler_moving.py    (SamplerTask/HomeSampler)
+    - sampling/__init__.py, base_unit_task.py
+  용도: engine/sampler_coordinator.py (오토샘플러 조율 v0) 의 프로토콜 원전.
+  런타임에는 로드되지 않음 (참고자료).

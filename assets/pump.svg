@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 50" fill="none" aria-label="Syringe Pump">
+  <g stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" vector-effect="non-scaling-stroke">
+    <!-- inlet line -->
+    <line x1="0" y1="25" x2="12" y2="25"/>
+
+    <!-- pump body -->
+    <rect x="12" y="14" width="34" height="22" />
+    <!-- plunger housing -->
+    <rect x="46" y="16" width="10" height="18" />
+    <!-- plunger rod -->
+    <line x1="56" y1="19" x2="72" y2="19"/>
+    <line x1="56" y1="31" x2="72" y2="31"/>
+    <!-- end cap -->
+    <line x1="72" y1="16" x2="72" y2="34"/>
+
+    <!-- small detail line -->
+    <line x1="20" y1="18" x2="20" y2="32"/>
+  </g>
+</svg>

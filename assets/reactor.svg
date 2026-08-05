@@ -1,0 +1,41 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 70 100" fill="none" aria-label="Flow Reactor / Heating Module">
+  <g stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" vector-effect="non-scaling-stroke">
+    <!-- outer module -->
+    <rect x="6" y="18" width="58" height="64" rx="3"/>
+
+    <!-- dashed inner boundary -->
+    <rect x="12" y="26" width="46" height="48" rx="2" stroke-dasharray="5 4" opacity="0.85"/>
+
+    <!-- heater symbol box -->
+    <rect x="23" y="22" width="24" height="12" rx="2" fill="currentColor" opacity="0.10"/>
+    <rect x="23" y="22" width="24" height="12" rx="2"/>
+    <path d="M26 30 L29 26 L32 30 L35 26 L38 30 L41 26 L44 30"/>
+
+    <!-- coil chamber -->
+    <rect x="16" y="42" width="38" height="30" rx="3" fill="currentColor" opacity="0.08"/>
+    <rect x="16" y="42" width="38" height="30" rx="3"/>
+
+    <!-- coiled tubing: repeated loops (spring/coil feel) -->
+    <!-- faint back line to give depth -->
+    <g opacity="0.85">
+      <ellipse cx="22" cy="57" rx="3.8" ry="9.2"/>
+      <ellipse cx="28" cy="57" rx="3.8" ry="9.2"/>
+      <ellipse cx="34" cy="57" rx="3.8" ry="9.2"/>
+      <ellipse cx="40" cy="57" rx="3.8" ry="9.2"/>
+      <ellipse cx="46" cy="57" rx="3.8" ry="9.2"/>
+      <ellipse cx="52" cy="57" rx="3.8" ry="9.2"/>
+    </g>
+
+    <!-- front highlight strokes (makes it look like a wound coil, not just circles) -->
+    <path d="M18.5 49.5 C20 47, 24 47, 25.5 49.5" />
+    <path d="M24.5 64.5 C26 67, 30 67, 31.5 64.5" />
+    <path d="M30.5 49.5 C32 47, 36 47, 37.5 49.5" />
+    <path d="M36.5 64.5 C38 67, 42 67, 43.5 64.5" />
+    <path d="M42.5 49.5 C44 47, 48 47, 49.5 49.5" />
+    <path d="M48.5 64.5 C50 67, 54 67, 55.5 64.5" />
+
+    <!-- inlet/outlet -->
+    <line x1="0" y1="57" x2="6" y2="57"/>
+    <line x1="64" y1="57" x2="70" y2="57"/>
+  </g>
+</svg>

@@ -1,0 +1,490 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <link rel="stylesheet" href="vendor/tab_tabulator.min.css">
+  <script src="vendor/tab_tabulator.min.js"></script>
+  <script src="qrc:///qtwebchannel/qwebchannel.js"></script>
+  <style>
+    /* ── 색은 전부 Python 팔레트(ui/colors.py)에서 주입 · 여기 값은 다크 폴백 ── */
+    :root {
+      --bg: #121418; --card: #181b22;
+      --tx: #edf1fa; --tx2: #9ea7bb; --tx3: #687188;
+      --line: #212736; --line2: #344055; --band: #1e2431;
+      --row: #181b22; --row-alt: #171d28; --row-hover: #2a3243; --header-tx: #9ea7bb;
+      --brand: #3b9eff; --brand-weak: rgba(59,158,255,.16);
+      --inp: #131722; --smiles: #79839a; --edit: #3b9eff;
+      --chip-bg: #222733; --chip-tx: #9ea7bb; --hdr: #cfd5e4;
+      --font: "Segoe UI"; --run: #3fb950;
+      --ga: #3b9eff; --gb: #3fb950; --gc: #9d95ff; --gd: #59b0ff;
+    }
+    * { box-sizing: border-box; }
+    html, body { height: 100%; margin: 0;
+      font-family: var(--font), "Segoe UI", "Malgun Gothic", sans-serif;
+      background: var(--bg); color: var(--tx); -webkit-font-smoothing: antialiased; }
+    .page { padding: 16px 16px 10px; height: 100%; }
+    .card { background: var(--card); border: 1px solid var(--line2); border-radius: 14px;
+      padding: 14px 18px 8px; height: 100%; display: flex; flex-direction: column; }
+    .hd { display: flex; align-items: center; justify-content: space-between; margin: 0 2px 12px; gap: 12px; }
+    /* 카드 타이틀 — 계측기 UI 위계: 섹션 타이틀은 본문보다 크고 진하게 */
+    .title { font-size: 15px; font-weight: 700; letter-spacing: .01em; color: var(--tx); }
+    .tools { display: flex; align-items: center; gap: 10px; }
+    .help { font-size: 12px; color: var(--tx3); cursor: help; user-select: none; }
+    .help:hover { color: var(--tx2); }
+    .chip { background: transparent; color: var(--tx3); border: 1px solid var(--line2);
+      border-radius: 7px; padding: 3px 9px; font-size: 11px; font-weight: 500; white-space: nowrap; }
+    #grid { flex: 1; }
+
+    /* ── Tabulator → 앱 디자인 시스템 매핑 ── */
+    /* 가시성(사용자 피드백): 본문 13→13.5px, 헤더 12→12.5px + 헤더색을
+       HEADER_TEXT 토큰(밝은 테마에서 더 진함)으로 — 라이트 모드 흐릿함 해소 */
+    .tabulator { border: none; background: transparent; font-size: 13.5px; color: var(--tx); }
+    .tabulator .tabulator-header { border: none; border-bottom: 1px solid var(--line2);
+      background: transparent; color: var(--header-tx); }
+    .tabulator .tabulator-header .tabulator-col { background: transparent; border: none; }
+    .tabulator .tabulator-col-title { color: var(--hdr); font-weight: 700; font-size: 12.5px;
+      letter-spacing: .02em; }
+    .tabulator .tabulator-row { border-bottom: 1px solid var(--line); background: var(--row); }
+    .tabulator .tabulator-row.tabulator-row-even { background: var(--row-alt); }  /* zebra */
+    .tabulator .tabulator-row:hover { background: var(--row-hover); }
+    .tabulator .tabulator-cell { border: none; padding: 11px 16px; color: var(--tx);
+      vertical-align: middle; }
+    .tabulator .tabulator-cell.tabulator-editing { border: 1px solid var(--edit) !important;
+      background: var(--card) !important; padding: 10px 15px; }
+    .tabulator-edit-list { background: var(--card); color: var(--tx); }
+    .tabulator .tabulator-cell .tabulator-editing input,
+    .tabulator .tabulator-cell input { color: var(--tx); background: transparent; }
+
+    /* 셀 위계 */
+    .c-muted { color: var(--tx2); }
+    .c-inp { background: var(--inp); }
+    .c-res { color: var(--brand); font-weight: 600; }
+    .c-smiles { font-family: Consolas, "Courier New", monospace; font-size: 12px; color: var(--smiles); }
+
+    /* ── B2: 2단 헤더(IDENTITY/AMOUNT) 그룹 + 블록 경계 굵은선 ── */
+    .tabulator .tabulator-col.tabulator-col-group > .tabulator-col-content .tabulator-col-title {
+      color: var(--tx3); font-size: 10px; font-weight: 800; letter-spacing: 1.4px; }
+    .tabulator .tabulator-col-group-cols { border-top: 1px solid var(--line); }
+    /* AMOUNT 블록 시작(밀도 열) 좌측 굵은 구분선 — 정체 ↔ 정량 경계 */
+    .tabulator .tabulator-cell.col-amt-start,
+    .tabulator .tabulator-col.col-amt-start { border-left: 2px solid var(--line2) !important; }
+
+    /* ── 단위 2줄 헤더(부제 단위 잘림 방지) — 라벨 + 괄호 단위줄, 중앙정렬 ──
+       기존 "MW (g/mol)" 가 컬럼폭 초과로 잘리던 문제. 단위를 둘째 줄로 내려 안 잘림.
+       사용자 피드백: ①단위 괄호 ②편중 안 되게 중앙정렬 ③기본 헤더와 색·크기 일관.
+       h-main = 기본 col-title(var(--hdr)·700·12px)와 동일, h-unit = 같은 색(opacity
+       로만 약화, 색 일관성) + 한 단계 작게(10px·500). */
+    /* 정렬(사용자 피드백): 숫자 컬럼은 셀이 우정렬이므로 헤더도 우측 기준선에
+       맞춘다(가운데 헤더 ↔ 우측 값 어긋남 해소). uCol headerHozAlign="right" 와 세트. */
+    .hcell { display: flex; flex-direction: column; align-items: flex-end;
+      line-height: 1.16; }
+    .hcell .h-main { font-size: 12.5px; font-weight: 700; color: var(--hdr); }
+    .hcell .h-unit { font-size: 10.5px; font-weight: 500; color: var(--hdr);
+      opacity: 0.65; letter-spacing: 0.2px; }
+
+    /* ── B3: 입력칸(공통 틴트, c-inp) vs 자동계산칸(셀 배경 투명 + muted 이탤릭) ── */
+    .tabulator .tabulator-cell.cell-derived { background: transparent !important;
+      color: var(--tx2) !important; font-style: italic; }
+
+    /* ── B5: 상태 배지 ── */
+    .st-badge { display: inline-block; padding: 1px 9px; border-radius: 9px;
+      font-size: 11px; font-weight: 600; white-space: nowrap; }
+    .st-ok { color: var(--run); border: 1px solid var(--run); }
+    .st-part { color: var(--tx3); border: 1px solid var(--line2); }
+
+    /* ── 그룹(펌프) 밴드 — 아이콘/점 없이 좌측 컬러바만 ── */
+    .tabulator .tabulator-group { background: var(--band); border: none;
+      border-top: 1px solid var(--line2); border-bottom: 1px solid var(--line2);
+      padding: 0; }
+    .tabulator .tabulator-group.tabulator-group-visible .tabulator-arrow,
+    .tabulator .tabulator-group .tabulator-arrow,
+    .tabulator .tabulator-group .tabulator-group-toggle { display: none !important; }
+    /* @codesyncer: 그룹 컨테이너가 밴드보다 높아 밴드가 바닥에 붙고 위에 빈 공간이
+       '붕뜨는' 문제 → 밴드를 그룹 높이에 꽉 채워(height:100%) 텍스트 세로 중앙. */
+    .grp-band { display: flex; align-items: center; height: 100%; min-height: 34px; padding: 0 16px; }
+    .grp-name { font-weight: 700; font-size: 12.5px; color: var(--tx2); letter-spacing: .03em; }
+    /* @codesyncer: Tabulator 기본 헤더패딩(4px)≠셀(16px)로 모든 열 헤더가 어긋남 + 그룹
+       span에 margin-left:10px·color:#d00(빨강) 강제 → 헤더=셀 패딩 정렬, 그룹 마진 제거. */
+    .tabulator .tabulator-header .tabulator-col .tabulator-col-content { padding-left: 16px !important; padding-right: 16px !important; }
+    .tabulator .tabulator-group span { margin-left: 0 !important; color: inherit; }
+
+    /* 범위선택 오버레이 테두리 → 브랜드 */
+    .tabulator .tabulator-range-overlay .tabulator-range { border: 1.5px solid var(--brand); }
+    .tabulator .tabulator-range-overlay .tabulator-range.tabulator-range-active { border-color: var(--brand); }
+    /* @codesyncer: Tabulator 기본 하드코딩색(흰 테이블 · #d6d6d6/#e6e6e6 회색 ·
+       #3876ca/#9abcea 파랑 · #bbb 호버)이 다크 테마를 무시 → 회색/흰 블록.
+       베이스를 투명(다크 카드가 비침)으로 만들고 전부 팔레트로 재정의. */
+    .tabulator .tabulator-tableholder .tabulator-table { background-color: transparent !important; color: var(--tx) !important; }
+    .tabulator .tabulator-row.tabulator-selectable:hover { background-color: var(--row-hover) !important; }
+    .tabulator .tabulator-row.tabulator-selected,
+    .tabulator .tabulator-row.tabulator-selected:hover { background-color: var(--brand-weak) !important; }
+    .tabulator .tabulator-range-highlight { background-color: transparent !important; color: inherit !important; }
+    .tabulator .tabulator-cell.tabulator-range-row-header,
+    .tabulator .tabulator-range-highlight .tabulator-cell.tabulator-range-row-header,
+    .tabulator .tabulator-row-header { background-color: transparent !important; color: var(--tx3) !important; }
+    .tabulator .tabulator-header .tabulator-col.tabulator-range-selected,
+    .tabulator .tabulator-col.tabulator-range-highlight { background-color: transparent !important; }
+    .tabulator .tabulator-header .tabulator-col.tabulator-range-selected .tabulator-col-title,
+    .tabulator .tabulator-col.tabulator-range-highlight .tabulator-col-title { color: var(--tx2) !important; }
+    .tabulator .tabulator-cell.tabulator-range-selected,
+    .tabulator-row.tabulator-range-selected .tabulator-cell.tabulator-range-row-header,
+    .tabulator-range-selected:not(.tabulator-range-only-cell-selected):not(.tabulator-range-row-header) {
+      background-color: var(--brand-weak) !important; color: var(--tx) !important; }
+
+    /* 스크롤바 — 다크/라이트 대응 */
+    .tabulator-tableholder::-webkit-scrollbar { width: 10px; height: 10px; }
+    .tabulator-tableholder::-webkit-scrollbar-thumb { background: var(--line2); border-radius: 5px; }
+    .tabulator-tableholder::-webkit-scrollbar-track { background: transparent; }
+
+    /* ── 다성분 stock — 계측기 UI 규격 정합 (reagent_grid 와 동일 스펙) ──
+       위계: 본문 13.5 · 배지 11/700 · 보조 12.5 · 액션 글리프 20px 칩 · 셰브런 토글 */
+    .mixbadge { display: inline-flex; align-items: center; height: 16px;
+      margin-left: 6px; padding: 0 7px; border-radius: 8px;
+      background: var(--brand-weak); color: var(--brand); font-size: 11px; font-weight: 700;
+      cursor: pointer; vertical-align: middle; transition: background .12s, color .12s; }
+    .mixbadge:hover { background: var(--brand); color: #fff; }
+    .rxadd, .rxdel { display: inline-flex; align-items: center; justify-content: center;
+      width: 20px; height: 20px; margin-left: 4px; border-radius: 5px;
+      opacity: 0; cursor: pointer; font-size: 13px; color: var(--tx3);
+      vertical-align: middle; transition: opacity .12s, background .12s, color .12s; }
+    .rxadd { font-weight: 700; }
+    .rxdel { float: right; font-size: 12px; }
+    .tabulator-row:hover .rxadd, .tabulator-row:hover .rxdel { opacity: .95; }
+    .rxadd:hover { background: var(--brand-weak); color: var(--brand); }
+    .rxdel:hover { background: rgba(229,83,75,.15); color: #e5534b; }
+    .c-addrow { color: var(--brand); font-size: 12.5px; font-weight: 600; opacity: .75; }
+    .tabulator-row:hover .c-addrow { opacity: 1; }
+    .tabulator-row.row-comp { background: var(--row-alt) !important; }
+    .tabulator-row.row-add { background: transparent !important; }
+    .tabulator-row.row-add .tabulator-cell { cursor: pointer; }
+    .tabulator-row.row-add:hover { background: var(--brand-weak) !important; }
+    /* dataTree 토글 — 셰브런 ▸/▾ + hover 칩 (Qt5 Chromium :has() 미지원 →
+       내부 expand/collapse div 자체를 border 셰브런으로) */
+    .tabulator .tabulator-data-tree-control {
+      width: 18px !important; height: 18px !important; flex: 0 0 18px;
+      border: none !important; border-radius: 5px;
+      background: transparent !important; margin-right: 5px;
+      align-items: center; justify-content: center; }
+    .tabulator .tabulator-data-tree-control:hover {
+      background: var(--brand-weak) !important; }
+    .tabulator .tabulator-data-tree-control .tabulator-data-tree-control-expand,
+    .tabulator .tabulator-data-tree-control .tabulator-data-tree-control-collapse {
+      width: 7px !important; height: 7px !important;
+      background: transparent !important;
+      border: solid var(--brand); border-width: 0 2px 2px 0; border-radius: 1px; }
+    .tabulator .tabulator-data-tree-control .tabulator-data-tree-control-expand {
+      transform: rotate(-45deg) translate(-1px, 1px); }   /* ▸ 접힘 */
+    .tabulator .tabulator-data-tree-control .tabulator-data-tree-control-collapse {
+      transform: rotate(45deg) translate(-1px, -1px); }   /* ▾ 펼침 */
+    .tabulator .tabulator-data-tree-control .tabulator-data-tree-control-expand:after,
+    .tabulator .tabulator-data-tree-control .tabulator-data-tree-control-collapse:after {
+      display: none !important; }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <div class="card">
+      <div class="hd">
+        <div class="title">시약 · 스톡 계산</div>
+      </div>
+      <div id="grid"></div>
+    </div>
+  </div>
+  <script>
+    const num = (v) => { const f = parseFloat(String(v).replace(',', '.')); return isFinite(f) ? f : 0; };
+    const rnd = (v, d = 4) => Math.round(v * 10 ** d) / 10 ** d;
+
+    function gcolor(v) {
+      const cs = getComputedStyle(document.documentElement);
+      return cs.getPropertyValue('--g' + String(v).toLowerCase()).trim() ||
+             cs.getPropertyValue('--brand').trim();
+    }
+
+    function setVars(t) {
+      const r = document.documentElement.style;
+      for (const k in t) r.setProperty('--' + k, t[k]);
+      if (table) table.redraw(true);
+    }
+
+    function updateCount() {
+      if (!table) return;
+      const n = table.getData().filter(d => d.name && String(d.name).trim()).length;
+      const el = document.getElementById('cnt');
+      if (el) el.textContent = `입력 ${n}종`;
+    }
+
+    // '전체 계산' 버튼 → 모든 행 강제 재계산 + Python 동기화
+    // 재계산된 행 데이터를 _rows 로 함께 전달 → Python 미러가 파생값(자동계산 conc 등)까지 반영.
+    function recalcAll() {
+      if (!table) return;
+      const rows = [];
+      table.getRows().forEach(function (r) { const d = r.getData(); recalc(d); r.update(d); rows.push(d); });
+      updateCount();
+      gridBridge && gridBridge.onCell(JSON.stringify({ _bulk: true, _rows: rows }));
+    }
+
+    function recalc(d) {
+      const MW = num(d.mw), V = num(d.vol), M = num(d.mass), C = num(d.conc);
+      // B3: 어느 칸이 '자동 계산'됐는지 기록 → 입력칸과 시각 구분(= 마커)
+      d._derived = null;
+      if (MW > 0) {
+        if (V > 0 && C > 0) { d.mass = rnd(C * (V / 1000) * MW); d._derived = "mass"; }
+        else if (M > 0 && C > 0) { d.vol = rnd((M / MW) / C * 1000); d._derived = "vol"; }
+        else if (M > 0 && V > 0) { d.conc = rnd((M / MW) / (V / 1000)); d._derived = "conc"; }
+      }
+      const p = [];
+      if (num(d.mass)) p.push(`질량 ${rnd(d.mass, 3)} g`);
+      if (num(d.vol)) p.push(`부피 ${rnd(d.vol, 3)} mL`);
+      if (num(d.conc)) p.push(`농도 ${rnd(d.conc, 3)} M`);
+      d.result = p.join('   ');
+    }
+
+    // 값 없는 셀 → muted "–" (Carbon no-value 관행) · 결과/파생 컬럼용
+    const dash = (c) => { const v = c.getValue(); return (v === null || v === undefined || v === "")
+      ? `<span style="color:var(--tx3)">–</span>` : v; };
+
+    // 다성분 stock (A안, 시퀀스 시약그리드와 동일 UX): 포트행=첫 시약,
+    // 추가 시약=편집가능 자식행(＋로 추가, ✕로 삭제, ×N 배지=펼침/접기)
+    const editableIf = (cell) => !cell.getRow().getData()._add;
+    const ph = (t) => ({ editor: "input", editorParams: { placeholder: t } });
+
+    // B3: 정량 입력칸(부피/질량/농도) — 자동계산된 칸은 muted 이탤릭+'=', 입력칸은 그대로.
+    //   셀 요소에 클래스 토글로 배경까지 구분(입력=틴트 / 계산=투명).
+    const amtFmt = (field) => (c) => {
+      const d = c.getRow().getData();
+      const derived = d._derived === field;
+      const el = c.getElement();
+      if (el) el.classList.toggle("cell-derived", derived);
+      const v = c.getValue();
+      if (v === null || v === undefined || v === "") return `<span style="color:var(--tx3)">–</span>`;
+      return derived ? `= ${v}` : String(v);
+    };
+
+    // B5: 상태 배지 — MW + (부피·질량·농도 중 2개) 있으면 '완료', 아니면 부족 항목 표시.
+    const statusFmt = (c) => {
+      const d = c.getRow().getData();
+      if (!d.name || !String(d.name).trim()) return "";
+      const amt = [num(d.vol) > 0, num(d.mass) > 0, num(d.conc) > 0].filter(Boolean).length;
+      if (num(d.mw) > 0 && amt >= 2)
+        return `<span class="st-badge st-ok">● 완료</span>`;
+      const miss = [];
+      if (num(d.mw) <= 0) miss.push("MW");
+      if (amt < 2) miss.push(`양 ${2 - amt}개`);
+      return `<span class="st-badge st-part">○ ${miss.join(" · ")}</span>`;
+    };
+
+    // @codesyncer(전문 레퍼런스 정합, 2026-07-13 사용자): 셀 안 예시 고스트 제거 —
+    //   프로 그리드(Excel/AG Grid/Benchling) 관례는 '빈 셀 = 빈 셀', 안내는 편집기
+    //   placeholder 로만. 이탤릭 고스트(한글 합성 이탤릭)와 "예: 아닐린" 문구 폐기.
+    const egFmt = () => (c) => {
+      const v = c.getValue();
+      return (v === null || v === undefined) ? "" : v;
+    };
+
+    // @codesyncer(계산기 UI 개선): 레퍼런스(ChemDraw 화학양론·Sigma 시약표) 관례로 재구성.
+    //   B1 순서: 포트·시약명(앵커) → IDENTITY(CAS/MW/SMILES) → AMOUNT(밀도/부피/질량/농도/상태)
+    //   B2 2단 헤더(정체 vs 정량) · B4 포트·시약명 frozen(가로스크롤 앵커 유지)
+    //   B3 입력칸 틴트 통일(MW·밀도 포함) + 자동계산칸 '=' muted · B5 상태 배지
+    const nCol = (title, field, opts) => Object.assign(
+      { title, field, hozAlign: "right", headerHozAlign: "right", editor: "number" },
+      opts || {});
+
+    // @codesyncer(사용자 "계산기 단위 잘림 수정"): 단위를 헤더 둘째 줄 작은 글씨로.
+    //   titleFormatter 로 "라벨 + 단위" 2줄 HTML 렌더 → 좁은 폭에서도 안 잘림.
+    //   title 은 전체 텍스트 유지(접근성/툴팁). 숫자열 공통(우정렬·number editor).
+    const uCol = (main, unit, field, opts) => Object.assign(
+      { title: `${main} (${unit})`, field, hozAlign: "right",
+        headerHozAlign: "right", editor: "number",
+        titleFormatter: () =>
+          `<div class="hcell"><span class="h-main">${main}</span>` +
+          `<span class="h-unit">(${unit})</span></div>` },
+      opts || {});
+    // @codesyncer(칸배열 버그): 2단 헤더(컬럼 그룹)가 layout:"fitColumns" 의 widthGrow 폭
+    //   분배를 깨서 grow 컬럼 폭주 → fitData 고정폭으로 우회했으나, 좁은 창에선 마지막 칸
+    //   (상태)이 스크롤로 잘림. 해결: 컬럼 그룹 제거(플랫) + fitColumns 복귀 → 폭에 항상
+    //   맞춰져 어떤 창폭에서도 안 잘림. 정체↔정량 블록 구분은 밀도열 좌측 경계선(col-amt-start)
+    //   으로 유지. 슬랙은 시약명·SMILES(widthGrow)가 흡수.
+    // 시약명 셀: 예시 고스트 + 다성분 장식(×N 배지·hover ＋·자식행 ✕·추가행)
+    const nameFmt = (c) => {
+      const d = c.getData();
+      if (d._add) return `<span class="c-addrow">＋ 시약 추가</span>`;
+      const base = egFmt("name")(c);
+      if (d._comp) {
+        return base + `<span class="rxdel" title="이 시약 삭제">✕</span>`;
+      }
+      let out = base;
+      if (d.mixN) out += `<span class="mixbadge" title="이 포트에 시약 ${d.mixN}종 — 클릭: 펼치기/접기">×${d.mixN}</span>`;
+      out += `<span class="rxadd" title="이 포트에 시약 추가 (한 포트=여러 시약)">＋</span>`;
+      return out;
+    };
+
+    const COLUMNS = [
+      { title: "포트", field: "port", width: 58, cssClass: "c-muted" },
+      { title: "시약명", field: "name", widthGrow: 1.2, minWidth: 150, editor: "input",
+        tooltip: true, formatter: nameFmt, editorParams: { placeholder: "시약명" } },
+      { title: "CAS", field: "cas", width: 120, editor: "input",
+        formatter: egFmt("cas"), editorParams: { placeholder: "CAS 번호" } },
+      { title: "SMILES", field: "smiles", widthGrow: 1, minWidth: 130, editor: "input",
+        cssClass: "c-smiles", tooltip: true, formatter: egFmt("smiles"),
+        editorParams: { placeholder: "SMILES" } },
+      uCol("MW", "g/mol", "mw", { width: 96, cssClass: "c-inp", formatter: dash }),
+      uCol("밀도", "g/mL", "density", { width: 92, cssClass: "c-inp col-amt-start", formatter: dash }),
+      uCol("부피", "mL", "vol", { width: 84, cssClass: "c-inp", formatter: amtFmt("vol") }),
+      uCol("질량", "g", "mass", { width: 82, cssClass: "c-inp", formatter: amtFmt("mass") }),
+      uCol("농도", "M", "conc", { width: 84, cssClass: "c-inp", formatter: amtFmt("conc") }),
+      { title: "상태", field: "result", width: 116, headerHozAlign: "center",
+        hozAlign: "center", formatter: statusFmt },
+    ];
+
+    let table = null, gridBridge = null;
+
+    new QWebChannel(qt.webChannelTransport, function (channel) {
+      const bridge = channel.objects.bridge;
+      gridBridge = bridge;
+
+      // Python → JS 팔레트 주입 (테마 전환 포함)
+      bridge.applyTheme.connect(function (json) {
+        try { setVars(JSON.parse(json)); } catch (e) {}
+      });
+
+      // Python → JS 부분 갱신 (PubChem 결과 등)
+      bridge.updateRows.connect(function (json) {
+        if (!table) return;
+        const rows = JSON.parse(json);
+        table.updateOrAddData(rows).then(function () {
+          rows.forEach(function (u) {
+            const row = table.getRow(u._id);
+            if (row) { const d = row.getData(); recalc(d); row.update(d); }
+          });
+          updateCount();
+        });
+      });
+
+      // Python → JS 전체 교체 (자식행 추가/삭제 = 트리 구조 변경) + 펼침 보존
+      bridge.replaceRows.connect(function (json) {
+        if (!table) return;
+        let expanded = [];
+        try {
+          expanded = table.getRows()
+            .filter(r => r.isTreeExpanded && r.isTreeExpanded())
+            .map(r => r.getData()._id);
+        } catch (e) {}
+        const rows = JSON.parse(json);
+        rows.forEach(function (d) {
+          recalc(d);
+          (d._children || []).forEach(k => { if (!k._add) recalc(k); });
+        });
+        table.replaceData(rows).then(function () {
+          const want = new Set(expanded);
+          if (window._expandNext) { want.add(window._expandNext); window._expandNext = null; }
+          table.getRows().forEach(function (r) {
+            const d = r.getData();
+            if (d._children && d._children.length && want.has(d._id)) {
+              try { r.treeExpand(); } catch (e) {}
+            }
+          });
+          updateCount();
+          // ＋ 직후 새 시약행 이름 셀 자동 편집 진입 (전문 그리드 관례)
+          if (window._editNext) {
+            const id = window._editNext; window._editNext = null;
+            setTimeout(function () {
+              try {
+                let target = null;
+                table.getRows().forEach(function (r) {
+                  (r.getTreeChildren ? r.getTreeChildren() : []).forEach(function (k) {
+                    if (k.getData()._id === id) target = k;
+                  });
+                });
+                if (target) target.getCell("name").edit(true);
+              } catch (e) {}
+            }, 80);
+          }
+        });
+      });
+
+      bridge.configReady.connect(function (rowsJson) {
+        const rows = JSON.parse(rowsJson);
+        rows.forEach(recalc);
+        table = new Tabulator("#grid", {
+          data: rows,
+          height: "100%",
+          layout: "fitColumns",   // 플랫 컬럼(그룹 없음) → 폭 항상 맞춤(마지막 칸 안 잘림)
+          columns: COLUMNS,
+          index: "_id",
+          groupBy: "grp",
+          groupStartOpen: true,
+          groupHeader: function (value, count, data, group) {
+            // 부연 텍스트(Ports 2–11) 제거 — 그룹명만 (사용자 피드백)
+            const c = gcolor(value);
+            return `<div class="grp-band" style="box-shadow:inset 3px 0 0 ${c}">` +
+              `<span class="grp-name" style="color:${c}">GROUP ${value}</span></div>`;
+          },
+          // ── 엑셀형 복붙 + 범위선택 (Tabulator 내장) ──
+          clipboard: true,
+          clipboardCopyStyled: false,
+          clipboardPasteAction: "range",
+          selectableRange: true,
+          selectableRangeColumns: true,
+          selectableRangeRows: true,
+          editTriggerEvent: "dblclick",
+          rowHeight: 36,
+          columnDefaults: { headerSort: false, editable: editableIf },
+          // 다성분 자식행 (기본 접힘 · 토글=시약명 컬럼)
+          dataTree: true,
+          dataTreeChildField: "_children",
+          dataTreeStartExpanded: false,
+          dataTreeElementColumn: "name",
+          dataTreeChildIndent: 14,
+          dataTreeBranchElement: false,   // 'L' 커넥터 제거 — 인덴트+배경만(모던 트리 관례)
+          rowFormatter: function (row) {
+            const d = row.getData();
+            row.getElement().classList.toggle("row-comp", !!d._comp);
+            row.getElement().classList.toggle("row-add", !!d._add);
+          },
+        });
+
+        table.on("cellEdited", function (cell) {
+          const row = cell.getRow(), d = row.getData();
+          if (d._add) return;
+          recalc(d); row.update(d);
+          updateCount();
+          // 편집한 필드를 함께 전달 → Python 에서 CAS 편집 시 자동 PubChem 조회
+          gridBridge && gridBridge.onCell(JSON.stringify(Object.assign({ _field: cell.getField() }, d)));
+        });
+        // ＋=시약추가 · ✕=성분삭제 · ×N 배지=펼침/접기 · [＋ 시약 추가] 행=추가
+        table.on("cellClick", function (e, cell) {
+          const row = cell.getRow();
+          const d = row.getData();
+          const t = e.target;
+          const cls = (t && t.classList) ? t.classList : { contains: () => false };
+          if (d._add) {
+            gridBridge && gridBridge.onCell(JSON.stringify({ _addComp: String(d._id).replace(/:add$/, "") }));
+            return;
+          }
+          if (cell.getField() !== "name") return;
+          if (d._comp) {
+            if (cls.contains("rxdel"))
+              gridBridge && gridBridge.onCell(JSON.stringify({ _delComp: d._id }));
+            return;
+          }
+          if (cls.contains("rxadd")) {
+            gridBridge && gridBridge.onCell(JSON.stringify({ _addComp: d._id }));
+            return;
+          }
+          if (cls.contains("mixbadge")) {
+            try { row.treeToggle(); } catch (e2) {}
+          }
+        });
+        table.on("clipboardPasted", function () {
+          const rows = [];
+          table.getRows().forEach(r => { const d = r.getData(); recalc(d); r.update(d); rows.push(d); });
+          updateCount();
+          gridBridge && gridBridge.onCell(JSON.stringify({ _bulk: true, _rows: rows }));
+        });
+        table.on("tableBuilt", updateCount);
+      });
+      bridge.onReady();
+    });
+  </script>
+</body>
+</html>

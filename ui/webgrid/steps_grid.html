@@ -1,0 +1,160 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <link rel="stylesheet" href="vendor/tab_tabulator.min.css">
+  <script src="vendor/tab_tabulator.min.js"></script>
+  <script src="qrc:///qtwebchannel/qwebchannel.js"></script>
+  <style>
+    :root {
+      --bg: #121418; --card: #181b22;
+      --tx: #edf1fa; --tx2: #9ea7bb; --tx3: #687188;
+      --line: #212736; --line2: #344055; --band: #1e2431;
+      --row: #181b22; --row-alt: #171d28; --row-hover: #2a3243; --header-tx: #9ea7bb;
+      --brand: #3b9eff; --brand-weak: rgba(59,158,255,.16);
+      --inp: #131722; --smiles: #79839a; --edit: #3b9eff;
+      --chip-bg: #222733; --chip-tx: #9ea7bb; --hdr: #cfd5e4; --font: "Segoe UI";
+      --run: #3fb950; --run-weak: rgba(63,185,80,.12);
+    }
+    * { box-sizing: border-box; }
+    html, body { height: 100%; margin: 0;
+      font-family: var(--font), "Segoe UI", "Malgun Gothic", sans-serif;
+      background: var(--bg); color: var(--tx); -webkit-font-smoothing: antialiased; }
+    .page { padding: 10px 12px 8px; height: 100%; }
+    .card { background: var(--card); border: 1px solid var(--line2); border-radius: 14px;
+      padding: 12px 14px 6px; height: 100%; display: flex; flex-direction: column; }
+    .hd { display: flex; align-items: center; justify-content: space-between; margin: 0 2px 10px; gap: 10px; }
+    /* 카드 타이틀 — 계측기 UI 위계 (다른 그리드와 통일) */
+    .title { font-size: 15px; font-weight: 700; letter-spacing: .01em; color: var(--tx); }
+    .help { font-size: 11.5px; color: var(--tx3); cursor: help; user-select: none; }
+    .help:hover { color: var(--tx2); }
+    #grid { flex: 1; }
+
+    /* 가시성: 본문 13.5px / 헤더 12.5px (calc·reagent 그리드와 통일) */
+    .tabulator { border: none; background: transparent; font-size: 13.5px; color: var(--tx); }
+    .tabulator .tabulator-header { border: none; border-bottom: 1px solid var(--line2);
+      background: transparent; color: var(--header-tx); }
+    .tabulator .tabulator-header .tabulator-col { background: transparent; border: none; }
+    .tabulator .tabulator-header .tabulator-col .tabulator-col-content { padding-left: 14px !important; padding-right: 14px !important; }
+    .tabulator .tabulator-col-title { color: var(--hdr); font-weight: 700; font-size: 12.5px; letter-spacing: .02em; }
+    /* 컬럼 그룹(펌프) 상위 헤더 — 브랜드 액센트 + 하단 구분선 */
+    .tabulator .tabulator-col.tabulator-col-group { border-bottom: 1px solid var(--line2); }
+    .tabulator .tabulator-col.tabulator-col-group > .tabulator-col-content .tabulator-col-title {
+      color: var(--brand); font-weight: 700; font-size: 11px; letter-spacing: .05em; }
+    .tabulator .tabulator-col-group-cols { border-top: 1px solid var(--line); }
+    .tabulator .tabulator-row { border-bottom: 1px solid var(--line); background: var(--row); }
+    .tabulator .tabulator-row.tabulator-row-even { background: var(--row-alt); }
+    .tabulator .tabulator-row:hover { background: var(--row-hover); }
+    .tabulator .tabulator-row.step-running { box-shadow: inset 3px 0 0 var(--run); background: var(--run-weak); }
+    .tabulator .tabulator-cell { border: none; padding: 8px 14px; color: var(--tx); vertical-align: middle; }
+    .tabulator .tabulator-cell.tabulator-editing { border: 1px solid var(--edit) !important;
+      background: var(--card) !important; padding: 7px 13px; }
+    .tabulator .tabulator-cell input, .tabulator .tabulator-cell select { color: var(--tx); background: var(--card); }
+    .c-step { color: var(--tx2); }
+    .c-inp { background: var(--inp); }
+    .c-res { color: var(--brand); font-weight: 600; }
+
+    /* Tabulator 기본 하드코딩색 → 팔레트 (흰/회색 제거) */
+    .tabulator .tabulator-tableholder .tabulator-table { background-color: transparent !important; color: var(--tx) !important; }
+    .tabulator .tabulator-row.tabulator-selectable:hover { background-color: var(--row-hover) !important; }
+    .tabulator .tabulator-row.tabulator-selected,
+    .tabulator .tabulator-row.tabulator-selected:hover { background-color: var(--brand-weak) !important; }
+    .tabulator .tabulator-range-highlight { background-color: transparent !important; color: inherit !important; }
+    .tabulator .tabulator-cell.tabulator-range-row-header,
+    .tabulator .tabulator-range-highlight .tabulator-cell.tabulator-range-row-header,
+    .tabulator .tabulator-row-header { background-color: transparent !important; color: var(--tx3) !important; }
+    .tabulator .tabulator-header .tabulator-col.tabulator-range-selected,
+    .tabulator .tabulator-col.tabulator-range-highlight { background-color: transparent !important; }
+    .tabulator .tabulator-header .tabulator-col.tabulator-range-selected .tabulator-col-title,
+    .tabulator .tabulator-col.tabulator-range-highlight .tabulator-col-title { color: var(--tx2) !important; }
+    .tabulator .tabulator-cell.tabulator-range-selected,
+    .tabulator-row.tabulator-range-selected .tabulator-cell.tabulator-range-row-header,
+    .tabulator-range-selected:not(.tabulator-range-only-cell-selected):not(.tabulator-range-row-header) {
+      background-color: var(--brand-weak) !important; color: var(--tx) !important; }
+    .tabulator .tabulator-range-overlay .tabulator-range { border: 1.5px solid var(--brand); }
+
+    .tabulator-tableholder::-webkit-scrollbar { width: 10px; height: 10px; }
+    .tabulator-tableholder::-webkit-scrollbar-thumb { background: var(--line2); border-radius: 5px; }
+    .tabulator-tableholder::-webkit-scrollbar-track { background: transparent; }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <div class="card">
+      <div class="hd">
+        <div class="title">실험 스텝 · 테이블 뷰</div>
+        <span class="help" title="행=스텝, 열=조건/펌프 파라미터. 셀 더블클릭 편집 · 엑셀 드래그 복붙 지원.&#10;유속은 자동 계산(읽기전용). 카드 뷰와 실시간 동기화됩니다.">ⓘ 사용법</span>
+      </div>
+      <div id="grid"></div>
+    </div>
+  </div>
+  <script>
+    function setVars(t) {
+      const r = document.documentElement.style;
+      for (const k in t) r.setProperty('--' + k, t[k]);
+      if (table) table.redraw(true);
+    }
+    const dash = (c) => { const v = c.getValue();
+      return (v === null || v === undefined || v === "") ? `<span style="color:var(--tx3)">–</span>` : v; };
+
+    let table = null, gridBridge = null, COLUMNS = null;
+
+    function processCol(d) {
+      const col = Object.assign({}, d);
+      if (col.columns) { col.columns = col.columns.map(processCol); return col; }
+      if (col.ro) { col.editor = false; delete col.ro;
+        if (col.field === "flow" || col.dashEmpty) { col.formatter = dash; }
+      }
+      if (col.dashEmpty) { col.formatter = dash; delete col.dashEmpty; }
+      return col;
+    }
+    function buildColumns(defs) { return defs.map(processCol); }
+
+    new QWebChannel(qt.webChannelTransport, function (channel) {
+      const bridge = channel.objects.bridge;
+      gridBridge = bridge;
+      bridge.applyTheme.connect(function (json) { try { setVars(JSON.parse(json)); } catch (e) {} });
+      bridge.columnsReady.connect(function (json) { try { COLUMNS = buildColumns(JSON.parse(json)); } catch (e) {} });
+      bridge.updateRows.connect(function (json) {
+        if (!table) return;
+        table.updateOrAddData(JSON.parse(json));
+      });
+      bridge.replaceRows.connect(function (json) {
+        if (!table) return;
+        table.replaceData(JSON.parse(json));
+      });
+      bridge.configReady.connect(function (rowsJson) {
+        const rows = JSON.parse(rowsJson);
+        table = new Tabulator("#grid", {
+          data: rows,
+          height: "100%",
+          layout: "fitDataStretch",
+          columns: COLUMNS || [],
+          columnDefaults: { headerSort: false },
+          index: "_id",
+          clipboard: true,
+          clipboardCopyStyled: false,
+          clipboardPasteAction: "range",
+          selectableRange: true,
+          selectableRangeColumns: true,
+          selectableRangeRows: true,
+          editTriggerEvent: "dblclick",
+          rowHeight: 36,
+          rowFormatter: function (row) {
+            const d = row.getData();
+            if (d.state === "running") row.getElement().classList.add("step-running");
+            else row.getElement().classList.remove("step-running");
+          },
+        });
+        table.on("cellEdited", function (cell) {
+          gridBridge && gridBridge.onCell(JSON.stringify(cell.getRow().getData()));
+        });
+        table.on("clipboardPasted", function () {
+          table.getRows().forEach(function (r) { gridBridge && gridBridge.onCell(JSON.stringify(r.getData())); });
+        });
+      });
+      bridge.onReady();
+    });
+  </script>
+</body>
+</html>

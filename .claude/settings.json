@@ -1,0 +1,45 @@
+{
+  "permissions": {
+    "allow": [
+      "Read(//c/Users/gogoc/**)",
+      "Read(//c/Users/gogoc/OneDrive/Desktop//**)",
+      "Read(//c/Users/gogoc//**)",
+      "Bash(powershell -command \"\\(Get-Item ''C:\\\\Users\\\\gogoc\\\\OneDrive\\\\Desktop\\\\lcms-yield-analyzer''\\).CreationTime; \\(Get-Item ''C:\\\\Users\\\\gogoc\\\\lcms-yield-analyzer''\\).CreationTime\")",
+      "Bash(xargs -I{} ls \"{}\")",
+      "Bash(\"C:\\\\Users\\\\gogoc\\\\AppData\\\\Local\\\\Programs\\\\Python\\\\Python310\\\\python.exe\" -m pip install pyqtgraph)",
+      "Bash(start python:*)",
+      "Bash(cmd.exe /c \"cd /d C:\\\\Users\\\\gogoc\\\\OneDrive\\\\Desktop\\\\FlowChem_프로젝트\\\\20260309 Flowchemistry && start pythonw main.py\")",
+      "Bash(cmd.exe /c \"cd /d C:\\\\Users\\\\gogoc\\\\OneDrive\\\\Desktop\\\\FlowChem_프로젝트\\\\20260309 Flowchemistry && python main.py 2>&1\")",
+      "Bash(cmd.exe /c \"mode\")",
+      "Read(//c/Program Files/Arduino IDE/**)",
+      "Read(//c/Program Files \\(x86\\)/**)",
+      "Read(//c/Users/gogoc/OneDrive/Desktop/FlowChem_프로젝트/20260309 Flowchemistry/$LOCALAPPDATA/Programs/**)",
+      "Read(//c/Users/gogoc/OneDrive/Desktop/FlowChem_프로젝트/20260309 Flowchemistry/$LOCALAPPDATA/**)",
+      "Bash(start \"\" \"c:/Users/gogoc/OneDrive/Desktop/FlowChem_프로젝트/20260309 Flowchemistry/hardware/arduino/valve_relay_4ch/valve_relay_4ch.ino\")",
+      "Bash(powershell -Command \"Get-Process | Where-Object { $_MainWindowTitle -match ''COM|Serial|Arduino|relay'' -or $_ProcessName -match ''arduino|putty|teraterm|serial'' } | Select-Object ProcessName, Id, MainWindowTitle | Format-Table -AutoSize\")",
+      "Bash(powershell -NoProfile -Command \"Get-Process python* | Select-Object ProcessName, Id | Format-Table -AutoSize\")"
+    ]
+  },
+  "hooks": {
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "prompt",
+            "prompt": "이번 응답에서 코드 편집(Edit/Write)이 있었다면 CodeSyncer 체크: 1) 추론→@codesyncer-inference 태그? 2) 결정→@codesyncer-decision 태그? 3) 결제/보안/API→사용자에게 물었나? 빠진 태그가 있으면 지금 추가하세요. 코드 편집이 없었으면 이 체크를 건너뛰세요."
+          }
+        ]
+      }
+    ],
+    "PreCompact": [
+      {
+        "hooks": [
+          {
+            "type": "prompt",
+            "prompt": "컴팩트 후에도 기억: @codesyncer-* 태그 필수, 결제/보안/API→물어보기"
+          }
+        ]
+      }
+    ]
+  }
+}
