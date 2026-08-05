@@ -181,6 +181,7 @@ class ManualTab(QWidget):
             self._fs_timer.stop()
         self._fs_timer = QTimer(self)
         self._fs_timer.timeout.connect(self._update_flow_strip)
+        self._fs_timer.timeout.connect(self._update_deepwash_btn)
         self._fs_timer.start(1500)
 
         return self._fs_frame
@@ -193,6 +194,13 @@ class ManualTab(QWidget):
         app = self.app
 
         def _run():
+            # Deep Wash 실행 중이면 함께 중단 (E-Stop 범위에 포함)
+            try:
+                eng = getattr(self, "_dw_engine", None)
+                if eng is not None and eng.running:
+                    eng.stop()
+            except Exception:
+                pass
             try:
                 if getattr(app, "engine", None) is not None:
                     app.engine.abort_flag = True
@@ -243,6 +251,68 @@ class ManualTab(QWidget):
 
         threading.Thread(target=_run, daemon=True).start()
 
+    # ── Deep Wash (전 라인 세척) ──────────────────────────────────
+    def _deep_wash_targets(self):
+        """세척 가능한 그룹: external_valve 라우팅 + 세척 프리미티브 보유 (덕타이핑)."""
+        routing = getattr(getattr(self.app, "cfg", None), "PUMP_ROUTING", {}) or {}
+        targets = {}
+        for name, pump in (getattr(self.app, "pumps", {}) or {}).items():
+            if routing.get(name, "external_valve") != "external_valve":
+                continue
+            if not hasattr(pump, "wash_withdraw_prepare"):
+                continue
+            targets[name] = pump
+        return targets
+
+    def _deep_wash_clicked(self):
+        from PyQt5.QtWidgets import QMessageBox, QDialog
+        eng = getattr(self, "_dw_engine", None)
+        if eng is not None and eng.running:
+            eng.stop()
+            self._update_deepwash_btn()
+            return
+        w = getattr(self.app, "worker", None)
+        if w is not None and w.isRunning():
+            QMessageBox.warning(self, "Deep Wash",
+                                "Sequence is running — stop it before washing.")
+            return
+        targets = self._deep_wash_targets()
+        if not targets:
+            QMessageBox.warning(self, "Deep Wash",
+                                "No washable pump groups (external 12-way routing required).")
+            return
+        from ui.dialog_deep_wash import DeepWashDialog
+        dlg = DeepWashDialog(list(targets.keys()), self)
+        if dlg.exec_() != QDialog.Accepted:
+            return
+        pumps = {n: targets[n] for n in dlg.selected_groups() if n in targets}
+        if not pumps:
+            return
+        from core.deep_wash import DeepWashEngine
+        outlet = (getattr(self.app, "valves", {}) or {}).get("Outlet")
+        self._dw_engine = DeepWashEngine(
+            pumps, outlet_valve=outlet, options=dlg.options(),
+            log=self.app.signals.sig_log.emit)
+        if not self._dw_engine.start():
+            QMessageBox.warning(self, "Deep Wash", "Start refused — a pump is busy.")
+        self._update_deepwash_btn()
+
+    def _update_deepwash_btn(self):
+        btn = getattr(self, "btn_deepwash", None)
+        if btn is None:
+            return
+        P = self._pal()
+        eng = getattr(self, "_dw_engine", None)
+        running = eng is not None and eng.running
+        btn.setText("STOP WASH" if running else "DEEP WASH")
+        color = P.ACCENT_RED if running else P.ACCENT_BLUE
+        btn.setStyleSheet(
+            f"QPushButton {{ background: transparent; color: {color}; "
+            f"font-weight: {T.FW_BOLD}; font-size: {T.FS_SM}; "
+            f"letter-spacing: 1px; border: 1.5px solid {color}; "
+            f"border-radius: {T.R_MD}; padding: 0 8px; }}"
+            f"QPushButton:hover {{ background: {color}; color: #ffffff; }}")
+
     def _fs_set(self, key, text, state="idle"):
         """노드 값 갱신 + 의미색 적용 (run=녹 / warn=황 / idle=중립)"""
         if key not in self._fs_nodes:
@@ -277,6 +347,7 @@ class ManualTab(QWidget):
                 f"padding: 0 14px; }}"
                 f"QPushButton:hover {{ background: #e5534b; }}"
                 f"QPushButton:pressed {{ background: #b62324; }}")
+        self._update_deepwash_btn()
         if getattr(self, "_fs_frame", None):
             self._fs_frame.setStyleSheet(
                 f"QFrame {{ background: {P.BG_MONITOR}; border: 1px solid {P.BORDER_SECONDARY}; "
@@ -722,6 +793,29 @@ class ManualTab(QWidget):
         self.lbl_manual_status.setAlignment(Qt.AlignRight | Qt.AlignBottom)
         header.addWidget(self.lbl_manual_status, 0)
         main_layout.addLayout(header)
+
+        # ── 유틸리티 행: DEEP WASH (2026-08-05 사용자 요청) — 12-way 전 라인 세척.
+        # @codesyncer-decision: '펌프 버튼 = 밸브 무개입' 원칙(2026-07-31)과
+        #   구분되는 명시적 오케스트레이션 루틴 — 밸브+펌프 자동 제어를 버튼
+        #   라벨로 드러냄. 실행 중 클릭 = 중단(적색 아웃라인 = 채널 STOP 문법).
+        # @codesyncer-risk: 플로우 스트립은 탭 최소폭의 지배 제약(strip_min+403)
+        #   — 스트립에 버튼을 넣으면 카드 균일폭(A2, CARD_W)이 밀려 깨짐.
+        #   자체 행(세로 스택의 행 최소폭 = 행들의 최대값)은 폭 기여 0.
+        self.btn_deepwash = QPushButton("DEEP WASH")
+        self.btn_deepwash.setMinimumHeight(34)
+        self.btn_deepwash.setFixedWidth(120)
+        self.btn_deepwash.setCursor(Qt.PointingHandCursor)
+        self.btn_deepwash.setToolTip(
+            "전 라인 세척 — 포트 2~11 스터브 · 공통 경로 · 폐액 라인(12) · "
+            "다운스트림 플러시. 사전에 포트 2~11 바이알에 세척액을 채울 것. "
+            "실행 중 클릭 시 중단")
+        self.btn_deepwash.clicked.connect(self._deep_wash_clicked)
+        util_row = QHBoxLayout()
+        util_row.setSpacing(10)
+        util_row.addStretch()
+        util_row.addWidget(self.btn_deepwash)
+        main_layout.addLayout(util_row)
+        self._update_deepwash_btn()
 
         # ========================================
         # 존 구성: Feed(좌) | 우측 세로스택(Process 위 / Collect 아래)

@@ -42,6 +42,7 @@ class HardwareFactory:
             # --- 7. 센서 (Sensors — 슬러그 경계 검출 / 시린지 잔량) ---
             "가상 위상센서",                # MockPhaseSensor
             "위상센서 어레이 (OCB350)",     # PhaseSensorArrayHW - RoboChem 원본, UNO 1대=4센서
+            "위상센서 (OPB ADC 2ch)",       # PhaseSensorOPBADC - UNO A0/A1 CSV 스트림 @115200
             "가상 레벨센서 (HC-SR04)",      # MockUltrasonicLevelSensor - 테스트용
             "초음파 레벨센서 (HC-SR04)",    # UltrasonicLevelSensor - RoboChem 원본, 펌프당 UNO 1대
         ]
@@ -88,6 +89,7 @@ class HardwareFactory:
             # Sensors (슬러그 경계 검출 — RoboChem OCB350 스택)
             "가상 위상센서": "MockPhaseSensor",
             "위상센서 어레이 (OCB350)": "PhaseSensorArrayHW",
+            "위상센서 (OPB ADC 2ch)": "PhaseSensorOPBADC",
 
             # Sensors (시린지 잔량 — RoboChem HC-SR04 스택)
             "가상 레벨센서 (HC-SR04)": "MockUltrasonicLevelSensor",

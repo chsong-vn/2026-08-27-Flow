@@ -375,10 +375,13 @@ class HardwareManager:
                 from hardware.gas.mfc_korea_mkp import MFCKoreaMKP
                 g_set = g_info.get("settings", {}) or {}
                 # slave_addr: 신규 키. 구 config 의 modbus_addr 도 back-compat 로 읽음.
-                _addr = g_set.get("slave_addr", g_set.get("modbus_addr", 1))
+                # @codesyncer-decision(2026-08-05): 기본 주소 1→0 — 실기 테스트된
+                #   벤더 드라이버(MFC_Driver.zip)가 device_id=0x00 으로 검증됨.
+                #   다른 주소의 장비는 settings.slave_addr 로 명시.
+                _addr = g_set.get("slave_addr", g_set.get("modbus_addr", 0))
                 self.mfc = MFCKoreaMKP(
                     g_info.get("port"),
-                    slave_addr=int(_addr or 1),
+                    slave_addr=int(_addr or 0),
                     baudrate=int(g_set.get("baudrate", 9600) or 9600),
                     max_sccm=float(g_set.get("max_sccm", 100.0) or 100.0),
                     name=g_info.get("name", "MFC"))
@@ -401,11 +404,23 @@ class HardwareManager:
                     PhaseSensorArrayHW, MockPhaseSensor)
                 p_set = p_info.get("settings", {}) or {}
                 drv = HardwareFactory.get_driver_type(p_info.get("driver"))
-                cls = MockPhaseSensor if drv == "MockPhaseSensor" else PhaseSensorArrayHW
-                self.phase_sensor = cls(
-                    p_info.get("port"),
-                    sensors=p_set.get("sensors"),
-                    name=p_info.get("name", "PhaseSensors"))
+                if drv == "PhaseSensorOPBADC":
+                    # OPB 2ch ADC 스트림 (Photo_Interrupt.zip 벤더 리그 이식) —
+                    # settings: sensors / thresholds({채널|논리명: adc}) / baudrate
+                    from hardware.sensors.phase_sensor_opb import PhaseSensorOPBADC
+                    self.phase_sensor = PhaseSensorOPBADC(
+                        p_info.get("port"),
+                        sensors=p_set.get("sensors"),
+                        thresholds=p_set.get("thresholds"),
+                        baudrate=int(p_set.get("baudrate", 115200) or 115200),
+                        name=p_info.get("name", "OPBSensors"))
+                else:
+                    cls = (MockPhaseSensor if drv == "MockPhaseSensor"
+                           else PhaseSensorArrayHW)
+                    self.phase_sensor = cls(
+                        p_info.get("port"),
+                        sensors=p_set.get("sensors"),
+                        name=p_info.get("name", "PhaseSensors"))
                 self.phase_sensor.connect()
                 print(f"  - 위상센서 연결: {p_info.get('name')} @ {p_info.get('port')}")
             except Exception as e:

@@ -45,6 +45,11 @@ CMD_READ_GAS       = 0x31   # Read Gas Name   (String)
 CMD_READ_FULLSCALE = 0x33   # Read Full Scale (Float, native unit)
 CMD_READ_UNIT      = 0x35   # Read Flow Unit  (Unsigned char, 0~6)
 CMD_READ_DEVID     = 0x71   # Read Device ID  (Unsigned char)
+# @codesyncer-decision(2026-08-05, 벤더 실기 드라이버 이식): 초기화 시 0x78=0x01
+#   쓰기 — 실기 테스트된 MFC_Driver.zip(MFCController.initialize)이 항상 먼저
+#   전송하는 명령. 디지털(시리얼) setpoint 제어 활성으로 추정 — 이거 없이는
+#   실장비가 Write Set Point 를 무시할 수 있음.
+CMD_WRITE_MODE     = 0x78   # Write Control Mode (Unsigned char, 0x01=digital)
 
 # ── 데이터 타입 ──────────────────────────────────────────────
 DT_NODATA = 0x00
@@ -102,6 +107,9 @@ class MFCKoreaMKP:
         self._sp = 0.0                       # 마지막 명령 setpoint(sccm) — UI/모니터 미러
         self.device_full_scale = None        # 장비 보고 FS (native unit)
         self.flow_unit = None                # 0~6 (FLOW_UNITS)
+        self.model = None                    # 장비 모델명 (0x21)
+        self.gas = None                      # 가스명 (0x31)
+        self._last_data_type = None          # 직전 응답 DataType (문자열 디코딩용)
 
     # ── 연결 ──────────────────────────────────────────────────
     def connect(self):
@@ -118,15 +126,27 @@ class MFCKoreaMKP:
             self.is_connected = True
             print(f"[{self.name}] MKP RS485 연결 {self.port} "
                   f"addr={self.addr} (9600/8/ODD/1)")
+            # 디지털 제어 모드 활성 (벤더 initialize 1단계 — 0x78=0x01).
+            # 실패 시에도 연결은 유지하되 크게 경고: 이 명령이 안 먹으면
+            # 이후 Write Set Point 가 무시될 수 있음 (조용한 실패 금지).
+            try:
+                self.enable_digital_control()
+                print(f"[{self.name}] 디지털 제어 모드 활성 (0x78=01)")
+            except Exception as e:
+                print(f"[{self.name}] ⚠⚠ 디지털 제어 모드 설정 실패: {e} — "
+                      f"setpoint 명령이 무시될 수 있음 (배선/주소 확인)")
             # 풀스케일/단위 확인 — 실패해도 치명적 아님(설정 max_sccm 사용).
             # @codesyncer-decision: 장비 실측 Full Scale 을 환산 기준(max_sccm)으로
             #   자동 채택 — 규격 미입력(설정 None)이어도 %↔sccm 이 정확해짐.
             #   설정값과 다르면 로그로 알림(진단용).
             try:
                 _cfg_max = self.max_sccm
+                self.model = self.read_model()
+                self.gas = self.read_gas()
                 self.device_full_scale = self.read_full_scale()
                 self.flow_unit = self.read_flow_unit()
                 u = FLOW_UNITS.get(self.flow_unit, "?")
+                print(f"[{self.name}] Model={self.model}, Gas={self.gas}")
                 if self.device_full_scale and self.device_full_scale > 0:
                     self.max_sccm = float(self.device_full_scale)   # 환산 기준 = 장비 실측 FS
                     if _cfg_max > 0 and abs(self.device_full_scale - _cfg_max) / _cfg_max > 0.02:
@@ -182,7 +202,16 @@ class MFCKoreaMKP:
         if (resp_cmd & 0x7F) != (cmd & 0x7F):
             raise MFCProtocolError(
                 f"{self.name}: 명령 불일치 req=0x{cmd:02X} resp=0x{resp_cmd:02X}")
+        self._last_data_type = int(payload[5:7], 16)   # 문자열 응답 디코딩용
         return payload[7:].decode("ascii")   # Data 필드
+
+    def _decode_string(self, data):
+        """문자열 응답 디코딩 — DataType 상위 2비트 01 이면 하위 6비트 = 길이.
+        (벤더 실기 드라이버 MFCController._decode 와 동일 규칙)"""
+        dt = self._last_data_type or 0
+        if (dt & 0xC0) == 0x40:
+            return data[: dt & 0x3F]
+        return data
 
     # ── 고수준 API (단위=sccm) ─────────────────────────────────
     def set_flow(self, sccm):
@@ -220,6 +249,25 @@ class MFCKoreaMKP:
         if self._ser is None:
             return 2   # SCCM 가정
         return int(self._transact(CMD_READ_UNIT), 16) & 0xFF
+
+    def enable_digital_control(self):
+        """디지털(시리얼) setpoint 제어 활성 — 벤더 initialize 의 0x78=0x01.
+        연결 직후 1회 호출. 실패 시 예외 (연결부에서 시끄럽게 경고 후 진행)."""
+        if self._ser is None:
+            return
+        self._transact(CMD_WRITE_MODE, DT_UCHAR, "01")
+
+    def read_model(self):
+        """장비 모델명 (0x21, String)."""
+        if self._ser is None:
+            return "-"
+        return self._decode_string(self._transact(CMD_READ_MODEL))
+
+    def read_gas(self):
+        """가스명 (0x31, String)."""
+        if self._ser is None:
+            return "-"
+        return self._decode_string(self._transact(CMD_READ_GAS))
 
     def read_status(self):
         """MFC 상태 비트 → 활성 오류 문자열 리스트 (빈 리스트 = 정상)."""

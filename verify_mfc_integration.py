@@ -29,6 +29,14 @@ from ui.dialogs import HardwareConfigDialog
 cfg = SystemConfig()
 dlg = HardwareConfigDialog(cfg)
 
+
+def select_inv(inv_idx):
+    """인벤토리 '배열 인덱스'로 선택 — 리스트는 종류→이름 정렬 표시라
+    표시행 ≠ 배열 인덱스 (@codesyncer refresh_inv_list). _inv_row_to_idx 경유.
+    (2026-08-05 수리: 정렬 도입 후 배열 인덱스를 행 번호로 넘기던 검증기 결함)"""
+    dlg.on_inv_selected(dlg._inv_row_to_idx.index(inv_idx))
+
+
 # MFC 장비 + 스위치용 더미 장비 추가
 dlg.add_device()
 idxA = len(dlg.temp_inventory) - 1       # MFC 장비
@@ -36,7 +44,7 @@ dlg.add_device()
 idxB = len(dlg.temp_inventory) - 1       # 스위치용 더미
 
 # MFC 장비 선택 + 규격 입력 (on_inv_selected 경유해 curr_inv_idx 정합)
-dlg.on_inv_selected(idxA)
+select_inv(idxA)
 dlg.cb_driver.setCurrentText("질소 MFC (MKP RS485)")
 dlg.on_driver_changed(dlg.cb_driver.currentIndex())
 check("MFC 선택 시 slave_addr 필드 노출", dlg.sp_addr.isVisibleTo(dlg))
@@ -55,8 +63,8 @@ check("규격 저장 max_sccm=200", abs(float(st.get("max_sccm", 0)) - 200.0) < 
 check("규격 저장 baudrate=9600(기본)", st.get("baudrate") == 9600)
 
 # 다른 장치로 전환(autosave) 후 복귀 → 진짜 재로드 검증
-dlg.on_inv_selected(idxB)
-dlg.on_inv_selected(idxA)
+select_inv(idxB)
+select_inv(idxA)
 check("재로드 slave_addr=7", dlg.sp_addr.value() == 7, str(dlg.sp_addr.value()))
 check("재로드 Full Scale=200", abs(dlg.sp_maxsccm.value() - 200.0) < 1e-6)
 
@@ -65,7 +73,7 @@ import copy
 saved = copy.deepcopy(dlg.temp_inventory[idxA])
 
 # 밸브로 전환 시 Full Scale 숨김 (오노출 회귀) — 더미 장치에서
-dlg.on_inv_selected(idxB)
+select_inv(idxB)
 dlg.cb_driver.setCurrentText("12방향 밸브 (Runze)")
 dlg.on_driver_changed(dlg.cb_driver.currentIndex())
 check("밸브 전환 시 Full Scale 숨김", not dlg.sp_maxsccm.isVisibleTo(dlg))
@@ -77,10 +85,11 @@ from hardware.gas.mfc_korea_mkp import MFCKoreaMKP
 def build_mfc_from_device(g_info):
     """hw_manager 5-4 블록과 동일한 생성 로직 (규격 전파 검증)."""
     g_set = g_info.get("settings", {}) or {}
-    _addr = g_set.get("slave_addr", g_set.get("modbus_addr", 1))
+    # 기본 주소 0 — 벤더 실기 드라이버(MFC_Driver.zip, device_id=0x00) 정합
+    _addr = g_set.get("slave_addr", g_set.get("modbus_addr", 0))
     m = MFCKoreaMKP(
         g_info.get("port"),
-        slave_addr=int(_addr or 1),
+        slave_addr=int(_addr or 0),
         baudrate=int(g_set.get("baudrate", 9600) or 9600),
         max_sccm=float(g_set.get("max_sccm", 100.0) or 100.0),
         name=g_info.get("name", "MFC"))
@@ -96,7 +105,7 @@ check("드라이버 baud 9600", mfc.baud == 9600)
 # settings=None (기존 config 실제 상태) → 기본값 폴백, 무크래시
 mfc_none = build_mfc_from_device(
     {"name": "펌프_17", "port": "Mock_Port", "settings": None})
-check("settings=None → addr 기본 1", mfc_none.addr == 1)
+check("settings=None → addr 기본 0(벤더 정합)", mfc_none.addr == 0)
 check("settings=None → max 기본 100", abs(mfc_none.max_sccm - 100.0) < 1e-6)
 
 # 구 modbus_addr 키 back-compat
@@ -106,11 +115,14 @@ check("구 modbus_addr back-compat → addr 4", mfc_old.addr == 4)
 
 
 # ══ ③ Manual 탭 연동 (규격이 스핀박스 상한/조작에 반영) ══
-exec(open("render_manual_tab.py", encoding="utf-8").read().split('app = QApplication')[0])
+# @codesyncer-decision(2026-08-05): render_manual_tab.py 삭제(대청소)로 FakeApp
+#   출처를 verify_manual_grouping.py 헤더로 교체 — 동일 목적의 오프스크린 목.
+exec(open("verify_manual_grouping.py", encoding="utf-8").read()
+     .split('app = QApplication')[0])
 from ui.tab_manual import ManualTab
 
 # 실제 드라이버(Mock, max=200)를 app.mfc 로 — Manual 이 규격 반영하는지
-fa = FakeApp(True)
+fa = FakeApp()
 fa.mfc = build_mfc_from_device(saved)     # max_sccm=200
 tab = ManualTab(fa)
 check("Manual MFC 블록 표시", tab.mfc_group.isVisibleTo(tab))

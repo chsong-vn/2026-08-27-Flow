@@ -15,6 +15,7 @@ from hardware.gas.mfc_korea_mkp import (
     _float_to_ascii, _ascii_to_float, _xor_checksum,
     CMD_WRITE_SP, CMD_READ_SP, CMD_READ_FLOW, CMD_READ_STATUS,
     CMD_READ_FULLSCALE, CMD_READ_UNIT, DT_FLOAT, DT_NODATA, DT_UCHAR,
+    CMD_WRITE_MODE, CMD_READ_MODEL, CMD_READ_GAS,
 )
 
 fails = []
@@ -74,6 +75,9 @@ class FakeSerial:
         self.sp_pct = 0.0
         self.flow_pct = 0.0
         self.status = 0x00
+        self.mode = None          # 0x78 Write Control Mode 수신값
+        self.model = "M3030V"
+        self.gas = "N2"
         self._out = b""
 
     def reset_input_buffer(self):
@@ -105,6 +109,13 @@ class FakeSerial:
             self._out = self._resp(addr, cmd, DT_UCHAR, f"{self.flow_unit:02X}")
         elif cmd == CMD_READ_STATUS:
             self._out = self._resp(addr, cmd, DT_UCHAR, f"{self.status:02X}")
+        elif cmd == CMD_WRITE_MODE:
+            self.mode = int(data, 16)
+            self._out = self._resp(addr, cmd, DT_UCHAR, data)
+        elif cmd == CMD_READ_MODEL:
+            self._out = self._resp(addr, cmd, 0x40 | len(self.model), self.model)
+        elif cmd == CMD_READ_GAS:
+            self._out = self._resp(addr, cmd, 0x40 | len(self.gas), self.gas)
         else:
             self._out = b""
 
@@ -195,6 +206,28 @@ try:
     check("타임아웃 → 예외", False, "예외 안 남")
 except MFCProtocolError:
     check("타임아웃 → MFCProtocolError", True)
+
+
+# ══ 6. 벤더 실기 드라이버(MFC_Driver.zip) 이식분 검증 ═══════════
+# 6-1. 0x78=01 프레임이 벤더 MFCController._write_uchar_frame 과 바이트 동일
+m5 = MFCKoreaMKP("Mock_Port", slave_addr=0, max_sccm=100.0, name="V")
+vendor_body = ":00780201"                      # :{id=00}{cmd=78}{dt=02}{data=01}
+vendor_frame = (vendor_body
+                + f"{_xor_checksum(vendor_body.encode('ascii')):02X}"
+                ).encode("ascii") + b"\r"
+check("0x78 모드 프레임 = 벤더 프레임",
+      m5.build_frame(CMD_WRITE_MODE, DT_UCHAR, "01") == vendor_frame,
+      repr(m5.build_frame(CMD_WRITE_MODE, DT_UCHAR, "01")))
+
+# 6-2. enable_digital_control → 장비 mode=0x01 수신
+m2._ser.mode = None
+m2.enable_digital_control()
+check("enable_digital_control → 장비 mode=01", m2._ser.mode == 0x01,
+      str(m2._ser.mode))
+
+# 6-3. 모델/가스명 문자열 디코딩 (DataType 0x40|len)
+check("read_model = M3030V", m2.read_model() == "M3030V", m2.read_model())
+check("read_gas = N2", m2.read_gas() == "N2", m2.read_gas())
 
 
 # ══ 6. Mock 모드 (포트 없음) — 시리얼 없이 _sp 미러 ═════════════

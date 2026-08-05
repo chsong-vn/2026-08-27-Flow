@@ -1,0 +1,117 @@
+{
+  "_readme": [
+    "튜빙 실측값 원장 (single source of record) — 여기 적은 실측이 hardware_config.json 파라미터로 반영됨.",
+    "반영 방법: py -3.14 apply_tubing_measurements.py        (미리보기 dry-run)",
+    "           py -3.14 apply_tubing_measurements.py --apply (실제 반영, 반영 전 _backup/에 자동 백업)",
+    "값 결정 규칙: measured_ml(직접 실측)이 최우선. measured_ml이 null이고 length_cm+id_mm이 있으면",
+    "  부피 = π×(id_mm/20)²×length_cm 으로 계산해 반영. 둘 다 없으면 그 구간은 건드리지 않음.",
+    "components: [{name, ml}] 부속(루어어댑터/유니온 등) 데드볼륨을 기본값에 자동 합산. ml=null이면 0 취급+미입력 표기.",
+    "상황(배관 교체 등)이 바뀌면 profiles에 새 프로파일을 추가하고 active_profile만 바꾸면 됨.",
+    "current_config_ml 은 원장 생성 시점의 hardware_config.json 값 스냅샷 (정보용, 반영에 안 쓰임)."
+  ],
+  "_segment_guide": {
+    "tube_vol_inlet": "시약 바이알 → 12way 포트. 퍼지 창(line_src)에 포함 — 프라임 안 된 포트에만 가산됨.",
+    "tube_vol_selector": "12way 밸브 내부 통로. 퍼지 창(line_src)에 포함.",
+    "tube_vol_valve_pump": "12way → 3way → 시린지 펌프 (충전 경로). 퍼지 창(line_src)에 포함.",
+    "tube_vol_switcher": "3way 스위처 자체 내부 통로. 주입 타이밍(line_inj)에 가산 — 동시도착/스태거 보정.",
+    "tube_vol_pump_merge": "3way 반응기측 포트 → 합류점 배관. 주입 타이밍(line_inj)에 가산.",
+    "tube_vol_solvent": "세척액(포트1) 경로 총 데드볼륨 — 세척·리필 '부피' 전용, 타이밍 비적용.",
+    "tube_vol_reagent": "시약 포트 경로 총 데드볼륨 — 세척·리필 '부피' 전용, 타이밍 비적용.",
+    "tjunction_line_vols": "T-정션 캐스케이드 구간 (T1→T2=키 '1', T2→T3=키 '2'). 합류 후 공용 수송 타이밍.",
+    "mixing_line": "마지막 정션 → 반응기 입구. config가 길이×내경으로 계산 → 실측 반영 시 등가 길이로 환산 기록.",
+    "reactor": "마이크로반응기 코일. config가 길이×내경으로 계산 → 실측 반영 시 등가 길이로 환산 기록.",
+    "post_reactor_vol_ml": "반응기 출구 → 아웃렛 3way 밸브. 수송/수집 타이밍 (t_head 포함).",
+    "collection_line_vol_ml": "아웃렛 밸브 → 분취기 니들. 수집 타이밍."
+  },
+  "version": 1,
+  "units": "mL",
+  "active_profile": "current_4pump_hte",
+  "profiles": {
+    "current_4pump_hte": {
+      "description": "현행 구성: Chemyx×4 (Group A~D) + HTE droplet, ESP32 3way, Plate96 분취기",
+      "measured_date": "2026-08-05",
+      "measured_by": null,
+      "method": "collection_line: 실측 240 µL / selector·switcher: 제조사 스펙시트 (SV-07·Mrv-01B PDF)",
+      "pumps": {
+        "Group A": {
+          "tube_vol_inlet":      { "current_config_ml": 0.0,  "measured_ml": null, "length_cm": null, "id_mm": null, "note": null },
+          "tube_vol_selector":   { "current_config_ml": 0.0,  "measured_ml": 0.0224, "length_cm": null, "id_mm": null, "note": "스펙값: Runze SV-07 12port 'Dead volume (port to port)' 22.43 µL (매뉴얼 2.5 Technical Parameters, 2026-08-05 반영). sealed rotor 잔류는 별도 6.08 µL" },
+          "tube_vol_valve_pump": { "current_config_ml": 0.0,  "measured_ml": 1.83, "length_cm": null, "id_mm": 0.8,
+            "components": [
+              { "name": "루어어댑터", "ml": 0.004, "src": "IDEX 소내경 0.020\"(0.5mm) 보어 × 통로 ~20mm 기하 추정 ≈ 4 µL (swept volume 미공개, 2026-08-05)" },
+              { "name": "유니온", "ml": 0.0004, "src": "IDEX P-702 union assembly 0.020\" thru 스펙 swept volume 0.41 µL" },
+              { "name": "12way→3way 튜브", "ml": 0.0452, "src": "길이계산: 90 mm × ID 0.8 mm → π×0.4²×90 = 45.24 µL (2026-08-05)" }
+            ],
+            "note": "2026-08-05 실측: 시린지펌프↔3way 라인 내부 1.83 mL (튜빙 ID 0.8 mm, 루어 포함 구간). 키 정의상 12way→3way 앞단 구간은 별도 — 실측 시 합산 필요. 루어어댑터·유니온 데드볼륨은 components.ml 채우면 자동 합산" },
+          "tube_vol_switcher":   { "current_config_ml": 0.0,  "measured_ml": 0.0507, "length_cm": null, "id_mm": null, "note": "스펙값: Runze Mrv-01B 3-way(M02 유로) 'Dead volume (Port to Port)' 50.68 µL (매뉴얼 2.4, 2026-08-05 반영). ※유로가 M04면 101.35 µL로 수정" },
+          "tube_vol_pump_merge": { "current_config_ml": 0.0,  "measured_ml": null, "length_cm": null, "id_mm": null, "note": null },
+          "tube_vol_solvent":    { "current_config_ml": 1.35, "measured_ml": null, "length_cm": null, "id_mm": null, "note": null },
+          "tube_vol_reagent":    { "current_config_ml": 0.95, "measured_ml": null, "length_cm": null, "id_mm": null, "note": null }
+        },
+        "Group_B": {
+          "tube_vol_inlet":      { "current_config_ml": 0.0,  "measured_ml": null, "length_cm": null, "id_mm": null, "note": null },
+          "tube_vol_selector":   { "current_config_ml": 0.0,  "measured_ml": 0.0224, "length_cm": null, "id_mm": null, "note": "스펙값: Runze SV-07 12port 'Dead volume (port to port)' 22.43 µL (매뉴얼 2.5 Technical Parameters, 2026-08-05 반영). sealed rotor 잔류는 별도 6.08 µL" },
+          "tube_vol_valve_pump": { "current_config_ml": 0.0,  "measured_ml": 1.83, "length_cm": null, "id_mm": 0.8,
+            "components": [
+              { "name": "루어어댑터", "ml": 0.004, "src": "IDEX 소내경 0.020\"(0.5mm) 보어 × 통로 ~20mm 기하 추정 ≈ 4 µL (swept volume 미공개, 2026-08-05)" },
+              { "name": "유니온", "ml": 0.0004, "src": "IDEX P-702 union assembly 0.020\" thru 스펙 swept volume 0.41 µL" },
+              { "name": "12way→3way 튜브", "ml": 0.0452, "src": "길이계산: 90 mm × ID 0.8 mm → π×0.4²×90 = 45.24 µL (2026-08-05)" }
+            ],
+            "note": "2026-08-05 실측: 시린지펌프↔3way 라인 내부 1.83 mL (튜빙 ID 0.8 mm, 루어 포함 구간). 키 정의상 12way→3way 앞단 구간은 별도 — 실측 시 합산 필요. 루어어댑터·유니온 데드볼륨은 components.ml 채우면 자동 합산" },
+          "tube_vol_switcher":   { "current_config_ml": 0.0,  "measured_ml": 0.0507, "length_cm": null, "id_mm": null, "note": "스펙값: Runze Mrv-01B 3-way(M02 유로) 'Dead volume (Port to Port)' 50.68 µL (매뉴얼 2.4, 2026-08-05 반영). ※유로가 M04면 101.35 µL로 수정" },
+          "tube_vol_pump_merge": { "current_config_ml": 0.0,  "measured_ml": null, "length_cm": null, "id_mm": null, "note": null },
+          "tube_vol_solvent":    { "current_config_ml": 0.95, "measured_ml": null, "length_cm": null, "id_mm": null, "note": null },
+          "tube_vol_reagent":    { "current_config_ml": 0.5,  "measured_ml": null, "length_cm": null, "id_mm": null, "note": null }
+        },
+        "Group_C": {
+          "tube_vol_inlet":      { "current_config_ml": 0.0,  "measured_ml": null, "length_cm": null, "id_mm": null, "note": null },
+          "tube_vol_selector":   { "current_config_ml": 0.0,  "measured_ml": 0.0224, "length_cm": null, "id_mm": null, "note": "스펙값: Runze SV-07 12port 'Dead volume (port to port)' 22.43 µL (매뉴얼 2.5 Technical Parameters, 2026-08-05 반영). sealed rotor 잔류는 별도 6.08 µL" },
+          "tube_vol_valve_pump": { "current_config_ml": 0.0,  "measured_ml": 1.83, "length_cm": null, "id_mm": 0.8,
+            "components": [
+              { "name": "루어어댑터", "ml": 0.004, "src": "IDEX 소내경 0.020\"(0.5mm) 보어 × 통로 ~20mm 기하 추정 ≈ 4 µL (swept volume 미공개, 2026-08-05)" },
+              { "name": "유니온", "ml": 0.0004, "src": "IDEX P-702 union assembly 0.020\" thru 스펙 swept volume 0.41 µL" },
+              { "name": "12way→3way 튜브", "ml": 0.0452, "src": "길이계산: 90 mm × ID 0.8 mm → π×0.4²×90 = 45.24 µL (2026-08-05)" }
+            ],
+            "note": "2026-08-05 실측: 시린지펌프↔3way 라인 내부 1.83 mL (튜빙 ID 0.8 mm, 루어 포함 구간). 키 정의상 12way→3way 앞단 구간은 별도 — 실측 시 합산 필요. 루어어댑터·유니온 데드볼륨은 components.ml 채우면 자동 합산" },
+          "tube_vol_switcher":   { "current_config_ml": 0.0,  "measured_ml": 0.0507, "length_cm": null, "id_mm": null, "note": "스펙값: Runze Mrv-01B 3-way(M02 유로) 'Dead volume (Port to Port)' 50.68 µL (매뉴얼 2.4, 2026-08-05 반영). ※유로가 M04면 101.35 µL로 수정" },
+          "tube_vol_pump_merge": { "current_config_ml": 0.0,  "measured_ml": null, "length_cm": null, "id_mm": null, "note": null },
+          "tube_vol_solvent":    { "current_config_ml": 0.0,  "measured_ml": null, "length_cm": null, "id_mm": null, "note": null },
+          "tube_vol_reagent":    { "current_config_ml": 0.0,  "measured_ml": null, "length_cm": null, "id_mm": null, "note": null }
+        },
+        "Group_D": {
+          "tube_vol_inlet":      { "current_config_ml": 0.0,  "measured_ml": null, "length_cm": null, "id_mm": null, "note": null },
+          "tube_vol_selector":   { "current_config_ml": 0.0,  "measured_ml": 0.0224, "length_cm": null, "id_mm": null, "note": "스펙값: Runze SV-07 12port 'Dead volume (port to port)' 22.43 µL (매뉴얼 2.5 Technical Parameters, 2026-08-05 반영). sealed rotor 잔류는 별도 6.08 µL" },
+          "tube_vol_valve_pump": { "current_config_ml": 0.0,  "measured_ml": 1.83, "length_cm": null, "id_mm": 0.8,
+            "components": [
+              { "name": "루어어댑터", "ml": 0.004, "src": "IDEX 소내경 0.020\"(0.5mm) 보어 × 통로 ~20mm 기하 추정 ≈ 4 µL (swept volume 미공개, 2026-08-05)" },
+              { "name": "유니온", "ml": 0.0004, "src": "IDEX P-702 union assembly 0.020\" thru 스펙 swept volume 0.41 µL" },
+              { "name": "12way→3way 튜브", "ml": 0.0452, "src": "길이계산: 90 mm × ID 0.8 mm → π×0.4²×90 = 45.24 µL (2026-08-05)" }
+            ],
+            "note": "2026-08-05 실측: 시린지펌프↔3way 라인 내부 1.83 mL (튜빙 ID 0.8 mm, 루어 포함 구간). 키 정의상 12way→3way 앞단 구간은 별도 — 실측 시 합산 필요. 루어어댑터·유니온 데드볼륨은 components.ml 채우면 자동 합산" },
+          "tube_vol_switcher":   { "current_config_ml": 0.0,  "measured_ml": 0.0507, "length_cm": null, "id_mm": null, "note": "스펙값: Runze Mrv-01B 3-way(M02 유로) 'Dead volume (Port to Port)' 50.68 µL (매뉴얼 2.4, 2026-08-05 반영). ※유로가 M04면 101.35 µL로 수정" },
+          "tube_vol_pump_merge": { "current_config_ml": 0.0,  "measured_ml": null, "length_cm": null, "id_mm": null, "note": null },
+          "tube_vol_solvent":    { "current_config_ml": 0.0,  "measured_ml": null, "length_cm": null, "id_mm": null, "note": null },
+          "tube_vol_reagent":    { "current_config_ml": 0.0,  "measured_ml": null, "length_cm": null, "id_mm": null, "note": null }
+        }
+      },
+      "system": {
+        "tjunction_line_vols": {
+          "1": { "current_config_ml": 0.11, "measured_ml": null, "length_cm": null, "id_mm": null, "note": "T1(P1+P2) → T2 구간" },
+          "2": { "current_config_ml": 0.22, "measured_ml": null, "length_cm": null, "id_mm": null, "note": "T2 → T3 구간" }
+        },
+        "mixing_line": {
+          "current_config": { "id_mm": 1.5, "len_cm": 150.0, "computed_ml": 2.6507 },
+          "measured_ml": null,
+          "note": "실측 반영 시 mixing_line_len_cm 을 등가 길이(실측부피/단면적)로 환산해 기록"
+        },
+        "reactor": {
+          "current_config": { "id_mm": 1.0, "len_m": 3.82, "computed_ml": 3.0002 },
+          "measured_ml": null,
+          "note": "실측 반영 시 reactor_len_m 을 등가 길이로 환산해 기록"
+        },
+        "post_reactor_vol_ml":    { "current_config_ml": 2.0, "measured_ml": null, "length_cm": null, "id_mm": null, "note": null },
+        "collection_line_vol_ml": { "current_config_ml": 1.0, "measured_ml": 0.24, "length_cm": null, "id_mm": null, "note": "2026-08-05 실측: outlet 3-way 기점 → 분취기 니들 240 µL. 아웃렛 밸브 자체 통로는 전용 키가 없어 이 구간에 합산되는 모델(밸브 기점 실측이므로 정합)" }
+      }
+    }
+  }
+}
