@@ -282,7 +282,7 @@ class ManualTab(QWidget):
                                 "No washable pump groups (external 12-way routing required).")
             return
         from ui.dialog_deep_wash import DeepWashDialog
-        dlg = DeepWashDialog(list(targets.keys()), self)
+        dlg = DeepWashDialog(targets, self)   # dict 전달 — 그룹별 기본 유량 표시
         if dlg.exec_() != QDialog.Accepted:
             return
         pumps = {n: targets[n] for n in dlg.selected_groups() if n in targets}

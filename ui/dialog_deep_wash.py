@@ -14,10 +14,41 @@ from PyQt5.QtCore import Qt
 from core.deep_wash import DeepWashOptions
 
 
+def _abbr(name):
+    """'Group A'/'Group_D' → 'A'/'D' (유량 요약 표기용)."""
+    s = str(name).replace("Group", "").strip(" _")
+    return s or str(name)
+
+
+def _rate_summary(rates):
+    """{그룹명: 유량} → 'A·B·C 8 / D 1.7' (전 그룹 동일하면 '8')."""
+    if not rates:
+        return ""
+    by_val = {}
+    for n, v in rates.items():
+        by_val.setdefault(round(float(v), 2), []).append(_abbr(n))
+    if len(by_val) == 1:
+        return f"{next(iter(by_val)):g}"
+    return " / ".join(f"{'·'.join(ns)} {v:g}" for v, ns in sorted(
+        by_val.items(), key=lambda kv: -kv[0]))
+
+
 class DeepWashDialog(QDialog):
     """세척 대상 그룹/포트 범위/볼륨 설정 후 START 로 확정."""
 
-    def __init__(self, group_names, parent=None):
+    def __init__(self, groups, parent=None):
+        """@param groups: {그룹명: SmartPump} — 그룹별 기본 유량 표시용.
+        (하위호환: 그룹명 리스트도 허용 — 유량 숫자 미표시)"""
+        if isinstance(groups, dict):
+            group_names = list(groups)
+            self._wash_rates = {n: float(getattr(p, "wash_speed", 0) or 0)
+                                for n, p in groups.items()}
+            self._flush_rates = {n: float(getattr(p, "prime_rate", 0) or 0)
+                                 for n, p in groups.items()}
+        else:
+            group_names = list(groups)
+            self._wash_rates = {}
+            self._flush_rates = {}
         super().__init__(parent)
         self.setWindowTitle("Deep Wash — All Lines (Ports 2–11)")
         self.setModal(True)
@@ -104,10 +135,14 @@ class DeepWashDialog(QDialog):
         self.sp_wash_rate.setDecimals(1)
         self.sp_wash_rate.setSuffix(" mL/min")
         self.sp_wash_rate.setValue(0.0)
-        self.sp_wash_rate.setSpecialValueText("group default")
+        # 0 = 그룹별 기본(wash_speed) 사용 — 실제 숫자를 표시 (사용자 피드백 2026-08-05)
+        _ws = _rate_summary(self._wash_rates)
+        self.sp_wash_rate.setSpecialValueText(
+            f"group default ({_ws} mL/min)" if _ws else "group default")
         self.sp_wash_rate.setToolTip(
-            "Withdraw/dump flow rate (P0–P3). 0 = each group's wash_speed "
-            "(A–C: 8.0, D: 1.7). Caution: small syringes may stall at high rates")
+            "Withdraw/dump flow rate for P0–P3. Spin up to override all "
+            "selected groups; at 0 each group keeps its own wash_speed. "
+            "Caution: small syringes may stall at high rates")
         form.addRow("Wash rate:", self.sp_wash_rate)
 
         self.sp_flush_rate = QDoubleSpinBox()
@@ -116,9 +151,12 @@ class DeepWashDialog(QDialog):
         self.sp_flush_rate.setDecimals(1)
         self.sp_flush_rate.setSuffix(" mL/min")
         self.sp_flush_rate.setValue(0.0)
-        self.sp_flush_rate.setSpecialValueText("group default")
+        _fs = _rate_summary(self._flush_rates)
+        self.sp_flush_rate.setSpecialValueText(
+            f"group default ({_fs} mL/min)" if _fs else "group default")
         self.sp_flush_rate.setToolTip(
-            "Downstream flush rate toward reactor (P4). 0 = each group's prime_rate")
+            "Downstream flush rate toward reactor (P4). "
+            "At 0 each group keeps its own prime_rate")
         form.addRow("Flush rate:", self.sp_flush_rate)
 
         self.cb_batch = QCheckBox("Batch dumps (collect several ports, then dump)")
