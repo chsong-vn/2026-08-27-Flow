@@ -240,13 +240,25 @@ class DeepWashEngine:
         self._stop_req = False
         self.results = {}
 
-        # Outlet → WASTE 전역 강제 (다운스트림 플러시가 폐액병으로 가도록)
+        # Outlet → WASTE 전역 강제 (다운스트림 플러시가 폐액병으로 가도록).
+        # @codesyncer-decision(에러검증 2026-08-05): 전환 실패/미구성 시 P4(반응기
+        #   플러시)·컬렉션 세척을 '생략'한다 — Outlet 이 COLLECT 에 물려 있으면
+        #   세척액이 분취 플레이트로 들어가는 사고 경로. P0~P3 는 12-way 폐액
+        #   경로라 Outlet 과 무관하므로 계속 진행.
+        _outlet_ok = False
         if self.outlet is not None:
             try:
                 self.outlet.set_position(self.POS_WASTE)
                 self._log("Outlet → WASTE")
+                _outlet_ok = True
             except Exception as e:
-                self._log(f"⚠ Outlet 전환 실패: {e} — 계속 진행")
+                self._log(f"⚠ Outlet 전환 실패: {e}")
+        if not _outlet_ok:
+            if self.opt.downstream_ml > 0 or self.opt.include_collection:
+                self._log("⚠ Outlet=WASTE 미보장 — 다운스트림 플러시(P4)·컬렉션 "
+                          "세척 생략 (포트 세척 P0~P3 만 진행)")
+            self.opt.downstream_ml = 0.0
+            self.opt.include_collection = False
 
         self._threads = []
         for name, pump in self.pumps.items():

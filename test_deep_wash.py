@@ -236,6 +236,66 @@ pb.is_refilling = True
 eng = DeepWashEngine({"Group A": pb}, None, DeepWashOptions(), log=lambda m: None)
 check("start()=False", eng.start() is False)
 
+print("== 8. 에러 격리 — 한 그룹 밸브 예외, 다른 그룹은 완주 ==")
+
+
+class ExplodingPump(FakePump):
+    """포트 3 밸브 전환에서 통신 예외 (set_valves_safe 실패 재현)."""
+
+    def wash_withdraw_prepare(self, solvent_port=1):
+        if solvent_port == 3:
+            raise RuntimeError("밸브 통신 실패 시뮬")
+        return super().wash_withdraw_prepare(solvent_port)
+
+
+pe = ExplodingPump("Group A")
+pn = FakePump("Group_B")
+opt_e = DeepWashOptions(ports=[2, 3, 4], v_port=0.5, common_cycles=1,
+                        v_common=2.0, downstream_ml=1.0)
+eng = run_engine({"Group A": pe, "Group_B": pn}, FakeOutlet(), opt_e)
+check("예외 그룹 → error 기록", str(eng.results.get("Group A")).startswith("error"),
+      str(eng.results))
+check("다른 그룹은 done (격리)", eng.results.get("Group_B") == "done")
+check("예외 그룹 포트 3 이후 중단(포트 4 미진행)",
+      ("withdraw", 4, 0.5) not in pe.ops, str(pe.ops))
+
+print("== 9. Outlet 전환 실패 → P4/컬렉션 생략 (분취기 오염 방지) ==")
+
+
+class FailingOutlet(FakeOutlet):
+    def set_position(self, pos):
+        raise RuntimeError("outlet stuck")
+
+
+pf = FakePump("Group A")
+opt_f = DeepWashOptions(ports=[2], v_port=0.5, common_cycles=1,
+                        v_common=2.0, downstream_ml=3.0, include_collection=True)
+eng = run_engine({"Group A": pf}, FailingOutlet(), opt_f)
+check("Outlet 실패 → P4 prime 미실행", not any(o[0] == "prime" for o in pf.ops),
+      str(pf.ops))
+check("Outlet 실패 → downstream/컬렉션 0 으로 강제",
+      eng.opt.downstream_ml == 0.0 and eng.opt.include_collection is False)
+check("포트 세척(P0~P3)은 정상 done", eng.results.get("Group A") == "done",
+      str(eng.results))
+
+print("== 10. prepare 거부(False) → aborted 기록 ==")
+
+
+class RefusePump(FakePump):
+    def wash_withdraw_prepare(self, solvent_port=1):
+        if solvent_port == 4:
+            return False
+        return super().wash_withdraw_prepare(solvent_port)
+
+
+pr2 = RefusePump("Group A")
+eng = run_engine({"Group A": pr2}, FakeOutlet(),
+                 DeepWashOptions(ports=[2, 3, 4, 5], v_port=0.5, common_cycles=1,
+                                 v_common=2.0, downstream_ml=1.0))
+check("prepare False → aborted", eng.results.get("Group A") == "aborted",
+      str(eng.results))
+check("거부 지점 이후 미진행", ("withdraw", 5, 0.5) not in pr2.ops, str(pr2.ops))
+
 fails = sum(1 for _, ok in results if not ok)
 print(f"\n{'ALL PASS' if fails == 0 else str(fails) + ' FAILED'} ({len(results)} checks)")
 sys.exit(1 if fails else 0)
