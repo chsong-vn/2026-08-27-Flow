@@ -95,6 +95,13 @@ class CollectionTimer:
 
     def start(self):
         self.start_time = time.time()
+        # 트레이스: 계획된 이벤트를 예정 시각(무일시정지 가정)에 instant 로 미리 기록
+        # → 실측 발화(TIMER 트랙)와 위아래로 놓고 편차를 눈으로 비교하는 PLAN 트랙
+        tr = getattr(self.engine, "trace", None)
+        if tr:
+            for t, name, _action, lane, _meta in self.events:
+                tr.instant("TIMER PLAN", name, ts=self.start_time + t,
+                           args={"t_sec": round(t, 1), "lane": lane})
         for lane in {e[3] for e in self.events}:
             q: "queue.Queue" = queue.Queue()
             self._queues[lane] = q
@@ -287,6 +294,11 @@ class CollectionTimer:
                 if kind in ("collect", "waste"):
                     self._valve_phase = kind
                 act_dur = time.time() - t_act
+                tr = getattr(self.engine, "trace", None)
+                if tr:
+                    tr.complete(f"TIMER {lane}", name, t_act, act_dur,
+                                args={"target_sec": round(target_sec, 1),
+                                      "late_sec": round(fire_late, 1)})
                 try:
                     msg = f"  [Timer] {name} @ pump-elapsed {target_sec:.1f}s FIRED"
                     if fire_late > 0.5:
@@ -299,6 +311,10 @@ class CollectionTimer:
                 except Exception:
                     pass
             except Exception as exc:
+                tr = getattr(self.engine, "trace", None)
+                if tr:
+                    tr.instant(f"TIMER {lane}", f"FAILED: {name}",
+                               args={"error": str(exc)[:200]})
                 try:
                     self.engine._log(f"  [Timer] {name} FAILED: {exc}")
                 except Exception:
@@ -574,6 +590,13 @@ class StrictSequenceEngine(FlowEngine):
             self.signals.sig_status.emit(msg)
 
     def _emit_phase(self, name: str, pct: float):
+        # 트레이스: 국면 이름이 바뀔 때 PHASE 트랙의 스팬을 전환 (UI 신호에 무영향)
+        prev = getattr(self, "_trace_phase_name", None)
+        if name != prev:
+            if prev is not None:
+                self.trace.end("PHASE")
+            self.trace.begin("PHASE", name)
+            self._trace_phase_name = name
         if self.signals:
             self.signals.sig_phase_progress.emit(name, pct)
 
@@ -639,6 +662,7 @@ class StrictSequenceEngine(FlowEngine):
         @raises RuntimeError: 펌프 미동작/파라미터 실패 → Emergency Stop 후 re-raise
         """
         log_names = extra_names if extra_names is not None else pump_names
+        self.trace.begin("PUMP OPS", phase_name, args={"pumps": list(pump_names)})
         errors = []  # (pump_name, exception) 저장용
 
         def _safe_complete(p_name):
@@ -687,6 +711,7 @@ class StrictSequenceEngine(FlowEngine):
             st = getattr(pump, 'status', '')
             if st and st != prev_log.get(p_name):
                 self._log(f"  [{p_name}] {log_prefix}{st}")
+        self.trace.end("PUMP OPS")
 
     def _max_collector_tubes(self) -> int:
         if self.collector and hasattr(self.collector, "total_tubes"):
@@ -920,9 +945,12 @@ class StrictSequenceEngine(FlowEngine):
         threads = []
 
         def _switch(v_name, valve, pos):
+            t0 = time.time()
             try:
                 valve.set_position(pos)
+                self.trace.complete(f"VALVE {v_name}", f"→{pos}", t0, time.time() - t0)
             except Exception as exc:
+                self.trace.instant(f"VALVE {v_name}", f"FAILED →{pos}")
                 print(f"[Warning] Valve switch failed ({v_name} -> {pos}): {exc}")
 
         for v_name, valve in self.valves.items():
@@ -939,15 +967,21 @@ class StrictSequenceEngine(FlowEngine):
         threads = []
 
         def _set_selector(v_name, valve, port):
+            t0 = time.time()
             try:
                 valve.set_position(int(port))
+                self.trace.complete(f"VALVE {v_name}", f"→port{int(port)}", t0, time.time() - t0)
             except Exception as exc:
+                self.trace.instant(f"VALVE {v_name}", f"FAILED →port{port}")
                 print(f"[Warning] Selector switch failed ({v_name} -> {port}): {exc}")
 
         def _set_switcher(v_name, valve):
+            t0 = time.time()
             try:
                 valve.set_position(2)  # Reactor direction
+                self.trace.complete(f"VALVE {v_name}", "→REACTOR(2)", t0, time.time() - t0)
             except Exception as exc:
+                self.trace.instant(f"VALVE {v_name}", "FAILED →2")
                 print(f"[Warning] Switcher switch failed ({v_name} -> 2): {exc}")
 
         for p_name, port in inlet_ports.items():
@@ -1078,6 +1112,12 @@ class StrictSequenceEngine(FlowEngine):
             self._run_sequence_impl(sequence_plan, map_mgr)
         finally:
             self._running = False
+            # 트레이스 마감 (열린 스팬 자동 종료 + 유효한 JSON 으로 close)
+            try:
+                self._trace_phase_name = None
+                self.trace.close()
+            except Exception:
+                pass
 
     def _startup_level_reconcile(self, sequence_plan=None):
         """@codesyncer-decision: 콜드스타트/재시작 시 시린지 물리 잔량을 초음파(HC-SR04)로
@@ -2328,10 +2368,13 @@ class StrictSequenceEngine(FlowEngine):
         if "Outlet" not in self.valves:
             return
         for attempt in (1, 2):
+            t0 = time.time()
             try:
                 self.valves["Outlet"].set_position(pos)
+                self.trace.complete("VALVE Outlet", f"→{pos} {ctx}".strip(), t0, time.time() - t0)
                 return
             except Exception as e:
+                self.trace.instant("VALVE Outlet", f"FAILED({attempt}/2) →{pos} {ctx}".strip())
                 self._log(f"  [HTE-Timer] ⚠ Outlet→{pos} 실패({attempt}/2) {ctx}: {e}")
                 if attempt == 1:
                     time.sleep(0.2)
@@ -2354,6 +2397,8 @@ class StrictSequenceEngine(FlowEngine):
         if dur_sec <= 0:
             return
         self._log(f"  [HTE] {label}: {sccm:.1f} sccm × {dur_sec:.1f}s")
+        self.trace.begin("MFC", label, args={"sccm": round(float(sccm), 2),
+                                             "dur_sec": round(float(dur_sec), 1)})
         self.mfc.set_flow(sccm)
         if self._collection_timer is not None:
             self._collection_timer.resume()
@@ -2374,6 +2419,7 @@ class StrictSequenceEngine(FlowEngine):
                 t_left -= time.time() - t0
         finally:
             self.mfc.set_flow(0.0)
+            self.trace.end("MFC")
             if self._collection_timer is not None:
                 self._collection_timer.pause()
 
@@ -3060,6 +3106,10 @@ class StrictSequenceEngine(FlowEngine):
 
         if step_name:
             self._log(f"[{step_name}] start")
+        self.trace.begin("DOSING", step_name or "dosing",
+                         args={"flows": {k: round(float(v), 3) for k, v in flow_map.items()},
+                               "duration_sec": round(duration_sec, 1),
+                               "allow_refill": allow_refill})
 
         while time.time() < end_time:
             self._check_abort()
@@ -3323,6 +3373,7 @@ class StrictSequenceEngine(FlowEngine):
             elapsed = time.time() - start_time
             self._emit_phase(step_name, 100.0)
             self._log(f"[{step_name}] done (elapsed={elapsed:.1f}s refill={total_refill_time:.1f}s)")
+        self.trace.end("DOSING")
 
     def _smart_prefill_logic(self, inlet_ports: Dict[str, int], flows: Dict[str, float], fast_rate: float,
                              target_vol: float = None, total_flow: float = None,

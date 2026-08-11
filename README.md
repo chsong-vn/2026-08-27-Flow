@@ -57,6 +57,7 @@ tests/·tools/ 스크립트는 자체 부트스트랩(`sys.path`에 루트 삽�
 ## 문서 인덱스 (docs/)
 
 - [ARCHITECTURE.md](docs/ARCHITECTURE.md) — 모듈 지도·의존 방향·결합면·주의사항 (AI/신규 참여자용)
+- [TRACING.md](docs/TRACING.md) — 실행 타임라인 트레이스 (`logs/TRACE_*.json` → ui.perfetto.dev로 열람)
 - [CALIBRATION_실측_백로그.md](docs/CALIBRATION_실측_백로그.md) — 소프트웨어로 못 고치는 실측 항목 우선순위
 - [나중계획.md](docs/나중계획.md) — 보류 작업 4건 (실행 문구로 호출, 완료 시 삭제)
 - [Chemyx_RS485_핀아웃_배선메모.md](docs/Chemyx_RS485_핀아웃_배선메모.md) — DB9 핀아웃·버스 함정 (실측 검증됨)

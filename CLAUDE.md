@@ -45,7 +45,8 @@ Hardware            ← 장비 드라이버 (시리얼/RS-485/MODBUS)
 |------|--------|------|
 | `config.py` | `SystemConfig` | JSON 로드, 런타임 파생값 계산 (reactor_vol, dead_vol 등) |
 | `strict_engine.py` | `StrictSequenceEngine` | **핵심 실행 루프**: 가열→세척→프리필→주입→수송→수집 |
-| `flow_engine.py` | `FlowEngine` | 부모 클래스. CSV 로깅, 백그라운드 안전 모니터 |
+| `flow_engine.py` | `FlowEngine` | 부모 클래스. CSV 로깅, 백그라운드 안전 모니터, Perfetto 트레이스(`self.trace`) 개시 |
+| `trace_log.py` | `TraceLogger` | Chrome Trace Event 로거 — `logs/TRACE_*.json` → ui.perfetto.dev 타임라인 (docs/TRACING.md). 예외 완전 삼킴=엔진 무영향, `FLOWCHEM_TRACE=0` 비활성 |
 | `calculators.py` | `FlowCalculator` | 양론비 → 펌프 유량 변환 |
 | `safety_manager.py` | `SafetyManager` | 온도/압력 감시, SafetyError 발생 |
 | `sequence_timeline.py` | | 타임라인 빌더 |

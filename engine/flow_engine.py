@@ -7,17 +7,24 @@ import os
 import threading
 from datetime import datetime
 from .safety_manager import SafetyError
+from .trace_log import TraceLogger, NULL_TRACER
 
 class FlowEngine:
+    # @codesyncer-decision: trace 는 '클래스 속성' 기본값 — 테스트가 __init__ 을
+    #   우회해 엔진을 만드는 패턴(__new__/부분 스텁)에서도 self.trace 접근이
+    #   항상 안전하도록. _init_log 가 인스턴스 속성으로 실제 로거를 덮어쓴다.
+    trace = NULL_TRACER
+
     def __init__(self, config, pumps, valves, heater, safety_mgr):
         self.cfg = config
         self.pumps = pumps
         self.valves = valves
         self.heater = heater
         self.safety = safety_mgr
-        
+
         self.csv_file = None
         self.writer = None
+        self.trace = NULL_TRACER  # _init_log 에서 실제 TraceLogger 로 교체
         self.start_time = 0
         self.log_dir = "logs" # 기본 로그 디렉토리
         
@@ -27,20 +34,26 @@ class FlowEngine:
 
     def _init_log(self, name_prefix="Exp"):
         try:
-            if not os.path.exists(self.log_dir): 
+            if not os.path.exists(self.log_dir):
                 os.makedirs(self.log_dir)
-            filename = f"LOG_{datetime.now().strftime('%Y%m%d_%H%M%S')}_{name_prefix}.csv"
+            stamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+            filename = f"LOG_{stamp}_{name_prefix}.csv"
             filepath = os.path.join(self.log_dir, filename)
-            
+
             self.csv_file = open(filepath, 'w', newline='')
             self.writer = csv.writer(self.csv_file)
-            
+
             # 헤더 작성
             headers = ["Time_s", "Status", "Temp_C"] + [f"P_{k}_Bar" for k in self.pumps]
             self.writer.writerow(headers)
-            
+
             self.start_time = time.time()
             print(f"[Info] Log saved to: {filepath}")
+
+            # Perfetto 트레이스 (CSV 와 동일 생명주기·타임스탬프 — ui.perfetto.dev 로 열람)
+            self.trace = TraceLogger(os.path.join(self.log_dir, f"TRACE_{stamp}_{name_prefix}.json"))
+            if getattr(self.trace, "enabled", False):
+                print(f"[Info] Trace: {self.trace.path} (ui.perfetto.dev 에 드래그)")
         except Exception as e:
             print(f"[Error] Log Init Failed: {e}")
             self.writer = None
@@ -74,31 +87,40 @@ class FlowEngine:
             except Exception:
                 pass
 
+        self.trace.instant("LOG", msg)
+
         if not self.writer: return
 
         elap = round(time.time() - self.start_time, 1)
-        
+
         # 온도 읽기
         t_val = -999
         if self.heater:
-            try: 
+            try:
                 t = self.heater.get_temperature()
                 t_val = t if t is not None else 0
             except: pass
-            
+
         # 압력 읽기
         p_vals = []
         for p in self.pumps.values():
-            try: 
+            try:
                 v = p.get_pressure()
                 p_vals.append(v if v is not None else 0)
-            except: 
+            except:
                 p_vals.append(-999)
-                
+
         try:
             self.writer.writerow([elap, msg, t_val] + p_vals)
             self.csv_file.flush()
         except: pass
+
+        # 트레이스 카운터 트랙 (모니터 주기와 동일한 샘플링)
+        if t_val != -999:
+            self.trace.counter("Temp(C)", {"temp": t_val})
+        pv = {k: v for k, v in zip(self.pumps, p_vals) if v != -999}
+        if pv:
+            self.trace.counter("Pressure(bar)", pv)
 
     def _background_monitor(self, msg):
         """백그라운드에서 안전 상태를 감시하고 로그를 기록하는 스레드 함수"""
@@ -144,6 +166,7 @@ class FlowEngine:
     def emergency_stop(self, reason):
         self._stop_mon()
         self._emergency_triggered = True
+        self.trace.instant("LOG", f"EMERGENCY STOP: {reason}")
         print(f"\n!!!!!! EMERGENCY STOP: {reason} !!!!!!")
         try: self.heater.stop()
         except: pass

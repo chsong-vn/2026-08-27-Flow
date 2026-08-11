@@ -36,6 +36,7 @@ pytest가 아니라 standalone 스크립트다 — PASS/FAIL을 print하고 exit
 | `test_phase_sensor_opb.py` | 위상센서 OPB 판정 로직 |
 | `test_esp32_valve.py` | ESP32 8ch 밸브 드라이버 (가짜 링크) |
 | `test_valve_path_sync.py` | 밸브 경로 동기화 — ⚠ 2건 FAIL 상태(2026-08-11 확인, 재배치 전부터). "INFUSE 시 3-way 자동 정렬" 기대가 2026-07-31 "매뉴얼 펌프 버튼=밸브 무개입" 결정과 모순 — 기대치 갱신 필요 |
+| `test_trace_log.py` | Perfetto 트레이스 로거 (JSON 유효성·크래시 내성·멀티스레드·타이머/FlowEngine 통합) |
 
 ## UI (Qt — 장비 불필요)
 
