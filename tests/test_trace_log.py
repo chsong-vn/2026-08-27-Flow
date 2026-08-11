@@ -77,13 +77,17 @@ try:
     check("close 이후 호출 no-op", tr.instant("LOG", "after") is None and not os.path.getsize(p1) == 0)
 
     # ══ 2. 크래시 내성 (close 없음) ══
+    # flush 는 0.5초 스로틀 계약 — 크래시 시 최대 0.5초 분량만 유실.
+    # 0.6초 간격의 두 번째 기록이 인터벌 경과로 앞 이벤트까지 flush 함을 검증.
     p2 = os.path.join(tmp, "t2.json")
     tr2 = TraceLogger(p2)
     tr2.instant("LOG", "a")
+    time.sleep(0.6)
     tr2.instant("LOG", "b")
     # close 하지 않음 — 크래시 시뮬레이션
     evs2 = parse_lenient(p2)
-    check("미마감 파일 관용 파싱", len([e for e in evs2 if e["ph"] == "i"]) == 2)
+    check("미마감 파일 관용 파싱 (0.5s 스로틀 계약)",
+          len([e for e in evs2 if e["ph"] == "i"]) == 2)
     tr2.close()
 
     # ══ 3. 멀티스레드 무손실 ══

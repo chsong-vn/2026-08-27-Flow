@@ -32,7 +32,7 @@ class FlowEngine:
         self._monitor_thread = None
         self._emergency_triggered = False
 
-    def _init_log(self, name_prefix="Exp"):
+    def _init_log(self, name_prefix="Exp", trace=True):
         try:
             if not os.path.exists(self.log_dir):
                 os.makedirs(self.log_dir)
@@ -51,9 +51,13 @@ class FlowEngine:
             print(f"[Info] Log saved to: {filepath}")
 
             # Perfetto 트레이스 (CSV 와 동일 생명주기·타임스탬프 — ui.perfetto.dev 로 열람)
-            self.trace = TraceLogger(os.path.join(self.log_dir, f"TRACE_{stamp}_{name_prefix}.json"))
-            if getattr(self.trace, "enabled", False):
-                print(f"[Info] Trace: {self.trace.path} (ui.perfetto.dev 에 드래그)")
+            # @codesyncer(검증 2026-08-11): print 는 ASCII 전용 — 이 try 안의 한글
+            #   print 가 UnicodeEncodeError 로 writer=None(CSV 전멸)을 만들 수 있음
+            #   (cp949 콘솔 전례). 판정은 enabled 가 아닌 active(실제 open 성공).
+            if trace:
+                self.trace = TraceLogger(os.path.join(self.log_dir, f"TRACE_{stamp}_{name_prefix}.json"))
+                if getattr(self.trace, "active", False):
+                    print(f"[Info] Trace: {self.trace.path} (open in ui.perfetto.dev)")
         except Exception as e:
             print(f"[Error] Log Init Failed: {e}")
             self.writer = None
@@ -93,20 +97,24 @@ class FlowEngine:
 
         elap = round(time.time() - self.start_time, 1)
 
-        # 온도 읽기
+        # 온도 읽기 (CSV 값 규약 유지: None→0, 예외/히터없음→-999)
         t_val = -999
+        t_read = None
         if self.heater:
             try:
-                t = self.heater.get_temperature()
-                t_val = t if t is not None else 0
+                t_read = self.heater.get_temperature()
+                t_val = t_read if t_read is not None else 0
             except: pass
 
-        # 압력 읽기
+        # 압력 읽기 (CSV 값 규약 유지)
         p_vals = []
-        for p in self.pumps.values():
+        p_reads = {}
+        for k, p in self.pumps.items():
             try:
                 v = p.get_pressure()
                 p_vals.append(v if v is not None else 0)
+                if v is not None:
+                    p_reads[k] = v
             except:
                 p_vals.append(-999)
 
@@ -115,12 +123,12 @@ class FlowEngine:
             self.csv_file.flush()
         except: pass
 
-        # 트레이스 카운터 트랙 (모니터 주기와 동일한 샘플링)
-        if t_val != -999:
-            self.trace.counter("Temp(C)", {"temp": t_val})
-        pv = {k: v for k, v in zip(self.pumps, p_vals) if v != -999}
-        if pv:
-            self.trace.counter("Pressure(bar)", pv)
+        # 트레이스 카운터 — 실측값만 기록 (None→0 을 그래프에 올리면
+        # 가열 반응 중 가짜 '급랭'으로 읽힘 — 검증 발견)
+        if t_read is not None:
+            self.trace.counter("Temp(C)", {"temp": t_read})
+        if p_reads:
+            self.trace.counter("Pressure(bar)", p_reads)
 
     def _background_monitor(self, msg):
         """백그라운드에서 안전 상태를 감시하고 로그를 기록하는 스레드 함수"""

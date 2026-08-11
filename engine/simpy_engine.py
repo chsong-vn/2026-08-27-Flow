@@ -979,7 +979,10 @@ class SimPyFlowEngine(FlowEngine):
     def _sequence_process(self, steps: List[FlowStep]):
         """전체 시퀀스 프로세스"""
         self._emit_log("Sequence start")
-        self._init_log("SimPy_Sequence")
+        # @codesyncer(검증 2026-08-11): trace=False — SimPy 는 가상시간(env.now)으로
+        #   진행하므로 wall-clock 기반 트레이스는 타임라인이 무의미하고, 이 경로엔
+        #   trace.close() 도 없어 실행마다 파일 핸들이 누수됐다 (Windows 파일 락).
+        self._init_log("SimPy_Sequence", trace=False)
         self._initial_refill_done = False  # 초기 리필 플래그
 
         # 초기화: 모든 밸브 WASTE

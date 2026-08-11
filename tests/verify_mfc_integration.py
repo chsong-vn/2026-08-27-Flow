@@ -161,7 +161,8 @@ check("HTE 저장 hte_mode=True", spp.get("hte_mode") is True)
 
 # ══ ④ 실제 hardware_config.json 무크래시 로드 (roles.gas 실제) ══
 import json
-real = json.load(open("hardware_config.json", encoding="utf-8"))
+real = json.load(open(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+                                   "hardware_config.json"), encoding="utf-8"))
 gas_id = (real.get("roles", {}).get("gas") or {}).get("driver_id")
 dev = next((d for d in real.get("inventory", []) if d.get("id") == gas_id), None)
 check("실 config roles.gas 장비 존재", dev is not None, str(gas_id))

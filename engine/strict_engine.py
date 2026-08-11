@@ -94,14 +94,18 @@ class CollectionTimer:
         self._terminal_fired = threading.Event()     # 종료 WASTE 발화됨 → 가드 복원 금지
 
     def start(self):
-        self.start_time = time.time()
         # 트레이스: 계획된 이벤트를 예정 시각(무일시정지 가정)에 instant 로 미리 기록
         # → 실측 발화(TIMER 트랙)와 위아래로 놓고 편차를 눈으로 비교하는 PLAN 트랙
+        # @codesyncer(검증 2026-08-11): PLAN 기록은 반드시 start_time 앵커 캡처 '전'.
+        #   앵커 후에 두면 이벤트당 디스크 쓰기 소요가 pumping-elapsed 로 계산돼
+        #   전 이벤트가 조기 발화 — fix #4(앵커 갭)가 막은 제품 유실 버그의 재개방.
+        _plan_t0 = time.time()
         tr = getattr(self.engine, "trace", None)
         if tr:
             for t, name, _action, lane, _meta in self.events:
-                tr.instant("TIMER PLAN", name, ts=self.start_time + t,
+                tr.instant("TIMER PLAN", name, ts=_plan_t0 + t,
                            args={"t_sec": round(t, 1), "lane": lane})
+        self.start_time = time.time()
         for lane in {e[3] for e in self.events}:
             q: "queue.Queue" = queue.Queue()
             self._queues[lane] = q
@@ -662,7 +666,18 @@ class StrictSequenceEngine(FlowEngine):
         @raises RuntimeError: 펌프 미동작/파라미터 실패 → Emergency Stop 후 re-raise
         """
         log_names = extra_names if extra_names is not None else pump_names
+        # @codesyncer(검증 2026-08-11): 스팬을 try/finally 로 보장 — RuntimeError
+        #   (Emergency Stop 인터락)·abort 경로에서 end 누락 시 사고 트레이스의
+        #   실패 구간이 런 끝까지 이어진 것처럼 렌더링되던 결함 수정 (동작 불변 추출).
         self.trace.begin("PUMP OPS", phase_name, args={"pumps": list(pump_names)})
+        try:
+            self._run_complete_threads_impl(
+                pump_names, complete_fn_name, phase_name, log_prefix, log_names)
+        finally:
+            self.trace.end("PUMP OPS")
+
+    def _run_complete_threads_impl(self, pump_names, complete_fn_name, phase_name,
+                                   log_prefix, log_names):
         errors = []  # (pump_name, exception) 저장용
 
         def _safe_complete(p_name):
@@ -711,7 +726,6 @@ class StrictSequenceEngine(FlowEngine):
             st = getattr(pump, 'status', '')
             if st and st != prev_log.get(p_name):
                 self._log(f"  [{p_name}] {log_prefix}{st}")
-        self.trace.end("PUMP OPS")
 
     def _max_collector_tubes(self) -> int:
         if self.collector and hasattr(self.collector, "total_tubes"):
@@ -950,7 +964,8 @@ class StrictSequenceEngine(FlowEngine):
                 valve.set_position(pos)
                 self.trace.complete(f"VALVE {v_name}", f"→{pos}", t0, time.time() - t0)
             except Exception as exc:
-                self.trace.instant(f"VALVE {v_name}", f"FAILED →{pos}")
+                self.trace.instant(f"VALVE {v_name}", f"FAILED →{pos}",
+                                   args={"error": str(exc)[:200]})
                 print(f"[Warning] Valve switch failed ({v_name} -> {pos}): {exc}")
 
         for v_name, valve in self.valves.items():
@@ -972,7 +987,8 @@ class StrictSequenceEngine(FlowEngine):
                 valve.set_position(int(port))
                 self.trace.complete(f"VALVE {v_name}", f"→port{int(port)}", t0, time.time() - t0)
             except Exception as exc:
-                self.trace.instant(f"VALVE {v_name}", f"FAILED →port{port}")
+                self.trace.instant(f"VALVE {v_name}", f"FAILED →port{port}",
+                                   args={"error": str(exc)[:200]})
                 print(f"[Warning] Selector switch failed ({v_name} -> {port}): {exc}")
 
         def _set_switcher(v_name, valve):
@@ -981,7 +997,8 @@ class StrictSequenceEngine(FlowEngine):
                 valve.set_position(2)  # Reactor direction
                 self.trace.complete(f"VALVE {v_name}", "→REACTOR(2)", t0, time.time() - t0)
             except Exception as exc:
-                self.trace.instant(f"VALVE {v_name}", "FAILED →2")
+                self.trace.instant(f"VALVE {v_name}", "FAILED →2",
+                                   args={"error": str(exc)[:200]})
                 print(f"[Warning] Switcher switch failed ({v_name} -> 2): {exc}")
 
         for p_name, port in inlet_ports.items():
@@ -2374,7 +2391,8 @@ class StrictSequenceEngine(FlowEngine):
                 self.trace.complete("VALVE Outlet", f"→{pos} {ctx}".strip(), t0, time.time() - t0)
                 return
             except Exception as e:
-                self.trace.instant("VALVE Outlet", f"FAILED({attempt}/2) →{pos} {ctx}".strip())
+                self.trace.instant("VALVE Outlet", f"FAILED({attempt}/2) →{pos} {ctx}".strip(),
+                                   args={"error": str(e)[:200]})
                 self._log(f"  [HTE-Timer] ⚠ Outlet→{pos} 실패({attempt}/2) {ctx}: {e}")
                 if attempt == 1:
                     time.sleep(0.2)
@@ -2397,12 +2415,13 @@ class StrictSequenceEngine(FlowEngine):
         if dur_sec <= 0:
             return
         self._log(f"  [HTE] {label}: {sccm:.1f} sccm × {dur_sec:.1f}s")
-        self.trace.begin("MFC", label, args={"sccm": round(float(sccm), 2),
-                                             "dur_sec": round(float(dur_sec), 1)})
         self.mfc.set_flow(sccm)
         if self._collection_timer is not None:
             self._collection_timer.resume()
         t_left = float(dur_sec)
+        # 스팬은 set_flow 성공 후 개시 — set_flow 예외 시 미개시 스팬 누수 방지 (검증 반영)
+        self.trace.begin("MFC", label, args={"sccm": round(float(sccm), 2),
+                                             "dur_sec": round(float(dur_sec), 1)})
         try:
             while t_left > 0:
                 self._check_abort()
@@ -3077,6 +3096,35 @@ class StrictSequenceEngine(FlowEngine):
         on_pumps_started: Optional[Callable] = None,
         start_offsets: Optional[Dict[str, float]] = None,
     ):
+        # @codesyncer(검증 2026-08-11): DOSING 스팬 try/finally 보장 래퍼 (동작 불변 추출)
+        #   — abort/SafetyError/RuntimeError 경로에서 end 누락 시 사고 트레이스의
+        #   도징 스팬이 런 끝까지 이어져 보이던 결함 수정. args 구성도 방어적으로.
+        try:
+            _args = {"flows": {k: round(float(v), 3) for k, v in flow_map.items()},
+                     "allow_refill": bool(allow_refill)}
+        except Exception:
+            _args = None
+        self.trace.begin("DOSING", step_name or "dosing", args=_args)
+        try:
+            return self._execute_smart_dosing_impl(
+                flow_map, total_vol_ml=total_vol_ml, duration_sec=duration_sec,
+                source_port_map=source_port_map, step_name=step_name,
+                allow_refill=allow_refill, on_pumps_started=on_pumps_started,
+                start_offsets=start_offsets)
+        finally:
+            self.trace.end("DOSING")
+
+    def _execute_smart_dosing_impl(
+        self,
+        flow_map: Dict[str, float],
+        total_vol_ml: Optional[float] = None,
+        duration_sec: Optional[float] = None,
+        source_port_map: Optional[Dict[str, int]] = None,
+        step_name: str = "",
+        allow_refill: bool = True,
+        on_pumps_started: Optional[Callable] = None,
+        start_offsets: Optional[Dict[str, float]] = None,
+    ):
         """@param on_pumps_started: 첫 펌프 start 명령 전송 직후 1회 호출되는 콜백.
         CollectionTimer.resume를 넘기면 '실제 flow 시작 시점'과 타이머 기준점이
         일치하게 됨 (밸브 전환·순차 start 격차 동안의 가짜 pumping 시간 제거)."""
@@ -3106,10 +3154,6 @@ class StrictSequenceEngine(FlowEngine):
 
         if step_name:
             self._log(f"[{step_name}] start")
-        self.trace.begin("DOSING", step_name or "dosing",
-                         args={"flows": {k: round(float(v), 3) for k, v in flow_map.items()},
-                               "duration_sec": round(duration_sec, 1),
-                               "allow_refill": allow_refill})
 
         while time.time() < end_time:
             self._check_abort()
@@ -3373,7 +3417,6 @@ class StrictSequenceEngine(FlowEngine):
             elapsed = time.time() - start_time
             self._emit_phase(step_name, 100.0)
             self._log(f"[{step_name}] done (elapsed={elapsed:.1f}s refill={total_refill_time:.1f}s)")
-        self.trace.end("DOSING")
 
     def _smart_prefill_logic(self, inlet_ports: Dict[str, int], flows: Dict[str, float], fast_rate: float,
                              target_vol: float = None, total_flow: float = None,

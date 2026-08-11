@@ -69,7 +69,8 @@ def gcodes(c):
 
 
 RACK = "well_coordinates_eppendorf_5x5.json"
-DATA = os.path.join("hardware", "collectors", "data")
+DATA = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+                    "hardware", "collectors", "data")
 rack_json = json.load(open(os.path.join(DATA, RACK), encoding="utf-8"))
 by_id = {(w["plate"], w["well"]): w for w in rack_json["wells"]}
 

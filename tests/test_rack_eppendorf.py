@@ -31,7 +31,7 @@ def check(name, cond, detail=""):
         fails.append(name)
 
 
-DATA = os.path.join("hardware", "collectors", "data")
+DATA = os.path.join(_ROOT, "hardware", "collectors", "data")
 OUT = os.path.join(DATA, "well_coordinates_eppendorf_5x5_TEST.json")
 
 print("== 1. 생성 + 자가검증 (임시 Z 값 — 실기 생성 시엔 실측 필수) ==")

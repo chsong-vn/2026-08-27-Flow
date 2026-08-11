@@ -109,7 +109,8 @@ chk(dlg3.recipe is None and mb.warning.called, "앵커 없음 → 적용 거부+
 print("[B] export recipes_by_port")
 from core.notebook_export import NotebookExporter
 
-cfg = json.load(open("hardware_config.json", encoding="utf-8"))
+cfg = json.load(open(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+                                  "hardware_config.json"), encoding="utf-8"))
 lib2 = {"6-Bromoquinazoline": {"mw": 209.05, "density": 0.0, "smiles": "Brc1ccc2ncncc12"}}
 
 def mk_step(portA, portB):
@@ -125,7 +126,8 @@ eqs = [{"Group A": 1.0, "Group_B": 1.0}] * 2
 recipes = {("Group_B", 2): dict(XEC)}
 
 exp = NotebookExporter()
-out_dir = os.path.join("temp", "_test_notebook_stock")
+out_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+                       "temp", "_test_notebook_stock")
 os.makedirs(out_dir, exist_ok=True)
 paths = exp.save(plan, None, note_code="F-SCH-TEST-STOCK", revision=1,
                  reaction_type="Ni/Photoredox XEC", cfg_data=cfg,
