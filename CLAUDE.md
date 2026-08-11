@@ -2,6 +2,15 @@
 
 흐름 자동화 시스템. PyQt5 GUI로 시린지펌프, 밸브, 히터, 분획수집기를 제어하고 실험 시퀀스를 실행한다.
 
+**문서 지도**: `README.md`(실행법·폴더 지도·데이터 파일) · `docs/ARCHITECTURE.md`(모듈 상세·실측 의존
+방향·app 결합면·이름충돌·미해결 진실) · `tests/README.md`·`tools/README.md`(스크립트 인벤토리) ·
+`docs/`(배선메모 3종·캘리브레이션 백로그·나중계획).
+
+**폴더 규약 (2026-08-11 재배치)**: 검증 스크립트는 `tests/`, 캘리브레이션·진단·유틸은 `tools/`,
+실측/절차 문서는 `docs/`. 모든 스크립트는 **루트에서 실행** (`py -3.14 tests\xxx.py`) —
+`engine/config.py`가 `hardware_config.json`을 CWD 상대로 읽는다. tests/tools 스크립트 상단에는
+프로젝트 루트를 sys.path에 넣는 부트스트랩이 있으며 새 스크립트도 같은 규약을 따른다.
+
 ---
 
 ## 아키텍처 (4계층)
@@ -26,7 +35,10 @@ Hardware            ← 장비 드라이버 (시리얼/RS-485/MODBUS)
 | 파일 | 역할 |
 |------|------|
 | `main.py` | AutoPairingGUI (QMainWindow). Config→HW→UI→모니터링 순서로 초기화 |
+| `run.bat` | `py -3.14 main.py` (Python 3.14 고정 — PATH의 `python`은 3.10) |
 | `hardware_config.json` | 장비 인벤토리, 역할 매핑, 시스템 파라미터 (single source of truth) |
+| `tubing_measurements.json` | 튜빙 실측 원장 (손 편집) → `tools/apply_tubing_measurements.py --apply`로 config 반영 |
+| `stock_recipes.json` | 다성분 stock 레시피 (시퀀스 탭이 읽고 씀, 스키마 소비자는 engine/stock_stoich) |
 
 ### engine/ — 실행 엔진
 | 파일 | 클래스 | 역할 |
@@ -39,6 +51,10 @@ Hardware            ← 장비 드라이버 (시리얼/RS-485/MODBUS)
 | `sequence_timeline.py` | | 타임라인 빌더 |
 | `valve_timeline.py` | | 밸브 타이밍 |
 | `simpy_engine.py` | `SimPyEngine` | 시뮬레이션용 가상 엔진 |
+| `stock_stoich.py` | `compute_stock` | 다성분 stock 양론 순수 엔진 (UI/HW 무의존, limiting 앵커) |
+| `sampler_coordinator.py` | `SamplerCoordinator` | 오토샘플러 니들↔펌프 조율 (RoboChem Gen2 이식) |
+| `simulation_tool.py` | | `python -m engine.simulation_tool [--gui\|--sweep]` 시뮬 드라이버 |
+| `test_detailed_timing.py` | | ⚠ **테스트 아님** — 상세 타이밍 시뮬 라이브러리(SimPy+Excel). `tools/run_simulation.py`가 import |
 
 ### core/ — 코어 로직
 | 파일 | 클래스 | 역할 |
@@ -49,6 +65,9 @@ Hardware            ← 장비 드라이버 (시리얼/RS-485/MODBUS)
 | `experiment_report.py` | `ExperimentReport` | 결과 JSON + PNG 튜브 레이아웃 내보내기 |
 | `reagent_excel.py` | `ReagentExcelManager` | 시약 농도 엑셀 로드 |
 | `utils.py` | `SystemMapManager` | USB 포트 탐색, 펌프 라우팅 맵 |
+| `deep_wash.py` | `DeepWashEngine` | 12way 전 라인 세척 (포트 2–11 배치 흡인 → 12 폐기) |
+| `notebook_export.py` | `NotebookExporter` | 시퀀스 → F-SCH 연구노트 JSON (⚠ `notebook_export/` 폴더와 다름 — 폴더는 P&ID CDXML 생성기) |
+| `app_monitoring.py` 외 `app_*.py` 3종 | 믹스인 4종 | 옛 941줄 main.py에서 분리 — 탭이 `app.<속성>` 수백 곳으로 결합돼 있어 컴포지션 대신 믹스인 (self 네임스페이스 보존) |
 
 ### hardware/ — 장비 드라이버
 | 파일 | 프로토콜 | 장비 |
@@ -67,7 +86,9 @@ Hardware            ← 장비 드라이버 (시리얼/RS-485/MODBUS)
 | `collectors/collector_colosseum.py` | Serial (스텝모터) | 분획수집기 |
 | `collectors/collector_plate96.py` | Serial (Marlin G-code) | 96-well 분취기 |
 | `sensors/phase_sensor_opb.py` | Serial (CSV 스트림 115200) | **위상센서 모드 A(현행)**: OPB ADC 리그 — PC측 임계값 2상 판정 |
-| `sensors/phase_sensor_array.py` | Serial (RoboChem ASCII 9600) | **위상센서 모드 B(예비)**: 캘리브 보드 3상 판정(유색/불투명 대응) — 전환 절차는 `위상센서_OPB_배선메모.md` |
+| `sensors/phase_sensor_array.py` | Serial (RoboChem ASCII 9600) | **위상센서 모드 B(예비)**: 캘리브 보드 3상 판정(유색/불투명 대응) — 전환 절차는 `docs/위상센서_OPB_배선메모.md` |
+| `sensors/ultrasonic_level.py` | Serial (HC-SR04 4ch) | 시린지 레벨 — 시작 시 reconcile 전용 (실시간 피드백 아님) |
+| `gas/mfc_korea_mkp.py` | RS-485 **ASCII+ODD parity** | MKP MFC (Modbus 아님 — 초기 플레이스홀더를 교체한 것) |
 | `factory.py` | — | 한글 드라이버명 → 영문 클래스명 매핑 |
 | `*/mock_*.py` | — | 모든 장비의 가상 테스트용 드라이버 |
 
@@ -83,14 +104,29 @@ NRG 펌프·GRBL 샘플러의 백엔드. 원본 무수정(LICENSE/NOTICE 동봉)
 | `tab_dashboard.py` | 대시보드: 메트릭, 차트, 배관도 실시간 표시 |
 | `tab_sequence.py` | **StepCard 기반 시퀀스 편집기** (온도/시간/포트/당량 입력) |
 | `tab_manual.py` | 개별 장비 수동 제어 |
-| `tab_calculator.py` | 유량 계산기 (양론 UI) |
-| `visual_diagram.py` | 반응 배관도 애니메이션 위젯 |
-| `dialogs.py` | 하드웨어 설정 다이얼로그 |
-| `colors.py`, `theme.py`, `theme_manager.py` | 다크/라이트 테마 |
+| `tab_calculator.py` | 유량 계산기 (양론 UI, WebGrid 기반, PubChem CAS 워커) |
+| `visual_diagram.py` | 배관도 v2 (SVG — `assets/` 유일 소비자) |
+| `visual_diagram_parts.py` | 배관도 v3 — config 조합(채널수×라우팅×N2×BPR×분취기) 적응형 벡터 |
+| `main_window_ui.py` | 사이드바+페이지 스택 조립 믹스인 (QTabWidget 아님 — 4페이지) |
+| `webgrid/webgrid.py` | Tabulator를 QWebEngineView+QWebChannel로 내장 (`webgrid/vendor/` JS 번들 삭제 금지) |
+| `widgets/pump_controls.py` | ComponentCard·셀렉터·니들·3way 위젯 팩토리 |
+| `widgets/channel_column.py` | Manual v4 채널 게이지 카드 |
+| `dialogs.py` | 하드웨어 설정 다이얼로그 (HardwareConfigDialog) |
+| `dialog_plate96_manual.py` 외 `dialog_*.py` | 96웰 수동 이동 / 분획 프리뷰 / stock 레시피 / Deep Wash |
+| `colors.py`, `theme.py`, `theme_manager.py`, `styles.py` | 다크/라이트 테마 (colors.py가 색 단일 진실원) |
 
 > 정리 이력 (2026-08-05): 미사용 데드 모듈 `tab_collection.py`·`tab_setting.py`·`widget_plate96.py` 는
-> `_archive_20260805/dead_ui_modules/` 로 이동 (main_window_ui 는 4탭만 로드). 스크린샷·일회성 스크립트·
-> 옛 메서드 JSON·옛 로그도 `_archive_20260805/` 및 `logs/_archive_*` 참조. 캘리브레이션 실측 데이터는 `calibration_data/`.
+> `_archive_20260805/dead_ui_modules/` 로 이동 (main_window_ui 는 4탭만 로드). 캘리브레이션 실측 데이터는 `calibration_data/`.
+>
+> 정리 이력 (2026-08-11): 루트 스크립트 65개 → `tests/`(41)·`tools/`(24) 재배치 + 부트스트랩/경로 수리.
+> 루트 실측 .md 5종 → `docs/`. 픽스처 `2026-04-30.json` → `tests/fixtures/`. 탈락 PoC(`poc_nicegui`·
+> `poc_pyqt_grid`)·`_backup/`·구로그 아카이브·생성물 CDXML 삭제 (git 이력으로 복구 가능).
+
+### ⚠ 이름 충돌 (헷갈리기 쉬움 — 상세는 docs/ARCHITECTURE.md §3)
+- `notebook_export/`(폴더, P&ID→CDXML 생성기 — `piping_cdxml.py`는 core가 import하는 **프로덕션 코드**) ≠ `core/notebook_export.py`(F-SCH JSON)
+- `engine/test_detailed_timing.py`는 테스트가 아니라 시뮬 라이브러리
+- SystemConfig 2곳: `engine/config.py`(진짜) vs `engine/sequence_timeline.py`(별개)
+- `temp/`는 임시폴더가 아니라 **라이브 앱 상태**(시약 엑셀 2종) — 삭제 금지
 
 ---
 
