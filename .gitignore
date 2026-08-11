@@ -1,6 +1,7 @@
 # Python
 __pycache__/
 *.pyc
+*.log
 
 # 런타임 산출물 (코드 아님 — 실험/시뮬레이션 출력)
 logs/
