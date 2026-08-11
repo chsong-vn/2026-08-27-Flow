@@ -11,7 +11,13 @@ class SystemConfig:
     """Runtime system configuration loaded from hardware_config.json."""
 
     def __init__(self):
-        self.config_file = "hardware_config.json"
+        # @codesyncer-decision(검증 2026-08-12, 사용자 승인): 프로젝트 루트에 __file__
+        #   앵커링 — 기존 CWD 상대 경로는 "모든 스크립트는 루트에서 실행" 불변식의
+        #   근본 원인이었고, 다른 CWD 에서 실행 시 조용히 기본 스키마로 폴백해
+        #   빈 인벤토리/기본 reactor_vol 로 오동작했다. 저장(save_config)도 같은
+        #   경로를 쓰므로 CWD 무관하게 항상 루트의 단일 파일을 읽고 쓴다.
+        _root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        self.config_file = os.path.join(_root, "hardware_config.json")
 
         # Default schema. Existing file data will be merged over these values.
         self.config_data: Dict[str, Any] = {
@@ -95,6 +101,11 @@ class SystemConfig:
                     self._merge_dict(self.config_data, data)
             except Exception as exc:
                 print(f"[Config] Load error: {exc}. Using defaults.")
+        else:
+            # @codesyncer(검증 2026-08-12): 조용한 기본값 폴백 금지 — 파일 부재는
+            #   빈 인벤토리/기본 반응기 부피로 '조용히 오동작'하는 최악 경로였다.
+            print(f"[Config] WARNING: {self.config_file} not found - "
+                  f"using DEFAULT schema (empty inventory). Check installation.")
 
         self.process_config()
 

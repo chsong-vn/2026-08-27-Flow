@@ -26,7 +26,10 @@ class FlowEngine:
         self.writer = None
         self.trace = NULL_TRACER  # _init_log 에서 실제 TraceLogger 로 교체
         self.start_time = 0
-        self.log_dir = "logs" # 기본 로그 디렉토리
+        # 로그 폴더도 프로젝트 루트 앵커 (config.py 와 동일 결정 2026-08-12) —
+        # CWD 가 어디든 logs/ 는 항상 루트에 쌓인다
+        self.log_dir = os.path.join(
+            os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "logs")
         
         self._stop_event = threading.Event()
         self._monitor_thread = None

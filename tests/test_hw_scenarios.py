@@ -16,8 +16,10 @@ os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 import os
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-CFG = "hardware_config.json"
-BAK = "hardware_config.json.bak_scenario"
+# engine/config.py 가 루트 앵커로 바뀜(2026-08-12) — 변조/복원도 같은 파일을 겨냥해야 함
+_ROOT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+CFG = os.path.join(_ROOT_DIR, "hardware_config.json")
+BAK = os.path.join(_ROOT_DIR, "hardware_config.json.bak_scenario")
 S = os.environ.get("SCENARIO", "reaxus2")
 
 
