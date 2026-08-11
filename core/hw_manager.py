@@ -269,7 +269,7 @@ class HardwareManager:
             elif collector_driver == "Plate96Collector":
                 # @codesyncer-decision(2026-08-05 랙 확장): settings.rack_type 으로
                 #   좌표 파일 선택 — "plate96"(기본) | "eppendorf_5x5" 등.
-                #   랙별 좌표는 generate_rack_coords.py 가 생성 (기존 티칭 재사용).
+                #   랙별 좌표는 tools/generate_rack_coords.py 가 생성 (기존 티칭 재사용).
                 _c_set = c_info.get("settings", {}) or {}
                 _rack = str(_c_set.get("rack_type", "plate96") or "plate96")
                 _cfile = (None if _rack == "plate96"
@@ -279,7 +279,7 @@ class HardwareManager:
                     if self.collector.total_tubes <= 0:
                         raise RuntimeError(
                             f"랙 '{_rack}' 좌표 로드 실패 — "
-                            f"generate_rack_coords.py 로 생성했는지 확인")
+                            f"tools/generate_rack_coords.py 로 생성했는지 확인")
                     _, msg = self.collector.connect(c_info["port"])
                     print(f"[Collector] {msg} (rack={_rack})")
                 except Exception as e:
