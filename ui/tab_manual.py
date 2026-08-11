@@ -204,10 +204,21 @@ class ManualTab(QWidget):
             try:
                 if getattr(app, "engine", None) is not None:
                     app.engine.abort_flag = True
+                    # @codesyncer(검증 2026-08-12): pause_event.set() 누락 보완 —
+                    #   일시정지 중 E-STOP 이면 엔진이 pause_event.wait() 에 영원히
+                    #   블록되어 cleanup(히터 OFF 포함)에 도달하지 못했다.
+                    #   app_control.estop 과 동일 규약으로 정렬.
+                    if hasattr(app.engine, "pause_event"):
+                        app.engine.pause_event.set()
             except Exception:
                 pass
             for p in (getattr(app, "pumps", {}) or {}).values():
                 try:
+                    # @codesyncer(검증 2026-08-12): _abort_refill 누락 보완 — 리필 대기
+                    #   워커가 최대 ~60s 블라인드 슬립 후 다음 런의 도징 펌프에 stop 을
+                    #   쏘는 교차 런 오발사를 즉시 탈출로 차단 (estop 과 동일 규약).
+                    if hasattr(p, "_abort_refill"):
+                        p._abort_refill = True
                     p.stop()
                 except Exception:
                     pass

@@ -402,6 +402,17 @@ class _HteSensorSync(threading.Thread):
                                      f"(트레인은 타이밍으로 계속): {e}")
                     return
                 if ev is not None and idx < len(self.expected):
+                    # @codesyncer(검증 2026-08-12, C2): 일시정지 중 매칭 금지 — 정지 중
+                    #   가스 감압으로 계면이 센서를 왕복하는 엣지가 창 안에 들면 클록을
+                    #   오앵커하고 idx 를 소모해 진짜 엣지를 버림 ('타이머는 구동 중에만'
+                    #   불변식의 센서판). 스퓨리어스로 계수하고 넘어간다.
+                    with self.timer._pause_lock:
+                        _paused = self.timer._pause_start is not None
+                    if _paused:
+                        self.spurious += 1
+                        self.engine._log(f"[HTE-Sensor] 일시정지 중 엣지 무시 ({ev})")
+                        time.sleep(0.05)
+                        continue
                     kind = "L2G" if ev == "GAS" else "G2L"
                     t_exp, k_exp, label = self.expected[idx]
                     if kind == k_exp and abs(el - t_exp) <= self.w:
@@ -1499,6 +1510,11 @@ class StrictSequenceEngine(FlowEngine):
     def _run_sequence_impl(self, sequence_plan, map_mgr):
         self.abort_flag = False
         self._cleanup_done = False
+        # @codesyncer(검증 2026-08-12): pause_event 재장전 — 이전 런이 '일시정지 중
+        #   예외'로 끝나면 cleared 로 남아, 다음 런이 히터 가열 ON 상태로 첫
+        #   체크포인트("Paused (heating)")에서 조용히 멈추던 버그. 새 런은 항상
+        #   Running 으로 시작한다.
+        self.pause_event.set()
 
         # @codesyncer-decision: 시퀀스 시작 시 모든 펌프 current_vol 리셋
         # - 이전 시퀀스의 잔량이 남아있으면 initial refill의 fill_vol이 달라짐
@@ -1899,13 +1915,13 @@ class StrictSequenceEngine(FlowEngine):
                               f"웰 용량 {vol_per_tube:.2f}mL — 스플래시/교차오염 가능. "
                               f"collect_line_mode=compensated(WASH포트 배출) 권장")
 
+                # @codesyncer(검증 2026-08-12, C1): 무보호 단발 set_position → 재시도+
+                #   에러 승격 헬퍼로 교체 (fault-masking 규약: Outlet 은 시끄럽게)
                 def _valve_to_collect():
-                    if "Outlet" in self.valves:
-                        self.valves["Outlet"].set_position(2)
+                    self._outlet_set_safe(2, "collect")
 
                 def _valve_to_waste():
-                    if "Outlet" in self.valves:
-                        self.valves["Outlet"].set_position(1)
+                    self._outlet_set_safe(1, "terminal waste")
 
                 def _well_name(num):
                     """tube 번호 → well ID 문자열 (Plate96이면 A_A1 등, 아니면 Tube N)"""
@@ -2128,12 +2144,29 @@ class StrictSequenceEngine(FlowEngine):
                             self.pause_event.wait()
                             self._check_abort()
                             # resume — 남은 시간 기준으로 start 재개
-                            try:
-                                self.push_pump.set_flow(total_flow)
-                                self.push_pump.start()
-                            except Exception:
-                                pass
-                            if self._collection_timer is not None:
+                            # @codesyncer(검증 2026-08-12): 재시작 실패를 삼키고 타이머를
+                            #   재개하면 정지된 액체 기둥에 대해 모든 경계(터미널 WASTE
+                            #   포함)가 발화 — 무유량 제품 유실이 '정상 완료'로 보고되는
+                            #   경로. 1회 재시도, 실패 시 sig_error + 타이머 pause 유지.
+                            _push_restarted = False
+                            for _att in (1, 2):
+                                try:
+                                    self.push_pump.set_flow(total_flow)
+                                    self.push_pump.start()
+                                    _push_restarted = True
+                                    break
+                                except Exception as _pe:
+                                    self._log(f"  ⚠ Push 재시작 실패({_att}/2): {_pe}")
+                                    if _att == 1:
+                                        time.sleep(0.3)
+                                    else:
+                                        try:
+                                            self.signals.sig_error.emit(
+                                                f"S{exp_id}-Push 재시작 실패 — 흐름 정지 상태, "
+                                                f"타이머 일시정지 유지. 펌프 확인 필요: {_pe}")
+                                        except Exception:
+                                            pass
+                            if _push_restarted and self._collection_timer is not None:
                                 self._collection_timer.resume()
                             push_start = time.time() - elapsed  # 경과 유지
                         # 진행률 송출
@@ -2281,10 +2314,16 @@ class StrictSequenceEngine(FlowEngine):
                         self._collection_timer.stop(timeout=2.0)
                     self._collection_timer = None
 
+                # @codesyncer(검증 2026-08-12, C1): 게이트④의 'Outlet=WASTE' 전제를 먼저
+                #   강제 — 터미널 WASTE 이벤트가 1회 통신 장애로 조용히 실패(워커가 예외
+                #   삼킴)하거나 타이머 강제종료로 드레인되면 전제가 거짓이 되어 purge 가
+                #   제품 웰로 유입(오버플로/오염). 게이트① F1 수정과 동일 패턴.
+                self._outlet_set_safe(1, "step-end")
+
                 # 게이트④(잔량제거): 푸시 종료 후 용매 잔량 실측. 기본 purge —
                 #   자동정지 유예로 기다린 뒤에도 남았으면 '같은 스텝 유속'으로 센서 0
                 #   될 때까지 리액터 방향 추가 토출(2026-07-29 사용자 지시). 타이머
-                #   정리 후 + Outlet=WASTE 라 추가 토출은 폐액병행, 분획 무영향.
+                #   정리 후 + Outlet=WASTE(위에서 강제)라 추가 토출은 폐액병행, 분획 무영향.
                 _g4 = self._level_gate(list(flows.keys()), "push_end",
                                        f"S{exp_id} 푸시후",
                                        discharge="reactor", rates=flows)
@@ -2306,8 +2345,7 @@ class StrictSequenceEngine(FlowEngine):
                 else:
                     self.current_tube += num_collect_tubes
 
-                if "Outlet" in self.valves:
-                    self.valves["Outlet"].set_position(1)  # waste
+                # (Outlet→WASTE 는 게이트④ 직전으로 이동 — 2026-08-12 C1)
                 self._log(f"Step {exp_id} Complete")
 
                 if self.signals:
@@ -2374,6 +2412,34 @@ class StrictSequenceEngine(FlowEngine):
     #   ★실측 캘리브레이션 항목 — sccm→치환유량은 압력 의존) /
     #   hte_gas_sccm(MFC 설정치, 기본=equiv 값) / hte_wash_solvent_vol_ml(0.5) /
     #   hte_wash_gas_vol_ml(0.3) / hte_wash_port(1=공용매)
+
+    def _outlet_set_safe(self, pos, ctx=""):
+        """표준 경로 Outlet 전환 — 1회 재시도, 최종 실패 시 sig_error 승격.
+
+        @codesyncer(검증 2026-08-12, C1): 표준 타이머 이벤트의 Outlet 전환이 무보호
+        단발 set_position 이라 1회 통신 장애로 분획 경계가 조용히 소실됐다
+        (_hte_outlet 의 C2 수정과 동일 결함). 반환 True=성공."""
+        if "Outlet" not in self.valves:
+            return False
+        for attempt in (1, 2):
+            t0 = time.time()
+            try:
+                self.valves["Outlet"].set_position(pos)
+                self.trace.complete("VALVE Outlet", f"→{pos} {ctx}".strip(), t0, time.time() - t0)
+                return True
+            except Exception as e:
+                self.trace.instant("VALVE Outlet", f"FAILED({attempt}/2) →{pos} {ctx}".strip(),
+                                   args={"error": str(e)[:200]})
+                self._log(f"  [Timer] ⚠ Outlet→{pos} 실패({attempt}/2) {ctx}: {e}")
+                if attempt == 1:
+                    time.sleep(0.2)
+                else:
+                    try:
+                        self.signals.sig_error.emit(
+                            f"Outlet 전환 실패({ctx}) — 분획 경계 이상, 웰 확인 필요: {e}")
+                    except Exception:
+                        pass
+        return False
 
     def _hte_outlet(self, pos, ctx=""):
         """타이머 스레드용 Outlet 전환 — 1회 재시도, 최종 실패 시 sig_error 승격.
@@ -2892,6 +2958,17 @@ class StrictSequenceEngine(FlowEngine):
                 pass
             self._collection_timer = None
 
+        # @codesyncer(검증 2026-08-12): abort 시 터미널 WASTE 이벤트가 실행 없이
+        #   드레인되어 Outlet 이 COLLECT 로 방치되던 결함 — WASTE 는 이 엔진이 선언한
+        #   안전 종단 상태(타이머 도크스트링·워커 주석)인데 Manual E-STOP 외 어떤
+        #   경로도 보장하지 않았다. cleanup 은 abort/에러/정상 공용이므로 여기서 강제.
+        if "Outlet" in self.valves:
+            try:
+                self.valves["Outlet"].set_position(1)
+                self._log("Cleanup: Outlet→WASTE (안전상태 복귀)")
+            except Exception as e:
+                self._log(f"⚠ Cleanup: Outlet→WASTE 실패 — 수동 확인 필요: {e}")
+
         # 호밍 스레드 정리 (abort 시 아직 살아있을 수 있음)
         homing = getattr(self, "_homing_thread", None)
         if homing is not None and homing.is_alive():
@@ -2907,6 +2984,23 @@ class StrictSequenceEngine(FlowEngine):
         for p_obj in self.pumps.values():
             try:
                 p_obj.stop()
+            except Exception:
+                pass
+
+        # @codesyncer(검증 2026-08-12): abort 로 refill_complete 의 finally 에 도달 못한
+        #   펌프는 is_refilling=True 로 잔류 → 다음 런 시작 전까지 Manual infuse 가
+        #   조용히 무동작(start() 가 is_refilling 이면 return)하고 Deep Wash 는 busy
+        #   거부. 펌프 정지 직후인 여기서 해제. _dosing_started 잔류도 같은 취지
+        #   (다음 런 재시작 판정이 우연한 target_flow 리셋에 기대던 결합 제거).
+        for p_obj in self.pumps.values():
+            try:
+                if getattr(p_obj, "is_refilling", False):
+                    p_obj.is_refilling = False
+            except Exception:
+                pass
+        if hasattr(self, "_dosing_started"):
+            try:
+                self._dosing_started.clear()
             except Exception:
                 pass
 
@@ -2959,13 +3053,14 @@ class StrictSequenceEngine(FlowEngine):
             except Exception as exc:
                 print(f"[Error] Report save failed: {exc}")
 
-        # Close csv log
+        # Close csv log (writer 도 함께 무효화 — 닫힌 파일에의 writerow 무음 유실 방지)
         if self.csv_file:
             try:
                 self.csv_file.close()
             except Exception:
                 pass
             self.csv_file = None
+            self.writer = None
 
         self._emit_status("All steps complete" if not self.abort_flag else "Sequence aborted")
 

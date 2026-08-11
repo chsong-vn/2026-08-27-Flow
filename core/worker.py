@@ -30,6 +30,14 @@ class SequenceWorker(QThread):
         except SafetyError as se:
             self.engine.signals.sig_status.emit("Stopped")
             self.engine.signals.sig_log.emit(f"!!! {str(se)} !!!")
+            # @codesyncer(검증 2026-08-12): try 진입 '전' SafetyError(인터락·레벨
+            #   reconcile·HTE 사전검증)는 엔진 내부 cleanup 을 못 탐 — CSV 핸들 누수·
+            #   샘플러 미파킹. _cleanup_done 멱등 가드가 있어 중복 호출 안전.
+            if hasattr(self.engine, '_sequence_cleanup'):
+                try:
+                    self.engine._sequence_cleanup()
+                except Exception:
+                    pass
         except Exception as e:
             # @codesyncer-decision: 예외 발생 시에도 반드시 정리 수행
             self.engine.signals.sig_error.emit(str(e))

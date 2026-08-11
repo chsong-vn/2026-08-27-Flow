@@ -266,7 +266,11 @@ except Exception as e:
     print(f"  (엔진 예외: {e})")
 check("S3 시퀀스 비중단(예외 격리)", not crashed)
 check("S3 실패 주입 발생", len(h.ev("valve_fail")) == 1)
-check("S3 실패 로그 기록", any("FAILED" in m for m in h.logs))
+# 2026-08-12 C1 수정 후: Outlet 전환은 _outlet_set_safe 가 1회 재시도로 회복하고
+# "[Timer] ⚠ Outlet→2 실패(1/2)" 로그를 남긴다 (기존: 워커가 "FAILED" 삼킴 로그).
+check("S3 실패 로그 기록", any(("FAILED" in m) or ("실패" in m) for m in h.logs))
+check("S3 재시도 회복(전환 재시도 후 성공)",
+      any(d == 2 for _t, d in h.ev("valve")))
 # 후속 이벤트는 계속: 웰 이동 + 수집종료 WASTE 발동
 tubes = h.ev("tube")
 wastes = h.ev("valve", 1)
