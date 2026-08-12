@@ -270,19 +270,80 @@ tj_leg = sorted(pl.edit[2] for pl in wl.spine if pl.edit and pl.edit[1] == "tj")
 check("Q5 레거시 스파인 불변 [1,2]", tj_leg == [1, 2], str(tj_leg))
 leg_tags = [x.tag for x in wl.scene().items() if isinstance(x, PartTee) and x.tag]
 check("Q6 레거시 QUAD 태그 없음", not leg_tags, str(leg_tags))
-# 렌더 (육안 검토용)
-wq.update_realtime({cfg_q.ACTIVE_PUMPS[0]: {"running": True}},
-                   outlet_valve_pos=2, gas_flowing=True)
-sr = wq.scene().sceneRect()
-img = QImage(int(sr.width()), int(sr.height()), QImage.Format_ARGB32)
-img.fill(0xFF0E1320)
-pt = QPainter(img)
-pt.setRenderHint(QPainter.Antialiasing)
-wq.scene().render(pt, QRectF(img.rect()), sr)
-pt.end()
-path = os.path.join(OUT, "diagram_quad_topology.png")
-img.save(path)
-print(f"  render → {path}")
+
+# ── 2026-08-12b: 실물 4-way 크로스 렌더 검증 ─────────────────────
+# Q7 QUAD 티 = 물리 4포트 크로스 (사용 스터브 + 캡 마개 = L/T/B/R 전부)
+qts = {x.tag: x for x in wq.scene().items() if isinstance(x, PartTee) and x.tag}
+q7ok = all(set(t.used) | set(t.capped) == {"L", "T", "B", "R"}
+           for t in qts.values())
+check("Q7 QUAD 티 = 물리 4포트(크로스)", q7ok,
+      str({k: (t.used, t.capped) for k, t in qts.items()}))
+check("Q7b QUAD-2 4포트 전부 배관(T=유입·L=C·B=D·R=출구)",
+      set(qts["QUAD-2"].used) == {"L", "T", "B", "R"}, str(qts["QUAD-2"].used))
+check("Q7c push 없음 → QUAD-1 R 캡", "R" in qts["QUAD-1"].capped,
+      str(qts["QUAD-1"].capped))
+
+# Q8 수평런이 QUAD-2 행으로 이동 + tj[e_max]=실제 파이프
+Y_Q2 = 70 + 60 + 2 * 136   # ys[2] (그룹 2 첫 행)
+check("Q8 리액터 y = QUAD-2 행", abs(wq.reactor.pos().y() - Y_Q2) < 1,
+      str(wq.reactor.pos().y()))
+check("Q8b tj[2] 실파이프(부유 칩 핵 제거)", wq.tj_out_pipe is not None
+      and wq.tj_out_pipe.edit and wq.tj_out_pipe.edit[2] == 2)
+
+# Q9 QUAD + push: solvent 코리도어 → QUAD-1 'R' 포트 도킹, 런의 push 티 폐지
+cfg_qp = Cfg(["external_valve"] * 4, n2=True)
+cfg_qp.tjunction_entry_map = {"Group_A": 1, "Group_B": 1, "Group_C": 2, "Group_D": 2}
+wqp = FlowDiagramWidget(pump_configs=[], active_pumps=cfg_qp.ACTIVE_PUMPS, inventory=[])
+wqp.configure(cfg_qp, App(cfg_qp, 1, 1))
+qts_p = {x.tag: x for x in wqp.scene().items() if isinstance(x, PartTee) and x.tag}
+check("Q9 push → QUAD-1 R 배관", "R" in qts_p["QUAD-1"].used,
+      str(qts_p["QUAD-1"].used))
+_endp = wqp.push_parts[1][-1].pts[-1]
+Y_Q1 = 70 + 60 + 1 * 136   # ys[1] (그룹 1 마지막 행 = QUAD-1)
+check("Q9b solvent 라인 QUAD-1 도킹", abs(_endp.x() - (470 + 14)) < 1
+      and abs(_endp.y() - Y_Q1) < 1, f"({_endp.x():.0f},{_endp.y():.0f})")
+_push_tees = [x for x in wqp.scene().items() if isinstance(x, PartTee)
+              and abs(x.pos().x() - 655) < 1]
+check("Q9c 런의 push 티 폐지", not _push_tees, str(len(_push_tees)))
+
+# Q10 tj 분절 흐름 = 엔진 F_j 모델 정합: 구간 k 이전 진입 채널만 tj[k] 구동
+wq.update_realtime({"Group_C": {"running": True}}, outlet_valve_pos=1)
+check("Q10 C만 구동 → tj[1] 무흐름", not wq.spine[0].flowing)
+wq.update_realtime({"Group_A": {"running": True}}, outlet_valve_pos=1)
+check("Q10b A 구동 → tj[1] 흐름", wq.spine[0].flowing)
+wqp.update_realtime({}, push_running=True, outlet_valve_pos=1)
+check("Q10c push(solvent)만 → tj[1]+tj[2] 흐름", wqp.spine[0].flowing
+      and wqp.tj_out_pipe.flowing and all(q.flowing for q in wqp.push_parts[1]))
+
+# Q11 quad 두 케이스 bbox 비중첩 + 씬 포함 (레거시 콤보와 동일 기준)
+for _nm, _w in (("quad", wq), ("quad_push", wqp)):
+    parts_q = [x for x in _w.scene().items() if isinstance(x, Part)]
+    bad_q = []
+    for x, y2 in itertools.combinations(parts_q, 2):
+        r = x.sceneBoundingRect().intersected(y2.sceneBoundingRect())
+        if r.width() > 14 and r.height() > 14:
+            bad_q.append(f"{type(x).__name__}×{type(y2).__name__}"
+                         f"({r.width():.0f}x{r.height():.0f})")
+    check(f"Q11 {_nm} 파츠 비중첩", not bad_q, "; ".join(bad_q[:4]))
+    sr_q = _w.scene().sceneRect()
+    check(f"Q11b {_nm} 씬 포함",
+          all(sr_q.contains(x.sceneBoundingRect()) for x in parts_q))
+
+# 렌더 (육안 검토용) — 기본 quad + push(solvent→QUAD-1) 두 장
+for _nm, _w, _st in (("quad_topology", wq, {}),
+                     ("quad_push", wqp, {"push_running": True})):
+    _w.update_realtime({"Group_A": {"running": True}},
+                       outlet_valve_pos=2, gas_flowing=False, **_st)
+    sr = _w.scene().sceneRect()
+    img = QImage(int(sr.width()), int(sr.height()), QImage.Format_ARGB32)
+    img.fill(0xFF0E1320)
+    pt = QPainter(img)
+    pt.setRenderHint(QPainter.Antialiasing)
+    _w.scene().render(pt, QRectF(img.rect()), sr)
+    pt.end()
+    path = os.path.join(OUT, f"diagram_{_nm}.png")
+    img.save(path)
+    print(f"  render → {path}")
 
 print()
 print("RESULT:", "ALL PASS" if not fails else f"{len(fails)} FAIL: {fails}")

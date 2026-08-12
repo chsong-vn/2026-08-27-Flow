@@ -10,6 +10,8 @@
   채널 1~4 × 라우팅(external_valve=병→12way→3way→펌프 / internal_valve=저장조→펌프
   / autosampler=바이알랙→니들→펌프, 밸브 없음) × push HPLC(+체크밸브) ×
   질소(실린더+MFC) × BPR × 분취기(plate96/colosseum) — configure() 가 cfg 에서 유도.
+  + 합류 토폴로지: system_params.tjunction_entry_map 이 있으면 실물 QUAD 크로스
+  (4-way, Solvent+A+B→QUAD-1, +C+D→QUAD-2)로, 없으면 레거시 캐스케이드 티로.
 
 흐름 표시: 활성 경로 색 + 방향 대시 애니메이션(토출=정방향, 흡입=역방향).
 소스 맵핑: 12-way = 현재 포트 번호(+시약명) 배지, AS = 랙에서 현재 바이알
@@ -488,21 +490,32 @@ class PartCheck(Part):
     KIND = "chk"
     S = 7.0  # 피팅류=소형
 
+    def __init__(self, tag="", flip=False):
+        super().__init__(tag)
+        self.flip = flip   # True = 하향 흐름 허용 (in=위 → out=아래, QUAD-1 solvent 라이저용)
+        if flip:
+            self._ports = {"in": (0.0, -1.4), "out": (0.0, 1.1)}
+
     def boundingRect(self):
-        return QRectF(-2.4 * self.S, -2.0 * self.S, 4.8 * self.S, 4.2 * self.S)
+        return QRectF(-2.4 * self.S, -2.2 * self.S, 4.8 * self.S, 4.4 * self.S)
 
     def paint(self, p, o, w):
         p.setRenderHint(QPainter.Antialiasing)
         P = _pal()
+        if self.flip:
+            p.save()
+            p.scale(1, -1)   # 스터브·화살표 일괄 상하 반전 — _ports 오버라이드와 정합
         p.setPen(self._body_pen())
         p.setBrush(self._fill())
         p.drawEllipse(QPointF(0, 0), 1.2 * self.S, 1.2 * self.S)
-        # 체크 화살표 (상향 = 허용 방향)
+        # 체크 화살표 (상향 = 허용 방향; flip 시 스케일로 하향)
         p.setPen(QPen(QColor(P.TEXT_PRIMARY), 2.2, Qt.SolidLine, Qt.RoundCap))
         p.drawLine(QPointF(0, 5), QPointF(0, -5))
         p.drawLine(QPointF(-4, -1), QPointF(0, -5))
         p.drawLine(QPointF(4, -1), QPointF(0, -5))
         self._stub(p, "in", ln=4); self._stub(p, "out", ln=4)
+        if self.flip:
+            p.restore()
 
 
 class PartBpr(Part):
@@ -588,15 +601,21 @@ class PartPhaseSensor(Part):
 
 
 class PartTee(Part):
+    """합류 피팅: used=배관 연결 포트(스터브+도트), capped=배관 없는 물리 포트(캡 마개).
+    4포트 전부면 4-way 크로스(QUAD), 3포트면 T. 태그는 우하단(스파인·칩 레인 회피)."""
     KIND = "tee"
     S = 7.0
 
-    def __init__(self, tag="", used=("L", "R", "B")):
+    def __init__(self, tag="", used=("L", "R", "B"), capped=()):
         super().__init__(tag)
         self.used = used
+        self.capped = tuple(capped)
 
     def boundingRect(self):
-        return QRectF(-1.6 * self.S, -1.6 * self.S, 3.2 * self.S, 3.2 * self.S)
+        r = QRectF(-1.6 * self.S, -1.6 * self.S, 3.2 * self.S, 3.2 * self.S)
+        if self.tag:
+            r = r.united(QRectF(10, 8, 56, 18))
+        return r
 
     def paint(self, p, o, w):
         p.setRenderHint(QPainter.Antialiasing)
@@ -606,6 +625,20 @@ class PartTee(Part):
         p.drawEllipse(QPointF(0, 0), 0.9 * self.S, 0.9 * self.S)
         for k in self.used:
             self._stub(p, k, ln=4)
+        for k in self.capped:
+            # 캡 마개: 짧은 스터브 + 직교 캡 바 — QUAD 크로스의 미배관 여분 포트
+            ux, uy = PORTS[self.KIND][k]
+            pt = QPointF(ux * self.S, uy * self.S)
+            nlen = math.hypot(ux, uy) or 1.0
+            nv = QPointF(-uy / nlen * 4.5, ux / nlen * 4.5)
+            p.setPen(self._body_pen(2.0))
+            p.drawLine(pt * 0.62, pt)
+            p.drawLine(pt - nv, pt + nv)
+        if self.tag:
+            p.setFont(_f(9, mono=True))
+            p.setPen(QColor(P.TEXT_SECONDARY))
+            p.drawText(QRectF(12, 9, 52, 14), Qt.AlignLeft | Qt.AlignVCenter,
+                       self.tag)
 
 
 class PartOutlet3Way(Part):
@@ -1010,6 +1043,51 @@ class FlowDiagramWidget(QGraphicsView):
                 ch.setPos(part.pos() + QPointF(0, chip_dy))
                 add(ch)
 
+        # ── QUAD 판정 (2026-08-12 배관 재구성) ─────────────────────
+        # @codesyncer(2026-08-12b, 배관 재구성 반영 2단계): system_params.
+        #   tjunction_entry_map 이 표현 가능한 형태(진입값 행순 단조 + 값 1..K 연속
+        #   + K≤2)면 실물 그대로 'QUAD 크로스' 토폴로지로 그린다 — 캐스케이드 티
+        #   폐지. 표현 불가 맵(비단조/정션 3개+)은 콘솔 경고 후 레거시 캐스케이드
+        #   폴백(엔진 계산은 entry_map 그대로 정확 — 그림만 근사).
+        entry_cfg = getattr(cfg, "tjunction_entry_map", {}) or {}
+        entries = ([max(1, int(entry_cfg.get(p, 1) or 1)) for p in pumps]
+                   if entry_cfg else [])
+        quad = False
+        vals, q_groups, q_rows = [], {}, {}
+        if entries and n >= 2:
+            vals = sorted(set(entries))
+            mono = all(entries[i] <= entries[i + 1] for i in range(n - 1))
+            if mono and vals == list(range(1, len(vals) + 1)) and len(vals) <= 2:
+                quad = True
+                for i, e in enumerate(entries):
+                    q_groups.setdefault(e, []).append(i)
+                for v, rows in q_groups.items():
+                    # 정션 1 = 그룹 마지막 행(위에서 드롭), 정션 2+ = 첫 행(아래서 라이즈)
+                    q_rows[v] = rows[-1] if v == vals[0] else rows[0]
+                if any(len(rows) > 2 for rows in q_groups.values()):
+                    print("[Diagram] entry 그룹 행수>2 — 중간 행은 수직 수집관에 탭(근사)")
+            else:
+                print(f"[Diagram] entry_map 표현 불가({entries}) — 캐스케이드 폴백")
+                entries = []
+        self._quad = quad
+        self._entry_by_pump = ({p: max(1, int(entry_cfg.get(p, 1) or 1))
+                                for p in pumps} if quad else {})
+
+        def _tail(i):
+            """quad 모드: 행 i 의 합류라인이 (X_MAN, y) 이후 정션 포트로 가는 추가 점.
+            정션 행=L 직결(추가 없음), 그 외=이웃 행 방향으로 드롭/라이즈(2행 그룹=포트
+            정확 도킹, 3행+ 그룹=다음 행 수집관에 탭)."""
+            if not quad:
+                return []
+            v = entries[i]
+            rows, jr = q_groups[v], q_rows[v]
+            if i == jr:
+                return []
+            k = rows.index(i)
+            nxt = rows[k + 1] if v == vals[0] else rows[k - 1]
+            off = (-14 if v == vals[0] else 14) if nxt == jr else 0
+            return [(X_MAN, ys[nxt] + off)]
+
         # ── 채널들 ──
         for i, pname in enumerate(pumps):
             y = ys[i]
@@ -1048,7 +1126,8 @@ class FlowDiagramWidget(QGraphicsView):
                 po = pump.port("out")
                 p3 = pipe([pb, (pb.x(), po.y()), po], weight=4, chip_side="right",
                           edit=("3-way 내부+커먼", "pump", pname, "tube_vol_switcher"))
-                p4 = pipe([sw.port("R"), (X_MAN, y)], weight=5, chip_side="above",
+                p4 = pipe([sw.port("R"), (X_MAN, y)] + _tail(i), weight=5,
+                          chip_side="above",
                           edit=("3-way→합류", "pump", pname, "tube_vol_pump_merge"))
                 self.items_["src_pipes"][pname] = [p1, p2]
                 self.items_["pump_link"][pname] = [p3]
@@ -1071,7 +1150,7 @@ class FlowDiagramWidget(QGraphicsView):
                            ((rack.port("out").x() + pin.x()) / 2, pin.y()), pin], weight=4,
                           edit=("니들 라인", "pump", pname, "tube_vol_valve_pump"))
                 p4 = pipe([pump.port("out"), (X_MAN, pump.port("out").y()),
-                           (X_MAN, y)], weight=5,
+                           (X_MAN, y)] + _tail(i), weight=5,
                           edit=("펌프→합류", "pump", pname, "tube_vol_pump_merge"))
                 self.items_["src_pipes"][pname] = [p1]
                 seg = [p4]
@@ -1084,48 +1163,62 @@ class FlowDiagramWidget(QGraphicsView):
                            ((src.port("out").x() + pin.x()) / 2, pin.y()), pin], weight=4,
                           edit=("저장조 라인", "pump", pname, "tube_vol_valve_pump"))
                 p4 = pipe([pump.port("out"), (X_MAN, pump.port("out").y()),
-                           (X_MAN, y)], weight=5,
+                           (X_MAN, y)] + _tail(i), weight=5,
                           edit=("펌프→합류", "pump", pname, "tube_vol_pump_merge"))
                 self.items_["src_pipes"][pname] = [p1]
                 seg = [p4]
             self.items_["ch_pipes"][pname] = seg
 
-        # ── 매니폴드 스파인 + 캐스케이드 티 ──
+        # ── 합류부: QUAD 크로스(실물 4-way) 또는 레거시 캐스케이드 티 ──
         # @codesyncer(교차비교 수정): 스파인 tj 칩을 타이밍 모델(_compute_plug_timing)과 정합.
         #   흐름은 아래로(exit=최하단 y_m). tee@ys[j]=T_j (j=1..n-1). 조합흐름 구간
         #   S_k=T_k→T_{k+1} = 파이프 ys[k]→ys[k+1] = 엔진 tjunction_line_vols[k] (k=1..n-2).
         #   따라서 파이프 ys[j-1]→ys[j] 는 T_{j-1}→T_j = tj_vols[j-1]. j=1(최상단 펌프의
-        #   T1 이전 단독 강하)은 엔진 tj 변수가 없어 칩 생략(펌프 라인에 귀속). 기존엔 ident=j
-        #   로 1칸 밀려 마지막 구간(ident n-1)이 죽은칩이었고 조합구간이 오매핑됐음.
-        # @codesyncer(2026-08-12, 배관 재구성): system_params.tjunction_entry_map 이
-        #   있으면 QUAD 합류 토폴로지로 그린다 — 같은 진입값 행 사이 스파인은 '정션
-        #   내부 수집'(칩 없음), 진입값이 바뀌는 행 사이가 tj[e_prev] 공유 구간.
-        #   마지막 공유 구간 tj[e_max](마지막 정션→가스T)는 합류 수평런에 칩(아래
-        #   메인라인 칩 블록). 각 그룹 마지막 티에 QUAD-k 태그. 엔진
-        #   _compute_plug_timing(entry_map=...) 매핑과 1:1 정합.
-        entry_cfg = getattr(cfg, "tjunction_entry_map", {}) or {}
-        entries = ([max(1, int(entry_cfg.get(p, 1) or 1)) for p in pumps]
-                   if entry_cfg else [])
+        #   T1 이전 단독 강하)은 엔진 tj 변수가 없어 칩 생략(펌프 라인에 귀속).
+        # @codesyncer(2026-08-12b, 배관 재구성 반영 2단계): quad 모드는 채널당 티
+        #   캐스케이드 대신 '실물 그대로' 4-way 크로스를 그린다.
+        #   QUAD-1(그룹1 마지막 행): T=첫 행 드롭, L=마지막 행 직결, R=solvent 유입
+        #   (없으면 캡), B=출구 → tj[1] 수직 스파인. QUAD-2(그룹2 첫 행): T=tj[1]
+        #   유입, L=첫 행 직결, B=마지막 행 라이즈, R=출구 → 수평런(y_run=그 행).
+        #   tj[e_max](마지막 정션→가스T)는 부유 칩이 아니라 '실제 파이프'로 편집.
+        #   미배관 물리 포트는 캡 마개. 엔진 entry_map 매핑과 1:1 정합.
         self.spine = []
-        if n >= 2:
+        y_run = y_m
+        if quad:
+            v1 = vals[0]
+            y_q1 = ys[q_rows[v1]]
+            k2 = len(vals) == 2
+            used1 = ["L"] + (["T"] if len(q_groups[v1]) >= 2 else []) \
+                + (["B"] if k2 else ["R"])
+            if has_push:
+                used1.append("R" if k2 else "B")   # solvent 유입: K2=우측, K1=하단
+            q1p = PartTee(tag=f"QUAD-{v1}", used=tuple(used1),
+                          capped=tuple(k for k in ("L", "T", "B", "R")
+                                       if k not in used1))
+            q1p.setPos(X_MAN, y_q1); add(q1p)
+            if k2:
+                v2 = vals[1]
+                y_q2 = ys[q_rows[v2]]
+                used2 = ["T", "L", "R"] + (["B"] if len(q_groups[v2]) >= 2 else [])
+                q2p = PartTee(tag=f"QUAD-{v2}", used=tuple(used2),
+                              capped=tuple(k for k in ("L", "T", "B", "R")
+                                           if k not in used2))
+                q2p.setPos(X_MAN, y_q2); add(q2p)
+                tj1 = pipe([(X_MAN, y_q1 + 14), (X_MAN, y_q2 - 14)], weight=5,
+                           chip_side="left",
+                           edit=(f"정션 QUAD{v1}→QUAD{v2} 구간 (조합 흐름)",
+                                 "tj", v1, None))
+                tj1._tj_seg = v1
+                self.spine.append(tj1)
+                y_run = y_q2
+            else:
+                y_run = y_q1
+        elif n >= 2:
             for j in range(1, n):
-                _tag = ""
-                if entries:
-                    _e_cur = entries[j]
-                    if j == n - 1 or entries[j + 1] != _e_cur:
-                        _tag = f"QUAD-{_e_cur}"   # 그룹 마지막 행 = 정션 본체
-                tee = PartTee(tag=_tag, used=("L", "T", "B"))
+                tee = PartTee(used=("L", "T", "B"))
                 tee.setPos(X_MAN, ys[j]); add(tee)
                 _seg = [(X_MAN, ys[j - 1]), (X_MAN, ys[j] - 14)]
-                if entries:
-                    _e_prev, _e_cur = entries[j - 1], entries[j]
-                    if _e_cur > _e_prev:
-                        sp_pipe = pipe(_seg, weight=5, chip_side="left",
-                                       edit=(f"정션 QUAD{_e_prev}→QUAD{_e_cur} 구간 (조합 흐름)",
-                                             "tj", _e_prev, None))
-                    else:
-                        sp_pipe = pipe(_seg, weight=5)   # 같은 정션 내부 수집 — tj 변수 없음
-                elif j >= 2:
+                if j >= 2:
                     sp_pipe = pipe(_seg, weight=5, chip_side="left",
                                    edit=(f"정션 T{j-1}→T{j} 구간 (조합 흐름)",
                                          "tj", j - 1, None))
@@ -1133,50 +1226,91 @@ class FlowDiagramWidget(QGraphicsView):
                     sp_pipe = pipe(_seg, weight=5)   # 최상단 단독강하 — tj 변수 없음
                 self.spine.append(sp_pipe)
 
-        # ── 머지 → (N2) → (push) → reactor ──
-        merge_pts = [(X_MAN, y_m)]
-        x_cursor = X_MAN
+        # ── (quad: 마지막 크로스 R | legacy: 스파인 하단) → (N2) → (push) → reactor ──
+        self.tj_out_pipe = None
         self.n2_parts = None
+        self.push_parts = None
+        x_cursor = X_MAN
+        if quad:
+            # tj[e_max]: 마지막 정션 → 가스T(N2 없으면 합류 하류) — 실제 파이프로 편집/칩
+            _lbl_node = "가스T" if has_n2 else "합류 하류"
+            self.tj_out_pipe = pipe(
+                [(X_MAN + 14, y_run), (X_N2 - (14 if has_n2 else 0), y_run)],
+                weight=5, chip_side="above",
+                edit=(f"정션 QUAD{vals[-1]}→{_lbl_node} 구간 (조합 흐름)",
+                      "tj", vals[-1], None))
+            merge_pts = [(X_N2, y_run)]
+        else:
+            merge_pts = [(X_MAN, y_run)]
         if has_n2:
-            merge_pts.append((X_N2, y_m))
+            if not quad:
+                merge_pts.append((X_N2, y_run))
             tee_n2 = PartTee(used=("L", "R", "T"))
-            tee_n2.setPos(X_N2, y_m); add(tee_n2)
+            tee_n2.setPos(X_N2, y_run); add(tee_n2)
             # @codesyncer-decision: N2 어셈블리를 합류부에서 바깥쪽(우상단)으로 —
             #   실린더가 커진(S 6.2) 뒤 티/리액터 사이에 끼어 답답(사용자 지적).
             #   MFC 는 티 위 96px, 실린더는 +96/위 190px 로 여유 확보(위 공간은
             #   채널 관이 X_MAN 왼쪽에만 있어 비어 있음).
-            mfc = PartMfc(tag="MFC-01"); mfc.setPos(X_N2, y_m - 96); add(mfc)
-            cyl = PartCylinder(tag="GC-N2"); cyl.setPos(X_N2 + 96, y_m - 190); add(cyl)
-            g1 = pipe([cyl.port("out"), (cyl.port("out").x(), y_m - 96), mfc.port("in")],
+            mfc = PartMfc(tag="MFC-01"); mfc.setPos(X_N2, y_run - 96); add(mfc)
+            cyl = PartCylinder(tag="GC-N2"); cyl.setPos(X_N2 + 96, y_run - 190); add(cyl)
+            g1 = pipe([cyl.port("out"), (cyl.port("out").x(), y_run - 96), mfc.port("in")],
                       weight=3.5)
-            g2 = pipe([mfc.port("out"), (X_N2 - 30, y_m - 96), (X_N2 - 30, y_m - 30),
-                       (X_N2, y_m - 30), (X_N2, y_m - 13)], weight=3.5)
+            g2 = pipe([mfc.port("out"), (X_N2 - 30, y_run - 96), (X_N2 - 30, y_run - 30),
+                       (X_N2, y_run - 30), (X_N2, y_run - 13)], weight=3.5)
             for g in (g1, g2):
                 g.set_state(color="gas")
             self.n2_parts = (cyl, mfc, [g1, g2])
             x_cursor = X_N2
-        self.push_parts = None
-        if has_push:
-            merge_pts.append((X_PUSH, y_m))
+        if has_push and not quad:
+            merge_pts.append((X_PUSH, y_run))
             tee_p = PartTee(used=("L", "R", "B"))
-            tee_p.setPos(X_PUSH, y_m); add(tee_p)
-            chk = PartCheck(tag=""); chk.setPos(X_PUSH, y_m + 56); add(chk)
-            hp = PartHplc(tag="P-91"); hp.setPos(X_PUSH - 4, y_m + 132); add(hp)
+            tee_p.setPos(X_PUSH, y_run); add(tee_p)
+            chk = PartCheck(tag=""); chk.setPos(X_PUSH, y_run + 56); add(chk)
+            hp = PartHplc(tag="P-91"); hp.setPos(X_PUSH - 4, y_run + 132); add(hp)
             tank = PartBottle(tag="RSV-91", label="SOL")
-            tank.setPos(X_PUSH - 128, y_m + 132); add(tank)
+            tank.setPos(X_PUSH - 128, y_run + 132); add(tank)
             q0 = pipe([tank.port("out"), hp.port("in")], weight=3.5)
-            q1 = pipe([hp.port("out"), (X_PUSH + 56, y_m + 132), (X_PUSH + 56, y_m + 92),
-                       (X_PUSH, y_m + 92), chk.port("in")], weight=3.5)
-            q2 = pipe([chk.port("out"), (X_PUSH, y_m + 14)], weight=3.5)
+            q1 = pipe([hp.port("out"), (X_PUSH + 56, y_run + 132), (X_PUSH + 56, y_run + 92),
+                       (X_PUSH, y_run + 92), chk.port("in")], weight=3.5)
+            q2 = pipe([chk.port("out"), (X_PUSH, y_run + 14)], weight=3.5)
             self.push_parts = (hp, [q0, q1, q2])
             x_cursor = X_PUSH
+        elif has_push and quad:
+            # @codesyncer(2026-08-12b): solvent 펌프는 QUAD-1 유입이 실배관 —
+            #   런의 push 티 폐지. K2=우상단 코리도어(체크밸브 하향 flip)로 R 포트
+            #   도킹, K1=기존 하단 어셈블리 배치에서 B 포트로 상승.
+            if len(vals) == 2:
+                y_s = ys[0] - 62                    # 그룹1 위 코리도어 레인
+                x_r = X_MAN + 36                    # 라이저 (채널·N2 와 무교차 코리도어)
+                x_hp = X_MAN + 230
+                chk = PartCheck(tag="", flip=True)
+                chk.setPos(x_r, (y_s + y_q1) / 2); add(chk)
+                hp = PartHplc(tag="P-91"); hp.setPos(x_hp, y_s); add(hp)
+                tank = PartBottle(tag="RSV-91", label="SOL")
+                tank.setPos(x_hp - 128, y_s); add(tank)
+                q0 = pipe([tank.port("out"), hp.port("in")], weight=3.5)
+                q1 = pipe([hp.port("out"), (x_hp + 70, y_s), (x_hp + 70, y_s - 34),
+                           (x_r, y_s - 34), chk.port("in")], weight=3.5)
+                q2 = pipe([chk.port("out"), (x_r, y_q1), (X_MAN + 14, y_q1)],
+                          weight=3.5)
+            else:
+                chk = PartCheck(tag=""); chk.setPos(X_MAN, y_run + 56); add(chk)
+                hp = PartHplc(tag="P-91"); hp.setPos(X_MAN - 4, y_run + 132); add(hp)
+                tank = PartBottle(tag="RSV-91", label="SOL")
+                tank.setPos(X_MAN - 128, y_run + 132); add(tank)
+                q0 = pipe([tank.port("out"), hp.port("in")], weight=3.5)
+                q1 = pipe([hp.port("out"), (X_MAN + 56, y_run + 132),
+                           (X_MAN + 56, y_run + 92), (X_MAN, y_run + 92),
+                           chk.port("in")], weight=3.5)
+                q2 = pipe([chk.port("out"), (X_MAN, y_run + 14)], weight=3.5)
+            self.push_parts = (hp, [q0, q1, q2])
 
         rct = PartReactor(tag="R-01")
         rct.vol_ml = float(getattr(cfg, "reactor_vol", 0.0) or 0.0) or None
-        rct.setPos(X_RCT, y_m); add(rct)
+        rct.setPos(X_RCT, y_run); add(rct)
         self.reactor = rct
         rin = rct.port("in")
-        merge_pts += [(rin.x() - 22, y_m), (rin.x() - 22, rin.y()), rin]
+        merge_pts += [(rin.x() - 22, y_run), (rin.x() - 22, rin.y()), rin]
         self.merge_pipe = pipe(merge_pts, weight=5)
 
         rout = rct.port("out")
@@ -1229,7 +1363,7 @@ class FlowDiagramWidget(QGraphicsView):
         if "reactor_in" in _keys:
             s = PartPhaseSensor(tag="Inlet Sensor")
             # 마지막 티(x_cursor)~리액터 도킹점 세그먼트 '중앙' — 티/체크밸브와 겹침 방지
-            s.setPos((x_cursor + rin.x() - 22) / 2, y_m)
+            s.setPos((x_cursor + rin.x() - 22) / 2, y_run)
             add(s)
             self.sensor_items["reactor_in"] = s
 
@@ -1242,21 +1376,12 @@ class FlowDiagramWidget(QGraphicsView):
 
         # ── 메인라인 데드볼륨 칩 (감사 F3): 합류→리액터 / 리액터→아웃렛 / 아웃렛→분취기
         #    채널·티정션 칩과 함께 '전 구간'이 배관도에서 보이고 편집 가능해짐.
-        # @codesyncer(2026-08-12): entry_map 토폴로지에선 수평런 앞부분이 tj[e_max]
-        #   (마지막 정션→가스T 공유 구간)이고 mixing 은 가스T→센서→리액터 뿐 —
-        #   tj[e_max] 칩을 신설하고 mixing 칩은 가스T 하류(센서 글리프 회피 우측)로.
+        # @codesyncer(2026-08-12b): quad 모드의 tj[e_max]는 위에서 실제 파이프
+        #   (self.tj_out_pipe)로 그려져 부유 칩이 필요 없다 — mixing 칩만
+        #   가스T 하류(센서 글리프 회피 우측)에 남긴다.
         _x_end = rin.x() - 22
-        if entries:
-            _e_max = max(entries)
-            _x_node = X_N2 if has_n2 else (X_PUSH if has_push
-                                           else (X_MAN + _x_end) / 2)
-            _lbl_node = "가스T" if has_n2 else "합류 하류"
-            _tj_ch = VolChip(self, (f"정션 QUAD{_e_max}→{_lbl_node} 구간 (조합 흐름)",
-                                    "tj", _e_max, None))
-            self._vol_chips.append(_tj_ch)
-            _tj_ch.setPos((merge_pts[0][0] + _x_node) / 2, y_m - 14)
-            add(_tj_ch)
-            _mix_cx = _x_node + (_x_end - _x_node) * 0.72
+        if quad:
+            _mix_cx = X_N2 + (_x_end - X_N2) * 0.72
             _mix_lbl = "가스T→센서→리액터 (mixing line)" if has_n2 \
                 else "합류→리액터 (mixing line)"
         else:
@@ -1264,7 +1389,7 @@ class FlowDiagramWidget(QGraphicsView):
             _mix_lbl = "합류→리액터 (mixing line)"
         for _edit, _cx, _cy in (
                 ((_mix_lbl, "sp", "mixing", None),
-                 _mix_cx, y_m),
+                 _mix_cx, y_run),
                 (("리액터→아웃렛 (post)", "sp", "post", "post_reactor_vol_ml"),
                  rout.x() + 42, y_out),
                 (("아웃렛→분취기 (collection line)", "sp", "collection",
@@ -1282,8 +1407,10 @@ class FlowDiagramWidget(QGraphicsView):
                           (zx1, zx2, "REACTION"),
                           (zx2, bbox.right(), "COLLECTION")):
             add(ZoneBand(QRectF(a, bbox.top(), b - a, bbox.height()), cap))
-        # 정적 흐름 방향 힌트 — 티/센서/칩 회피 지점 3곳
-        _chev_pts = [(X_MAN + 68, y_m), (rout.x() + 26, y_out)]
+        # 정적 흐름 방향 힌트 — 티/센서/칩 회피 지점 3곳 (quad 는 tj[e_max] 칩 회피
+        # 위해 가스T 하류 merge 위에)
+        _chev_pts = [((X_N2 + 34) if quad else (X_MAN + 68), y_run),
+                     (rout.x() + 26, y_out)]
         if self.collector_part is not None:
             _fin = self.collector_part.port("in")
             _chev_pts.append(((out3.port("R").x() + _fin.x() - 16) / 2, y_out))
@@ -1313,6 +1440,7 @@ class FlowDiagramWidget(QGraphicsView):
         for _k, _it in (getattr(self, "sensor_items", {}) or {}).items():
             _it.set_phase(None if sensor_phases is None else sensor_phases.get(_k))
         any_run = False
+        _run_names = set()
         for name, part in self.items_["pumps"].items():
             st = pumps_status.get(name, {})
             if isinstance(st, bool):
@@ -1322,6 +1450,8 @@ class FlowDiagramWidget(QGraphicsView):
             part.running, part.refilling = running, refilling
             part.update()
             any_run = any_run or running
+            if running:
+                _run_names.add(name)
             # 채널 본선(→매니폴드): 토출 시에만 흐름 (정방향)
             for pl in self.items_["ch_pipes"].get(name, []):
                 pl.set_state(active=running, flowing=running,
@@ -1369,8 +1499,21 @@ class FlowDiagramWidget(QGraphicsView):
                 src.active = running or refilling
                 src.update()
 
+        # quad: tj[k] 구간은 '구간 k 이전 진입' 채널(또는 QUAD-1 유입 solvent)이
+        # 흐를 때만 — 엔진 F_j 누적유속 모델과 동일한 분절
+        _quad = getattr(self, "_quad", False)
         for pl in getattr(self, "spine", []):
-            pl.set_state(active=any_run, flowing=any_run, direction=1, color="run")
+            if _quad:
+                _seg = getattr(pl, "_tj_seg", 1)
+                _fl = push_running or any(
+                    self._entry_by_pump.get(nm, 1) <= _seg for nm in _run_names)
+            else:
+                _fl = any_run
+            pl.set_state(active=_fl, flowing=_fl, direction=1, color="run")
+        if getattr(self, "tj_out_pipe", None) is not None:
+            _fl = any_run or push_running
+            self.tj_out_pipe.set_state(active=_fl, flowing=_fl, direction=1,
+                                       color="run")
         self.merge_pipe.set_state(active=any_run or push_running,
                                   flowing=any_run or push_running, direction=1, color="run")
         if self.post_pipe is not None:
