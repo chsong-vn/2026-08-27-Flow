@@ -235,6 +235,55 @@ w.update_realtime({cfg2.ACTIVE_PUMPS[0]: {"running": True}},
                   outlet_valve_pos=2, gas_flowing=True)
 check("R3 재구성 후 realtime+gas 무크래시", True)
 
+# ══ QUAD 합류 토폴로지 (2026-08-12 배관 재구성): tjunction_entry_map ══
+print("=== quad (entry_map 토폴로지) ===")
+from ui.visual_diagram_parts import PartTee
+
+cfg_q = Cfg(["external_valve"] * 4, n2=True)
+cfg_q.tjunction_entry_map = {"Group_A": 1, "Group_B": 1, "Group_C": 2, "Group_D": 2}
+a_q = App(cfg_q, 0, 1)
+wq = FlowDiagramWidget(pump_configs=[], active_pumps=cfg_q.ACTIVE_PUMPS, inventory=[])
+wq.configure(cfg_q, a_q)
+
+# 스파인 tj 칩 = QUAD1→QUAD2 (key 1) 하나뿐 — 같은 정션 내부 수집엔 칩 없음
+tj_spine = sorted(pl.edit[2] for pl in wq.spine if pl.edit and pl.edit[1] == "tj")
+check("Q1 스파인 tj = [1] (QUAD1→QUAD2)", tj_spine == [1], str(tj_spine))
+# 수평런 tj[2] 칩 (QUAD2→가스T) — VolChip 으로 존재
+tj_chips = [c for c in wq._vol_chips
+            if c.edit and c.edit[1] == "tj" and c.edit[2] == 2]
+check("Q2 수평런 tj[2] 칩 (QUAD2→가스T)", len(tj_chips) == 1
+      and "가스T" in tj_chips[0].edit[0], str([c.edit[0] for c in tj_chips]))
+# QUAD 태그 티 — 그룹 마지막 행에만
+quad_tags = sorted(x.tag for x in wq.scene().items()
+                   if isinstance(x, PartTee) and x.tag)
+check("Q3 QUAD-1/QUAD-2 태그", quad_tags == ["QUAD-1", "QUAD-2"], str(quad_tags))
+# mixing 칩 라벨 = 가스T→센서→리액터
+mix_chips = [c for c in wq._vol_chips if c.edit and c.edit[1] == "sp"
+             and c.edit[2] == "mixing"]
+check("Q4 mixing 칩 = 가스T 하류 라벨", len(mix_chips) == 1
+      and "가스T" in mix_chips[0].edit[0], str([c.edit[0] for c in mix_chips]))
+# 레거시 대조: entry_map 없으면 기존 캐스케이드 (tj = [1, 2] 스파인)
+cfg_l = Cfg(["external_valve"] * 4, n2=True)
+wl = FlowDiagramWidget(pump_configs=[], active_pumps=cfg_l.ACTIVE_PUMPS, inventory=[])
+wl.configure(cfg_l, App(cfg_l, 0, 1))
+tj_leg = sorted(pl.edit[2] for pl in wl.spine if pl.edit and pl.edit[1] == "tj")
+check("Q5 레거시 스파인 불변 [1,2]", tj_leg == [1, 2], str(tj_leg))
+leg_tags = [x.tag for x in wl.scene().items() if isinstance(x, PartTee) and x.tag]
+check("Q6 레거시 QUAD 태그 없음", not leg_tags, str(leg_tags))
+# 렌더 (육안 검토용)
+wq.update_realtime({cfg_q.ACTIVE_PUMPS[0]: {"running": True}},
+                   outlet_valve_pos=2, gas_flowing=True)
+sr = wq.scene().sceneRect()
+img = QImage(int(sr.width()), int(sr.height()), QImage.Format_ARGB32)
+img.fill(0xFF0E1320)
+pt = QPainter(img)
+pt.setRenderHint(QPainter.Antialiasing)
+wq.scene().render(pt, QRectF(img.rect()), sr)
+pt.end()
+path = os.path.join(OUT, "diagram_quad_topology.png")
+img.save(path)
+print(f"  render → {path}")
+
 print()
 print("RESULT:", "ALL PASS" if not fails else f"{len(fails)} FAIL: {fails}")
 sys.exit(1 if fails else 0)

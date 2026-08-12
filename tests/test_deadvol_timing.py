@@ -100,6 +100,74 @@ p, pre, dv, st = compute(flows, ["A", "B", "C"], {k: 0 for k in flows}, inj, {1:
 check("C7 f=0 채널 무시", pre, 42.0)
 check_true("C7 stagger 에 B 없음", "B" not in st)
 
+# ══ Case 8+: 진입-정션 명시 매핑 (2026-08-12 QUAD 합류 토폴로지) ══════
+# 물리: Solvent(푸시 전용, 주입 중 유속 0 → flows 에 없음)+A+B → QUAD-1,
+#       QUAD-1 출구+C+D → QUAD-2, 이후 가스 T → 센서 → 반응기(mixing).
+# entry_map: A/B→구간1, C/D→구간2. 구간1=QUAD-1→QUAD-2, 구간2=QUAD-2→가스T.
+EM = {"A": 1, "B": 1, "C": 2, "D": 2}
+
+# ── Case 8: 신 토폴로지 기본 — B 가 구간1 을 통과하고 D 가 구간2 를 통과 ──
+flows = {"A": 1.0, "B": 1.0, "C": 1.0, "D": 1.0}
+inj = {k: 0.0 for k in flows}
+tj = {1: 0.20, 2: 0.40}
+p, pre, dv, st = compute(flows, ["A", "B", "C", "D"], {k: 0 for k in flows},
+                         inj, tj, "fifo", entry_map=EM)
+# A/B: 0.2/(1+1)*60=6 + 0.4/(4)*60=6 → 12   (F2 = 전 채널 합 4)
+# C/D: 0.4/4*60=6                     → 6
+check("C8 pre_sec (QUAD 토폴로지)", pre, 12.0)
+# 레거시 식이면: A/B: 0.2/2*60=6 + 0.4/3*60=8 → 14 (F2 에 D 누락) / D: 0 (구간 미통과)
+p_l, pre_l, _, _ = compute(flows, ["A", "B", "C", "D"], {k: 0 for k in flows},
+                           inj, tj, "fifo")
+check("C8 레거시 식과 다름(구식=14)", pre_l, 14.0)
+check_true("C8 신≠구 (B 구간1·D 구간2 반영)", abs(pre - pre_l) > 1.0,
+           f"new={pre} legacy={pre_l}")
+
+# ── Case 9: D 단독 유속에도 구간2 통과 시간이 잡힘 (레거시=0 이던 채널) ──
+flows_d = {"A": 0.0, "B": 0.0, "C": 0.0, "D": 2.0}
+p, pre, dv, st = compute(flows_d, ["A", "B", "C", "D"], {k: 0 for k in flows_d},
+                         {k: 0.0 for k in flows_d}, tj, "fifo", entry_map=EM)
+# D: 0.4/2*60 = 12 (구간2 를 자기 유속만으로 통과; 레거시는 0 이었음)
+check("C9 D 채널 구간2 통과", pre, 12.0)
+_, pre_l, _, _ = compute(flows_d, ["A", "B", "C", "D"], {k: 0 for k in flows_d},
+                         {k: 0.0 for k in flows_d}, tj, "fifo")
+check("C9 레거시는 D=0 (미통과)", pre_l, 0.0)
+
+# ── Case 10: C/D 만 흐를 때 구간1 은 비통과·F2 는 C+D ──
+flows_cd = {"A": 0.0, "B": 0.0, "C": 1.0, "D": 1.0}
+p, pre, dv, st = compute(flows_cd, ["A", "B", "C", "D"], {k: 0 for k in flows_cd},
+                         {k: 0.0 for k in flows_cd}, tj, "fifo", entry_map=EM)
+# C/D: 0.4/(1+1)*60 = 12 — 구간1(V=0.2)은 아무도 안 지나감
+check("C10 C/D 전용 — 구간2 만", pre, 12.0)
+
+# ── Case 11: entry_map 미기재 펌프는 1(보수적) + 자기 유속 line_inj 유지 ──
+flows = {"A": 1.0, "X": 1.0}
+p, pre, dv, st = compute(flows, ["A", "X"], {k: 0 for k in flows},
+                         {"A": 0.0, "X": 0.10}, {1: 0.20}, "fifo",
+                         entry_map={"A": 1})
+# X(미기재→1): 0.1/1*60=6 + 0.2/2*60=6 → 12
+check("C11 미기재 펌프 기본 진입=1", pre, 12.0)
+
+# ── Case 12: entry_map=None ↔ 레거시 유도 맵 항등 (C2/C3 값 재확인) ──
+flows = {"A": 1.0, "B": 2.0, "C": 1.0}
+inj = {k: 0.20 for k in flows}
+_, pre_new, _, _ = compute(flows, ["A", "B", "C"], {k: 0 for k in flows}, inj,
+                           {1: 0.50}, "fifo", entry_map=None)
+check("C12 레거시 항등 (C2 재현)", pre_new, 22.0)
+flows = {"A": 1.0, "B": 1.0, "C": 2.0, "D": 4.0}
+inj = {k: 0.10 for k in flows}
+_, pre_new, _, _ = compute(flows, ["A", "B", "C", "D"], {k: 0 for k in flows},
+                           inj, {1: 0.30, 2: 0.60}, "fifo", entry_map=None)
+check("C12 레거시 항등 (C3 재현)", pre_new, 24.0)
+
+# ── Case 13: 실측값 스모크 — 현행 config 수치로 물리 타당성 확인 ──
+# pump_merge+switcher=0.1794+0.0507=0.2301 / tj1=0.0905 / tj2=0.0452, 각 0.1 mL/min
+flows = {"A": 0.1, "B": 0.1, "C": 0.1, "D": 0.1}
+inj = {k: 0.2301 for k in flows}
+p, pre, dv, st = compute(flows, ["A", "B", "C", "D"], {k: 0 for k in flows},
+                         inj, {1: 0.0905, 2: 0.0452}, "lifo", entry_map=EM)
+# A/B: 0.2301/0.1*60=138.06 + 0.0905/0.2*60=27.15 + 0.0452/0.4*60=6.78 → 171.99
+check("C13 실측 스모크 (A/B 경로)", pre, 171.99, tol=0.05)
+
 print()
 print("RESULT:", "ALL PASS" if not fails else f"{len(fails)} FAIL: {fails}")
 sys.exit(1 if fails else 0)

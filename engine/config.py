@@ -328,6 +328,20 @@ class SystemConfig:
                 except Exception:
                     continue
 
+        # @codesyncer-decision(2026-08-12, 배관 재구성): 진입 정션 매핑 —
+        # {펌프명: 진입 구간번호}. QUAD 합류 토폴로지(Solvent+A+B→QUAD-1,
+        # +C+D→QUAD-2)처럼 3-in 동시 합류는 페어와이즈 캐스케이드 유도식으로
+        # 표현 불가라 명시 매핑이 필요. 비어 있으면 엔진이 레거시 캐스케이드
+        # (P1,P2→T1, P_m→T_{m-1})를 유도 — 구버전 config 하위호환.
+        self.tjunction_entry_map = {}
+        _tje = sp.get("tjunction_entry_map", {})
+        if isinstance(_tje, dict):
+            for k, v in _tje.items():
+                try:
+                    self.tjunction_entry_map[str(k)] = max(1, int(v))
+                except Exception:
+                    continue
+
         mixing_id = self._safe_float(sp.get("mixing_line_id_mm", 1.5), 1.5)
         mixing_len = self._safe_float(sp.get("mixing_line_len_cm", 150.0), 150.0)
         r_cm = (mixing_id / 10.0) / 2.0

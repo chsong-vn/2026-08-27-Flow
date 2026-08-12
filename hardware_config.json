@@ -363,6 +363,12 @@
             "post_inject": "purge",
             "push_end": "purge",
             "seq_end": "log"
+        },
+        "tjunction_entry_map": {
+            "Group A": 1,
+            "Group_B": 1,
+            "Group_C": 2,
+            "Group_D": 2
         }
     }
 }

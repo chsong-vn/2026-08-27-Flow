@@ -918,14 +918,19 @@ class StrictSequenceEngine(FlowEngine):
     # ---------------------------------------------------------------------
     @staticmethod
     def _compute_plug_timing(flows, ordered, line_src, line_inj, tj_vols,
-                             purge_order="fifo"):
+                             purge_order="fifo", entry_map=None):
         """채널별 데드볼륨 → (purge_sec, pre_sec, deficit_vol, stagger_offsets).
 
         물리 모델 (다중 펌프 = '단순 합산'이 아님):
         - 채널 i 의 플러그 도달시간 = 자기 주입경로 line_inj_i / f_i (자기 유속만 흐름)
-          + Σ_j (V_j / F_j)  — T-junction 캐스케이드 구간엔 '누적 유속' F_j 만 흐름
+          + Σ_j (V_j / F_j)  — 정션 공유 구간엔 '누적 유속' F_j 만 흐름
         - pre_sec = max_i(도달시간): 전 채널 합류 완료 시점 (max, sum 아님)
         - line_src(12way·12way→3way 앞단)는 여기 시간엔 안 들어가고 purge 창에만.
+        - entry_map: {펌프명: 진입 구간번호}. 명시하면 그 매핑으로 통과 구간을
+          결정 (예: QUAD 합류 토폴로지 A/B→1, C/D→2 — 2026-08-12 배관 재구성).
+          F_j = '구간 j 이전에 진입한' 전 채널 유속 합. 미기재 펌프는 1(보수적).
+          None(기본)이면 레거시 페어와이즈 캐스케이드(P1,P2→T1, P_m→T_{m-1},
+          구간 j=1..n-2)를 유도해 기존 동작과 100% 동일.
         - purge_order:
             fifo (기본, 기존 동작) — 과충전 구내용물이 먼저 토출된다고 가정.
               pre_sec 에 purge_sec 선행 가산 + 스태거/deficit 보정.
@@ -938,16 +943,29 @@ class StrictSequenceEngine(FlowEngine):
         purge_sec = 0.0
         inj_path_sec = 0.0
         n = len(ordered)
-        for idx, p in enumerate(ordered):
+        if entry_map:
+            _entry = {p: max(1, int(entry_map.get(p, 1) or 1)) for p in ordered}
+            # 통과 상한 = 부피가 정의된 마지막 공유 구간 (레거시의 n-2 대신 실배관 기준)
+            _max_seg = 0
+            for k, v in (tj_vols or {}).items():
+                try:
+                    if float(v or 0.0) > 0:
+                        _max_seg = max(_max_seg, int(k))
+                except Exception:
+                    continue
+        else:
+            # 레거시 유도 맵: P1,P2→T1, P_m→T_{m-1} — F_j(첫 j+1 펌프 합)와
+            # j_enter..n-2 통과 범위가 기존 식과 항등 (test_deadvol_timing 회귀 보증)
+            _entry = {p: (1 if idx <= 1 else idx) for idx, p in enumerate(ordered)}
+            _max_seg = n - 2
+        for p in ordered:
             f = float(flows.get(p, 0.0))
             if f <= 0:
                 continue
             purge_sec = max(purge_sec, (line_src.get(p, 0.0) / f) * 60.0)
             t_i = (line_inj.get(p, 0.0) / f) * 60.0
-            # 채널이 진입하는 정션: P1,P2→T1, P_m→T_{m-1}
-            j_enter = 1 if idx <= 1 else idx
-            for j in range(j_enter, n - 1):  # 구간 S_j (j=1..n-2)
-                Fj = sum(float(flows.get(ordered[k], 0.0)) for k in range(0, j + 1))
+            for j in range(_entry[p], _max_seg + 1):  # 진입 구간부터 마지막 공유 구간까지
+                Fj = sum(float(flows.get(q, 0.0)) for q in ordered if _entry[q] <= j)
                 Vj = float(tj_vols.get(j, 0.0) or 0.0)
                 if Fj > 0 and Vj > 0:
                     t_i += (Vj / Fj) * 60.0
@@ -1707,8 +1725,10 @@ class StrictSequenceEngine(FlowEngine):
                     if _p not in _ordered:
                         _ordered.append(_p)
                 _tj_vols = getattr(self.cfg, "tjunction_line_vols", {}) or {}
+                _tj_entry = getattr(self.cfg, "tjunction_entry_map", {}) or None
                 purge_sec, pre_sec, deficit_vol, stagger_offsets = self._compute_plug_timing(
-                    flows, _ordered, line_src, line_inj, _tj_vols, _purge_order)
+                    flows, _ordered, line_src, line_inj, _tj_vols, _purge_order,
+                    entry_map=_tj_entry)
                 deficit_sec = (deficit_vol / total_flow) * 60.0 if total_flow > 0 else 0.0
                 # 주입 창은 order 무관하게 purge 만큼 연장 — 과충전분 전량 토출(잔량 0) 보장
                 dosing_sec = inject_sec + purge_sec
@@ -2648,6 +2668,7 @@ class StrictSequenceEngine(FlowEngine):
             post=float(self.vol_post_common), vol_collection=float(self.vol_collection),
             deadvols=dv, active_pumps=list(getattr(self.cfg, "ACTIVE_PUMPS", [])),
             tj=getattr(self.cfg, "tjunction_line_vols", {}) or {},
+            tj_entry=getattr(self.cfg, "tjunction_entry_map", {}) or None,
             purge_factor=_purge_factor,
             purge_order=str(sp.get("purge_order", "fifo") or "fifo"),
             override_delay=sp.get("outlet_switch_delay_sec"),
@@ -3651,7 +3672,7 @@ class StrictSequenceEngine(FlowEngine):
 def hte_build_profile(steps, *, reactor_vol, mixing, post, vol_collection,
                       deadvols, active_pumps, tj, purge_factor, purge_order,
                       override_delay, v_spacer, v_wash_sol, v_wash_gas, primed=None,
-                      v_interwash=0.0):
+                      v_interwash=0.0, tj_entry=None):
     """구동 프로파일·이벤트 부피마크·헤드부피 계산 (하드웨어/시리얼 무의존).
 
     steps: [dict(flows, F, v_slug, q_equiv, ports), ...] — v_purge 를 채워 넣는다.
@@ -3682,7 +3703,8 @@ def hte_build_profile(steps, *, reactor_vol, mixing, post, vol_collection,
     #   리액터+포스트 순수 수송분만. purge_order="lifo" 호출은 pre_sec 에서
     #   inj_path_sec 만 추출하는 의도적 사용(lifo 분기: pre_sec=inj, deficit=0).
     _, inj_path_sec, _, _ = StrictSequenceEngine._compute_plug_timing(
-        s0["flows"], ordered, line_src0, line_inj0, tj or {}, "lifo")
+        s0["flows"], ordered, line_src0, line_inj0, tj or {}, "lifo",
+        entry_map=tj_entry or None)
     if override_delay is not None and float(override_delay) > 0:
         v_head = F0 * float(override_delay) / 60.0
     else:

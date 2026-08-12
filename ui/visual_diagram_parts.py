@@ -1097,13 +1097,35 @@ class FlowDiagramWidget(QGraphicsView):
         #   따라서 파이프 ys[j-1]→ys[j] 는 T_{j-1}→T_j = tj_vols[j-1]. j=1(최상단 펌프의
         #   T1 이전 단독 강하)은 엔진 tj 변수가 없어 칩 생략(펌프 라인에 귀속). 기존엔 ident=j
         #   로 1칸 밀려 마지막 구간(ident n-1)이 죽은칩이었고 조합구간이 오매핑됐음.
+        # @codesyncer(2026-08-12, 배관 재구성): system_params.tjunction_entry_map 이
+        #   있으면 QUAD 합류 토폴로지로 그린다 — 같은 진입값 행 사이 스파인은 '정션
+        #   내부 수집'(칩 없음), 진입값이 바뀌는 행 사이가 tj[e_prev] 공유 구간.
+        #   마지막 공유 구간 tj[e_max](마지막 정션→가스T)는 합류 수평런에 칩(아래
+        #   메인라인 칩 블록). 각 그룹 마지막 티에 QUAD-k 태그. 엔진
+        #   _compute_plug_timing(entry_map=...) 매핑과 1:1 정합.
+        entry_cfg = getattr(cfg, "tjunction_entry_map", {}) or {}
+        entries = ([max(1, int(entry_cfg.get(p, 1) or 1)) for p in pumps]
+                   if entry_cfg else [])
         self.spine = []
         if n >= 2:
             for j in range(1, n):
-                tee = PartTee(used=("L", "T", "B"))
+                _tag = ""
+                if entries:
+                    _e_cur = entries[j]
+                    if j == n - 1 or entries[j + 1] != _e_cur:
+                        _tag = f"QUAD-{_e_cur}"   # 그룹 마지막 행 = 정션 본체
+                tee = PartTee(tag=_tag, used=("L", "T", "B"))
                 tee.setPos(X_MAN, ys[j]); add(tee)
                 _seg = [(X_MAN, ys[j - 1]), (X_MAN, ys[j] - 14)]
-                if j >= 2:
+                if entries:
+                    _e_prev, _e_cur = entries[j - 1], entries[j]
+                    if _e_cur > _e_prev:
+                        sp_pipe = pipe(_seg, weight=5, chip_side="left",
+                                       edit=(f"정션 QUAD{_e_prev}→QUAD{_e_cur} 구간 (조합 흐름)",
+                                             "tj", _e_prev, None))
+                    else:
+                        sp_pipe = pipe(_seg, weight=5)   # 같은 정션 내부 수집 — tj 변수 없음
+                elif j >= 2:
                     sp_pipe = pipe(_seg, weight=5, chip_side="left",
                                    edit=(f"정션 T{j-1}→T{j} 구간 (조합 흐름)",
                                          "tj", j - 1, None))
@@ -1220,9 +1242,29 @@ class FlowDiagramWidget(QGraphicsView):
 
         # ── 메인라인 데드볼륨 칩 (감사 F3): 합류→리액터 / 리액터→아웃렛 / 아웃렛→분취기
         #    채널·티정션 칩과 함께 '전 구간'이 배관도에서 보이고 편집 가능해짐.
+        # @codesyncer(2026-08-12): entry_map 토폴로지에선 수평런 앞부분이 tj[e_max]
+        #   (마지막 정션→가스T 공유 구간)이고 mixing 은 가스T→센서→리액터 뿐 —
+        #   tj[e_max] 칩을 신설하고 mixing 칩은 가스T 하류(센서 글리프 회피 우측)로.
+        _x_end = rin.x() - 22
+        if entries:
+            _e_max = max(entries)
+            _x_node = X_N2 if has_n2 else (X_PUSH if has_push
+                                           else (X_MAN + _x_end) / 2)
+            _lbl_node = "가스T" if has_n2 else "합류 하류"
+            _tj_ch = VolChip(self, (f"정션 QUAD{_e_max}→{_lbl_node} 구간 (조합 흐름)",
+                                    "tj", _e_max, None))
+            self._vol_chips.append(_tj_ch)
+            _tj_ch.setPos((merge_pts[0][0] + _x_node) / 2, y_m - 14)
+            add(_tj_ch)
+            _mix_cx = _x_node + (_x_end - _x_node) * 0.72
+            _mix_lbl = "가스T→센서→리액터 (mixing line)" if has_n2 \
+                else "합류→리액터 (mixing line)"
+        else:
+            _mix_cx = (merge_pts[0][0] + merge_pts[1][0]) / 2
+            _mix_lbl = "합류→리액터 (mixing line)"
         for _edit, _cx, _cy in (
-                (("합류→리액터 (mixing line)", "sp", "mixing", None),
-                 (merge_pts[0][0] + merge_pts[1][0]) / 2, y_m),
+                ((_mix_lbl, "sp", "mixing", None),
+                 _mix_cx, y_m),
                 (("리액터→아웃렛 (post)", "sp", "post", "post_reactor_vol_ml"),
                  rout.x() + 42, y_out),
                 (("아웃렛→분취기 (collection line)", "sp", "collection",
