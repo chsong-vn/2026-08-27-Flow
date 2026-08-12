@@ -44,7 +44,7 @@
             ],
             "note": "2026-08-05 실측: 시린지펌프↔3way 라인 내부 1.83 mL (튜빙 ID 0.8 mm, 루어 포함 구간). 키 정의상 12way→3way 앞단 구간은 별도 — 실측 시 합산 필요. 루어어댑터·유니온 데드볼륨은 components.ml 채우면 자동 합산" },
           "tube_vol_switcher":   { "current_config_ml": 0.0,  "measured_ml": 0.0507, "length_cm": null, "id_mm": null, "note": "스펙값: Runze Mrv-01B 3-way(M02 유로) 'Dead volume (Port to Port)' 50.68 µL (매뉴얼 2.4, 2026-08-05 반영). ※유로가 M04면 101.35 µL로 수정" },
-          "tube_vol_pump_merge": { "current_config_ml": 0.0,  "measured_ml": null, "length_cm": null, "id_mm": null, "note": null },
+          "tube_vol_pump_merge": { "current_config_ml": 0.0,  "measured_ml": null, "length_cm": 35.7, "id_mm": 0.8, "note": "2026-08-12 실측: 3way 반응기측 포트 → 자기 정션 진입 배관, ID 0.8 mm × 357 mm → π×0.4²×357 = 179.45 µL. 4그룹 전부 동일 길이 (A/B→QUAD-1, C/D→QUAD-2 로 목적지는 다름)" },
           "tube_vol_solvent":    { "current_config_ml": 1.35, "measured_ml": null, "length_cm": null, "id_mm": null, "note": null },
           "tube_vol_reagent":    { "current_config_ml": 0.95, "measured_ml": null, "length_cm": null, "id_mm": null, "note": null }
         },
@@ -59,7 +59,7 @@
             ],
             "note": "2026-08-05 실측: 시린지펌프↔3way 라인 내부 1.83 mL (튜빙 ID 0.8 mm, 루어 포함 구간). 키 정의상 12way→3way 앞단 구간은 별도 — 실측 시 합산 필요. 루어어댑터·유니온 데드볼륨은 components.ml 채우면 자동 합산" },
           "tube_vol_switcher":   { "current_config_ml": 0.0,  "measured_ml": 0.0507, "length_cm": null, "id_mm": null, "note": "스펙값: Runze Mrv-01B 3-way(M02 유로) 'Dead volume (Port to Port)' 50.68 µL (매뉴얼 2.4, 2026-08-05 반영). ※유로가 M04면 101.35 µL로 수정" },
-          "tube_vol_pump_merge": { "current_config_ml": 0.0,  "measured_ml": null, "length_cm": null, "id_mm": null, "note": null },
+          "tube_vol_pump_merge": { "current_config_ml": 0.0,  "measured_ml": null, "length_cm": 35.7, "id_mm": 0.8, "note": "2026-08-12 실측: 3way 반응기측 포트 → 자기 정션 진입 배관, ID 0.8 mm × 357 mm → π×0.4²×357 = 179.45 µL. 4그룹 전부 동일 길이 (A/B→QUAD-1, C/D→QUAD-2 로 목적지는 다름)" },
           "tube_vol_solvent":    { "current_config_ml": 0.95, "measured_ml": null, "length_cm": null, "id_mm": null, "note": null },
           "tube_vol_reagent":    { "current_config_ml": 0.5,  "measured_ml": null, "length_cm": null, "id_mm": null, "note": null }
         },
@@ -74,7 +74,7 @@
             ],
             "note": "2026-08-05 실측: 시린지펌프↔3way 라인 내부 1.83 mL (튜빙 ID 0.8 mm, 루어 포함 구간). 키 정의상 12way→3way 앞단 구간은 별도 — 실측 시 합산 필요. 루어어댑터·유니온 데드볼륨은 components.ml 채우면 자동 합산" },
           "tube_vol_switcher":   { "current_config_ml": 0.0,  "measured_ml": 0.0507, "length_cm": null, "id_mm": null, "note": "스펙값: Runze Mrv-01B 3-way(M02 유로) 'Dead volume (Port to Port)' 50.68 µL (매뉴얼 2.4, 2026-08-05 반영). ※유로가 M04면 101.35 µL로 수정" },
-          "tube_vol_pump_merge": { "current_config_ml": 0.0,  "measured_ml": null, "length_cm": null, "id_mm": null, "note": null },
+          "tube_vol_pump_merge": { "current_config_ml": 0.0,  "measured_ml": null, "length_cm": 35.7, "id_mm": 0.8, "note": "2026-08-12 실측: 3way 반응기측 포트 → 자기 정션 진입 배관, ID 0.8 mm × 357 mm → π×0.4²×357 = 179.45 µL. 4그룹 전부 동일 길이 (A/B→QUAD-1, C/D→QUAD-2 로 목적지는 다름)" },
           "tube_vol_solvent":    { "current_config_ml": 0.0,  "measured_ml": null, "length_cm": null, "id_mm": null, "note": null },
           "tube_vol_reagent":    { "current_config_ml": 0.0,  "measured_ml": null, "length_cm": null, "id_mm": null, "note": null }
         },
@@ -89,20 +89,24 @@
             ],
             "note": "2026-08-05 실측: 시린지펌프↔3way 라인 내부 1.83 mL (튜빙 ID 0.8 mm, 루어 포함 구간). 키 정의상 12way→3way 앞단 구간은 별도 — 실측 시 합산 필요. 루어어댑터·유니온 데드볼륨은 components.ml 채우면 자동 합산" },
           "tube_vol_switcher":   { "current_config_ml": 0.0,  "measured_ml": 0.0507, "length_cm": null, "id_mm": null, "note": "스펙값: Runze Mrv-01B 3-way(M02 유로) 'Dead volume (Port to Port)' 50.68 µL (매뉴얼 2.4, 2026-08-05 반영). ※유로가 M04면 101.35 µL로 수정" },
-          "tube_vol_pump_merge": { "current_config_ml": 0.0,  "measured_ml": null, "length_cm": null, "id_mm": null, "note": null },
+          "tube_vol_pump_merge": { "current_config_ml": 0.0,  "measured_ml": null, "length_cm": 35.7, "id_mm": 0.8, "note": "2026-08-12 실측: 3way 반응기측 포트 → 자기 정션 진입 배관, ID 0.8 mm × 357 mm → π×0.4²×357 = 179.45 µL. 4그룹 전부 동일 길이 (A/B→QUAD-1, C/D→QUAD-2 로 목적지는 다름)" },
           "tube_vol_solvent":    { "current_config_ml": 0.0,  "measured_ml": null, "length_cm": null, "id_mm": null, "note": null },
           "tube_vol_reagent":    { "current_config_ml": 0.0,  "measured_ml": null, "length_cm": null, "id_mm": null, "note": null }
         }
       },
       "system": {
         "tjunction_line_vols": {
-          "1": { "current_config_ml": 0.11, "measured_ml": null, "length_cm": null, "id_mm": null, "note": "T1(P1+P2) → T2 구간" },
-          "2": { "current_config_ml": 0.22, "measured_ml": null, "length_cm": null, "id_mm": null, "note": "T2 → T3 구간" }
+          "1": { "current_config_ml": 0.11, "measured_ml": null, "length_cm": 18.0, "id_mm": 0.8, "note": "2026-08-12 실측(신규 토폴로지): QUAD-1(Solvent+A+B 합류) → QUAD-2 구간, ID 0.8 mm × 180 mm → π×0.4²×180 = 90.48 µL. 구 모델 표기 'T1(P1+P2)→T2' 를 대체" },
+          "2": { "current_config_ml": 0.22, "measured_ml": null, "length_cm": 9.0, "id_mm": 0.8, "note": "2026-08-12 실측(신규 토폴로지): QUAD-2(+C+D 합류) → T-junction(가스 분기점) 구간, ID 0.8 mm × 90 mm → π×0.4²×90 = 45.24 µL. 누적유속 = 액체 전체(S+A+B+C+D). 구 모델 표기 'T2→T3' 를 대체" }
         },
         "mixing_line": {
           "current_config": { "id_mm": 1.5, "len_cm": 150.0, "computed_ml": 2.6507 },
-          "measured_ml": null,
-          "note": "실측 반영 시 mixing_line_len_cm 을 등가 길이(실측부피/단면적)로 환산해 기록"
+          "measured_ml": 0.0955,
+          "segments": {
+            "tjunction_to_sensor": { "length_cm": 11.6, "id_mm": 0.8, "ml": 0.0583, "note": "2026-08-12 실측: T-junction(가스 분기) → OPB 센서 앞단, ID 0.8 mm × 116 mm → π×0.4²×116 = 58.31 µL" },
+            "sensor_to_reactor":   { "length_cm": 7.4,  "id_mm": 0.8, "ml": 0.0372, "note": "2026-08-12 실측: OPB 센서 → 반응기 입구 뒷단, ID 0.8 mm × 74 mm(총 190−앞단 116) → 37.20 µL" }
+          },
+          "note": "신규 토폴로지(2026-08-12): T-junction→센서→반응기 총 190 mm 를 센서 기준 2분할(116+74). measured_ml=합계 95.5 µL → 반영 시 mixing_line_len_cm 등가 길이 환산. 센서 앞단 58.3 µL 는 HTE 예상엣지 타이밍 기준(추후 전용 키 후보)"
         },
         "reactor": {
           "current_config": { "id_mm": 1.0, "len_m": 3.82, "computed_ml": 3.0002 },

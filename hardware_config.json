@@ -218,7 +218,7 @@
                     "tube_vol_switcher": 0.0507,
                     "tube_vol_inlet": 0.0754,
                     "tube_vol_valve_pump": 1.8796,
-                    "tube_vol_pump_merge": 0.0
+                    "tube_vol_pump_merge": 0.1794
                 },
                 "position": "inlet"
             },
@@ -246,7 +246,7 @@
                     "tube_vol_switcher": 0.0507,
                     "tube_vol_inlet": 0.0754,
                     "tube_vol_valve_pump": 1.8796,
-                    "tube_vol_pump_merge": 0.0
+                    "tube_vol_pump_merge": 0.1794
                 },
                 "position": "inlet"
             },
@@ -270,7 +270,7 @@
                     "tube_vol_switcher": 0.0507,
                     "tube_vol_inlet": 0.0754,
                     "tube_vol_valve_pump": 1.8796,
-                    "tube_vol_pump_merge": 0.0
+                    "tube_vol_pump_merge": 0.1794
                 },
                 "position": "inlet"
             },
@@ -295,7 +295,7 @@
                     "tube_vol_switcher": 0.0507,
                     "tube_vol_inlet": 0.0754,
                     "tube_vol_valve_pump": 1.8796,
-                    "tube_vol_pump_merge": 0.0
+                    "tube_vol_pump_merge": 0.1794
                 },
                 "position": "inlet"
             }
@@ -328,7 +328,7 @@
         "post_reactor_vol_ml": 2.0,
         "collection_line_vol_ml": 0.24,
         "mixing_line_id_mm": 1.5,
-        "mixing_line_len_cm": 150.0,
+        "mixing_line_len_cm": 5.4,
         "priming_rate_ml_min": 1.7,
         "syringe_refill_rate": 1.7,
         "temp_tolerance_c": 0.3,
@@ -350,8 +350,8 @@
         "hte_wash_gas_vol_ml": 0.3,
         "hte_gas_equiv_flow_ml_min": 20.0,
         "tjunction_line_vols": {
-            "1": 0.11,
-            "2": 0.22
+            "1": 0.0905,
+            "2": 0.0452
         },
         "hte_interwash_vol_ml": 0.0,
         "dosing_autostop_grace_sec": 6.0,
