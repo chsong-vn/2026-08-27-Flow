@@ -9,16 +9,27 @@ import time
 # 밸브 버스에 공통으로 쓰여서 VID/PID만으로는 구분 불가
 # ──────────────────────────────────────────────────────────────
 
+# @codesyncer-decision(2026-08-12, 프로브 폭풍 수정): 프로브는 2회 시도한다.
+#   CH340 을 직전에 다른 프로브가 열었다 닫으면 핸들 해제 지연 + 앞 프로브가
+#   남긴 이종 프로토콜 바이트(예: Runze 밸브에 Chemyx ASCII)가 첫 조회를
+#   깨뜨린다. open 직후 in/out 버퍼를 모두 비우고, 매 시도마다 입력을 다시
+#   비운 뒤 조회 → 잔류 1회는 흡수. 그래도 근본 완화는 config 의 시그니처/
+#   포트 분류 캐시(프로브 자체를 8→2회로 축소)가 담당한다.
 def probe_chemyx(com: str, timeout: float = 1.5) -> bool:
     """ID 1 Chemyx 펌프가 응답하는지 확인. `view parameter` 조회만 보냄 → 기계 미동작."""
     try:
         with serial.Serial(com, 9600, timeout=timeout) as ser:
-            time.sleep(0.1)
+            time.sleep(0.15)
             ser.reset_input_buffer()
-            ser.write(b'1 view parameter\r\n')
-            time.sleep(0.4)
-            resp = ser.read(500).lower()
-            return b'dia' in resp and b'rate' in resp
+            ser.reset_output_buffer()
+            for _ in range(2):
+                ser.reset_input_buffer()
+                ser.write(b'1 view parameter\r\n')
+                time.sleep(0.4)
+                resp = ser.read(500).lower()
+                if b'dia' in resp and b'rate' in resp:
+                    return True
+            return False
     except Exception:
         return False
 
@@ -29,12 +40,17 @@ def probe_runze(com: str, addr: int = 1, timeout: float = 0.8) -> bool:
         frame = bytes([0xCC, addr, 0x3E, 0x00, 0x00, 0xDD])
         cksum = sum(frame).to_bytes(2, 'little')
         with serial.Serial(com, 9600, timeout=timeout) as ser:
-            time.sleep(0.1)
+            time.sleep(0.15)
             ser.reset_input_buffer()
-            ser.write(frame + cksum)
-            time.sleep(0.3)
-            resp = ser.read(16)
-            return len(resp) >= 6 and resp[0] == 0xCC and resp[5] == 0xDD
+            ser.reset_output_buffer()
+            for _ in range(2):
+                ser.reset_input_buffer()
+                ser.write(frame + cksum)
+                time.sleep(0.3)
+                resp = ser.read(16)
+                if len(resp) >= 6 and resp[0] == 0xCC and resp[5] == 0xDD:
+                    return True
+            return False
     except Exception:
         return False
 
@@ -48,12 +64,17 @@ def probe_reaxus(com: str, timeout: float = 1.2) -> bool:
     """
     try:
         with serial.Serial(com, 9600, timeout=timeout) as ser:
-            time.sleep(0.1)
+            time.sleep(0.15)
             ser.reset_input_buffer()
-            ser.write(b"PR\r")
-            time.sleep(0.4)
-            resp = ser.read(64).decode(errors='ignore')
-            return resp.startswith("OK,") and "/" in resp
+            ser.reset_output_buffer()
+            for _ in range(2):
+                ser.reset_input_buffer()
+                ser.write(b"PR\r")
+                time.sleep(0.4)
+                resp = ser.read(64).decode(errors='ignore')
+                if resp.startswith("OK,") and "/" in resp:
+                    return True
+            return False
     except Exception:
         return False
 
@@ -65,7 +86,8 @@ _PROBE_REGISTRY = {
 }
 
 
-def find_port_by_usb_info(vid=None, pid=None, serial_number=None, probe=None):
+def find_port_by_usb_info(vid=None, pid=None, serial_number=None, probe=None,
+                          class_cache=None):
     """
     VID/PID/Serial Number로 COM 포트를 자동 검색합니다.
 
@@ -73,6 +95,14 @@ def find_port_by_usb_info(vid=None, pid=None, serial_number=None, probe=None):
       1. vid + pid + serial_number → 정확한 장치 특정
       2. vid + pid (serial_number 없음) → 해당 장치 타입 중 첫 번째
       3. 매칭 실패 → None 반환 (fallback으로 하드코딩 포트 사용)
+
+    @codesyncer-decision(2026-08-12, 프로브 폭풍 수정): class_cache(dict)를 주면
+      포트 분류 결과({포트: probe_이름})를 읽고 쓴다. 같은 CH340 VID/PID 를 공유하는
+      Chemyx/Runze 버스가 부팅 때 서로의 포트를 반복해서 열어 프로브가 상호 오염되던
+      결함(로그: 살아있는 Runze COM9 조차 'Auto match failed')을 막는다:
+      - 이미 이 probe 로 분류된 포트가 있으면 재프로브 없이 반환.
+      - 다른 probe 로 이미 확정된 포트는 건너뛴다(이종 프로토콜 바이트 재주입 금지).
+      호출측(config.get_device_info)이 부팅 1회 스캔 동안 캐시를 공유한다.
 
     @codesyncer-inference: pyserial list_ports 의존성 가정
       - 가정: pyserial >= 3.0 설치됨 (serial.tools.list_ports 사용)
@@ -114,19 +144,33 @@ def find_port_by_usb_info(vid=None, pid=None, serial_number=None, probe=None):
                 return p.device
         return None
 
-    # VID/PID 매칭 장치가 하나뿐이면 그대로 사용
-    if len(candidates) == 1:
+    # @codesyncer-decision(2026-08-12): probe 가 지정되면 후보가 하나여도 반드시
+    #   프로브로 종류를 확인한다. 기존엔 'len==1 이면 무조건 반환'이 먼저였는데,
+    #   Chemyx 버스가 빠지고 CH340 이 Runze 하나만 남으면 Chemyx 조회가 그 Runze
+    #   포트를 잘못 잡던 오매칭(같은 VID/PID) 결함. 프로브 실패 시 None → static 폴백.
+    probe_fn = _PROBE_REGISTRY.get(probe) if probe else None
+    if probe and not probe_fn:
+        # 알 수 없는 probe 종류 → 확인 불가, 첫 번째로 폴백 (기존 동작 유지)
         return candidates[0].device
-
-    # 여러 개 매칭 + probe 지정 → probe로 확정
-    if probe:
-        probe_fn = _PROBE_REGISTRY.get(probe)
-        if probe_fn:
+    if probe_fn:
+        # 1) 이미 이 probe 로 분류된 포트가 있으면 재프로브 없이 반환
+        if class_cache is not None:
             for p in candidates:
-                if probe_fn(p.device):
+                if class_cache.get(p.device) == probe:
                     return p.device
-            return None
-        # 알 수 없는 probe 종류 → 첫 번째로 폴백
+        # 2) 미분류 포트만 프로브 (다른 프로토콜로 확정된 포트는 건너뜀)
+        for p in candidates:
+            dev = p.device
+            if class_cache is not None and class_cache.get(dev) is not None:
+                continue   # 이미 다른 타입 확정 — 이종 바이트 재주입 금지
+            if probe_fn(dev):
+                if class_cache is not None:
+                    class_cache[dev] = probe
+                return dev
+        return None
+
+    # probe 미지정 — VID/PID 매칭 장치가 하나뿐이면 그대로 사용
+    if len(candidates) == 1:
         return candidates[0].device
 
     # 여러 개 매칭 + probe 없음 → Serial 없는 것 우선 (기존 동작 유지와 유사)

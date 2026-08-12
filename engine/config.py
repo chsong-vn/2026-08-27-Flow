@@ -60,6 +60,15 @@ class SystemConfig:
         # 초음파 레벨센서(HC-SR04) startup 잔량 설정 — {펌프명: {device_id,policy,gate_ul,slope,intercept,samples}}
         self.PUMP_LEVEL_CFG: Dict[str, Dict[str, Any]] = {}
         self.cached_inventory: Dict[str, Dict[str, Any]] = {}
+        # @codesyncer-decision(2026-08-12, 프로브 폭풍 수정): USB 매칭 캐시 (부팅 1회 스캔).
+        #   _usb_match_cache: (vid,pid,serial,probe) → 확정 포트. 공유 버스 장치
+        #     (Chemyx 4대·Runze 4대)는 시그니처가 같아 프로브가 8→2회로 축소되고,
+        #     같은 버스=같은 포트로 캐시하는 게 의미상으로도 정확하다.
+        #   _usb_class_cache: {포트: probe_이름}. 이미 분류된 포트를 재프로브하지 않아
+        #     Chemyx 조회가 Runze 포트를 짓밟는 상호 오염을 차단.
+        #   SystemConfig 는 핫리로드 시 재생성되므로 인스턴스 캐시가 자동 무효화됨.
+        self._usb_match_cache: Dict[Any, Any] = {}
+        self._usb_class_cache: Dict[str, str] = {}
 
         # Safety/runtime attributes consumed by other modules
         self.max_temp = 120.0
@@ -166,7 +175,16 @@ class SystemConfig:
         probe = result.get("probe")
 
         if vid and pid:
-            auto_port = find_port_by_usb_info(vid, pid, serial, probe=probe)
+            # 시그니처 캐시: 같은 (vid,pid,serial,probe) 는 부팅 1회만 프로브하고
+            #   결과를 공유 — 공유 버스 4대가 8회 재프로브하며 서로를 짓밟던 결함 제거.
+            sig = (str(vid).upper(), str(pid).upper(), serial, probe)
+            if sig in self._usb_match_cache:
+                auto_port = self._usb_match_cache[sig]
+            else:
+                auto_port = find_port_by_usb_info(
+                    vid, pid, serial, probe=probe,
+                    class_cache=self._usb_class_cache)
+                self._usb_match_cache[sig] = auto_port
             if auto_port:
                 result["port"] = auto_port
                 result["_auto_matched"] = True
