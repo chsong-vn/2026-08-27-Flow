@@ -51,7 +51,7 @@ class HotReloadMixin:
         self.cfg = SystemConfig()
 
         # 4) 그래프 버퍼 재초기화
-        self.st = time.time()
+        self.st = time.monotonic()
         self.dh = {"t": [], "temp": []}
         for p in self.cfg.ACTIVE_PUMPS:
             self.dh[p] = []

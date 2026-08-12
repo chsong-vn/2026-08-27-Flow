@@ -86,13 +86,13 @@ class DeepWashEngine:
     def _cmd(self, fn, *args, **kwargs):
         """버스 명령 구간 직렬화 + 최소 간격 보장."""
         with self._cmd_lock:
-            wait = self.CMD_INTERVAL - (time.time() - self._last_cmd)
+            wait = self.CMD_INTERVAL - (time.monotonic() - self._last_cmd)
             if wait > 0:
                 time.sleep(wait)
             try:
                 return fn(*args, **kwargs)
             finally:
-                self._last_cmd = time.time()
+                self._last_cmd = time.monotonic()
 
     def _aborted(self, pump):
         return self._stop_req or bool(getattr(pump, "_abort_refill", False))

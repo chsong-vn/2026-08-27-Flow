@@ -130,7 +130,7 @@ class PhaseSensorOPBADC:
             if not all(0 <= v <= 1023 for v in vals):
                 continue
             with self._lock:
-                self._last_rx = time.time()
+                self._last_rx = time.monotonic()
                 for ch, adc in enumerate(vals):
                     self._adc[ch] = adc
                     new = 1 if adc > self.thresholds.get(ch, 512) else 0
@@ -165,7 +165,7 @@ class PhaseSensorOPBADC:
         return k
 
     def _check_fresh(self):
-        if time.time() - self._last_rx > self.stale_sec:
+        if time.monotonic() - self._last_rx > self.stale_sec:
             raise PhaseSensorError(
                 f"[{self.name}] ADC 스트림 두절 {self.stale_sec:.0f}s+ — "
                 f"배선/포트({self.port}) 확인 (단선 의심)")

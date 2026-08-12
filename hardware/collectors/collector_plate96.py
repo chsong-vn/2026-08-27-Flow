@@ -353,15 +353,15 @@ class Plate96Collector:
             self.ser.reset_input_buffer()
             self.ser.write((cmd + '\n').encode())
             self.ser.flush()
-            deadline = time.time() + wait
+            deadline = time.monotonic() + wait
             data = b''
-            while time.time() < deadline:
+            while time.monotonic() < deadline:
                 if self.ser.in_waiting:
                     data += self.ser.read(self.ser.in_waiting)
                     text = data.decode('utf-8', errors='replace')
                     lines = [l for l in text.strip().splitlines() if l.strip()]
                     if lines and lines[-1].strip().lower().startswith('ok'):
-                        deadline = min(deadline, time.time() + 0.15)
+                        deadline = min(deadline, time.monotonic() + 0.15)
                 else:
                     time.sleep(0.03)
             return data.decode('utf-8', errors='replace').strip()

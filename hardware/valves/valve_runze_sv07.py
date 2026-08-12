@@ -234,8 +234,8 @@ class RunzeSV07Valve:
         if not ser:
             return False
 
-        start_time = time.time()
-        while (time.time() - start_time) < timeout:
+        start_time = time.monotonic()
+        while (time.monotonic() - start_time) < timeout:
             cmd_bytes = self._build_command(self.CMD_QUERY_STATUS, 0x00, 0x00)
             ser.write(cmd_bytes)
             response = ser.read(8)

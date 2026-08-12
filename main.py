@@ -104,8 +104,8 @@ class AutoPairingGUI(MainWindowUIMixin, MonitoringMixin, RunControlMixin,
         # Method 저장/로드
         self.method_io = MethodIO(self)
 
-        # 그래프 버퍼 초기화
-        self.st = time.time()
+        # 그래프 버퍼 초기화 (경과축 = monotonic, app_monitoring 소비와 동일 클록)
+        self.st = time.monotonic()
         self.dh = {"t":[], "temp":[]}
         for p in self.cfg.ACTIVE_PUMPS:
             self.dh[p] = []

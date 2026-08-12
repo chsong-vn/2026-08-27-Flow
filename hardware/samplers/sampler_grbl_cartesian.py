@@ -374,8 +374,8 @@ class GrblCartesianSampler:
             try:
                 dev.flush_buffer_in()  # 잔류 비우기
                 dev._serial_iface.write((cmd + "\n").encode("ascii"))
-                deadline = time.time() + wait
-                while time.time() < deadline:
+                deadline = time.monotonic() + wait
+                while time.monotonic() < deadline:
                     line = dev.flush_buffer_in(whole_line=True)
                     if line == "":
                         time.sleep(0.02)

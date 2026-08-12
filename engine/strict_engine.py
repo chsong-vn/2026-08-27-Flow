@@ -105,7 +105,11 @@ class CollectionTimer:
             for t, name, _action, lane, _meta in self.events:
                 tr.instant("TIMER PLAN", name, ts=_plan_t0 + t,
                            args={"t_sec": round(t, 1), "lane": lane})
-        self.start_time = time.time()
+        # @codesyncer-decision(P2, 2026-08-12): 타이머 클록 = time.monotonic —
+        #   NTP 동기화/수동 시계 조정이 wall-clock 을 점프시키면 분취 경계 전체가
+        #   그만큼 이동(조기 WASTE=제품 유실)하던 경로 차단. 트레이스 절대 ts 만
+        #   wall-clock(time.time) 유지 (TraceLogger._ts_us 계약).
+        self.start_time = time.monotonic()
         for lane in {e[3] for e in self.events}:
             q: "queue.Queue" = queue.Queue()
             self._queues[lane] = q
@@ -168,13 +172,13 @@ class CollectionTimer:
         """Pump이 멈춤 시 호출. Timer는 이 시간만큼 이벤트 발동 미룸."""
         with self._pause_lock:
             if self._pause_start is None:
-                self._pause_start = time.time()
+                self._pause_start = time.monotonic()
 
     def resume(self):
         """Pump이 재가동 시 호출. 누적 pause 시간에 반영."""
         with self._pause_lock:
             if self._pause_start is not None:
-                self._total_paused += time.time() - self._pause_start
+                self._total_paused += time.monotonic() - self._pause_start
                 self._pause_start = None
 
     def _pumping_elapsed(self) -> float:
@@ -184,7 +188,7 @@ class CollectionTimer:
                 # 현재 pause 중 → pause 시작 시점까지의 pumping 경과
                 base = self._pause_start - self.start_time
                 return base - self._total_paused
-            return (time.time() - self.start_time) - self._total_paused
+            return (time.monotonic() - self.start_time) - self._total_paused
 
     def _end_workers(self):
         """레인 큐에 센티널 삽입 — 워커 스레드 자연 종료 유도."""
@@ -286,7 +290,8 @@ class CollectionTimer:
             # 종료(terminal WASTE)는 액션 '전'에 플래그 — 가드 복원 레이스를 닫는 방향
             if kind == "waste" and meta.get("terminal"):
                 self._terminal_fired.set()
-            t_act = time.time()
+            t_act = time.time()        # 트레이스 절대 ts (wall-clock 계약)
+            m_act = time.monotonic()   # 액션 소요 측정 (NTP 무관)
             try:
                 if guard_on:
                     try:
@@ -297,7 +302,7 @@ class CollectionTimer:
                 action()
                 if kind in ("collect", "waste"):
                     self._valve_phase = kind
-                act_dur = time.time() - t_act
+                act_dur = time.monotonic() - m_act
                 tr = getattr(self.engine, "trace", None)
                 if tr:
                     tr.complete(f"TIMER {lane}", name, t_act, act_dur,
@@ -1346,8 +1351,8 @@ class StrictSequenceEngine(FlowEngine):
             그 안에서 먼저 끊음. 고속 판독 실패는 무시 — 최종 판정은 루프 뒤
             풀샘플 검증 측정이 담당(조용한 오판 금지)."""
             t_need = (target_ml / rate_eff) * 60.0 if rate_eff > 0 else 0.0
-            deadline = time.time() + t_need + 2.0
-            while time.time() < deadline:
+            deadline = time.monotonic() + t_need + 2.0
+            while time.monotonic() < deadline:
                 if self.abort_flag or getattr(pump, "_abort_refill", False):
                     break
                 try:
@@ -1769,7 +1774,7 @@ class StrictSequenceEngine(FlowEngine):
 
                 self._stop_momentary()
 
-                heat_start = time.time()
+                heat_start = time.monotonic()
                 while True:
                     self._wait_pause_or_abort("heating")
                     curr_temp = self.heater.get_temperature()
@@ -1783,7 +1788,7 @@ class StrictSequenceEngine(FlowEngine):
                         break
 
                     if self.heater_reach_timeout_sec > 0:
-                        if (time.time() - heat_start) > self.heater_reach_timeout_sec:
+                        if (time.monotonic() - heat_start) > self.heater_reach_timeout_sec:
                             raise SafetyError(
                                 f"Heater timeout: target {target_temp:.1f}C not reached within "
                                 f"{self.heater_reach_timeout_sec:.0f}s"
@@ -1815,9 +1820,9 @@ class StrictSequenceEngine(FlowEngine):
 
                 # Step 4: injection (reagent ports)
                 # @codesyncer-decision: Outlet valve + Collector 제어를 별도 Timer thread로 위임.
-                # Main thread의 펌프 로직은 그대로 유지. Timer는 injection_start 기준으로
-                # wall-clock 타이밍에 valve/collector 이벤트 발동 (서로 다른 COM 포트).
-                inject_start = time.time()
+                # Main thread의 펌프 로직은 그대로 유지. Timer는 injection_start 기준
+                # monotonic 경과 타이밍에 valve/collector 이벤트 발동 (서로 다른 COM 포트).
+                inject_start = time.monotonic()
                 # _log()의 [T+] prefix 기준점 — 매 step의 injection 시작 시 리셋
                 self.injection_start_ts = inject_start
                 self._log(f"Step {exp_id}: injection START")
@@ -2127,9 +2132,9 @@ class StrictSequenceEngine(FlowEngine):
                     # pause/abort를 감시하면서 push 지속
                     # @codesyncer-decision: pause 시 Timer도 함께 pause — HPLC가 멈춘 동안
                     #   Timer가 계속 카운트하면 Outlet→WASTE가 잘못된 시점에 발동됨
-                    push_start = time.time()
+                    push_start = time.monotonic()
                     while True:
-                        elapsed = time.time() - push_start
+                        elapsed = time.monotonic() - push_start
                         if elapsed >= push_sec_hplc:
                             break
                         self._check_abort()
@@ -2168,7 +2173,7 @@ class StrictSequenceEngine(FlowEngine):
                                             pass
                             if _push_restarted and self._collection_timer is not None:
                                 self._collection_timer.resume()
-                            push_start = time.time() - elapsed  # 경과 유지
+                            push_start = time.monotonic() - elapsed  # 경과 유지
                         # 진행률 송출
                         pct = min(100.0, (elapsed / push_sec_hplc) * 100.0) if push_sec_hplc > 0 else 100.0
                         self._emit_phase(f"S{exp_id}-Push", pct)
@@ -2285,7 +2290,7 @@ class StrictSequenceEngine(FlowEngine):
                         ),
                     )
 
-                elapsed_min = (time.time() - inject_start) / 60.0
+                elapsed_min = (time.monotonic() - inject_start) / 60.0
                 self._log(f"Step {exp_id}: push complete | total {elapsed_min:.2f} min after injection")
 
                 # 5-2c: Timer의 모든 이벤트 자연 완료 대기 (Outlet→WASTE 포함)
@@ -2499,9 +2504,9 @@ class StrictSequenceEngine(FlowEngine):
                     self.mfc.set_flow(sccm)
                     if self._collection_timer is not None:
                         self._collection_timer.resume()
-                t0 = time.time()
+                t0 = time.monotonic()
                 time.sleep(min(0.2, t_left))
-                t_left -= time.time() - t0
+                t_left -= time.monotonic() - t0
         finally:
             self.mfc.set_flow(0.0)
             self.trace.end("MFC")
@@ -2717,14 +2722,14 @@ class StrictSequenceEngine(FlowEngine):
                 self.collector.home()
                 self.collector.move_to_tube(self.current_tube)
             self.heater.set_temperature(steps[0]["temp"])
-            t0h = time.time()
+            t0h = time.monotonic()
             tol = float(sp.get("temp_tolerance_c", 0.3) or 0.3)
             while True:
                 self._wait_pause_or_abort("HTE heating")
                 cur = self.heater.get_temperature() or 0.0
                 if abs(cur - steps[0]["temp"]) <= tol:
                     break
-                if time.time() - t0h > float(self.cfg.heater_reach_timeout_sec):
+                if time.monotonic() - t0h > float(self.cfg.heater_reach_timeout_sec):
                     raise SafetyError("HTE: 가열 타임아웃")
                 time.sleep(0.5)
 
@@ -2787,7 +2792,7 @@ class StrictSequenceEngine(FlowEngine):
             self._collection_timer = CollectionTimer(self, events)
             self._collection_timer.start()
             self._collection_timer.pause()   # 구동 시작 전 정지
-            self.injection_start_ts = time.time()
+            self.injection_start_ts = time.monotonic()
 
             # ── 하이브리드 트리거 (hte_sensor_trigger): 센서 엣지로 마크 재앵커 ──
             # config: hte_sensor_trigger(bool) / hte_sensor_key("collect") /
@@ -3237,7 +3242,9 @@ class StrictSequenceEngine(FlowEngine):
         if source_port_map is None:
             source_port_map = {}
 
-        start_time = time.time()
+        # @codesyncer-decision(P2, 2026-08-12): 도징 창 클록 = monotonic — NTP 점프가
+        #   창을 늘리거나(과주입) 줄이는(미달) 경로 차단. CollectionTimer 와 동일 결정.
+        start_time = time.monotonic()
         end_time = start_time + duration_sec
         # @codesyncer-decision: 스태거 시작 기준점 — 펌프별 시작 시각 = anchor + offset
         stagger_anchor = start_time
@@ -3250,7 +3257,7 @@ class StrictSequenceEngine(FlowEngine):
         if step_name:
             self._log(f"[{step_name}] start")
 
-        while time.time() < end_time:
+        while time.monotonic() < end_time:
             self._check_abort()
 
             # Pause handling
@@ -3269,10 +3276,10 @@ class StrictSequenceEngine(FlowEngine):
                     except Exception:
                         pass
                 self._emit_status(f"{step_name}: paused")
-                pause_start = time.time()
+                pause_start = time.monotonic()
                 self.pause_event.wait()
                 self._check_abort()
-                paused_dur = time.time() - pause_start
+                paused_dur = time.monotonic() - pause_start
                 stagger_anchor += paused_dur
                 # @codesyncer-decision: pause 시간만큼 end_time 연장 (분취 타이밍 버그 fix #2)
                 # - 기존: end_time 고정 → pause 동안 wall-clock이 흘러가 dosing이
@@ -3289,9 +3296,9 @@ class StrictSequenceEngine(FlowEngine):
                 _start_verified.clear()   # 재시작 펌프 재검증
                 _start_suspect.clear()
 
-            dt = min(1.0, max(0.0, end_time - time.time()))
+            dt = min(1.0, max(0.0, end_time - time.monotonic()))
             if start_offsets:
-                _nw = time.time()
+                _nw = time.monotonic()
                 _started_set = getattr(self, "_dosing_started", set())
                 for _pn, _of in start_offsets.items():
                     if _pn not in _started_set:
@@ -3329,7 +3336,7 @@ class StrictSequenceEngine(FlowEngine):
                     except Exception:
                         pass
 
-                refill_start = time.time()
+                refill_start = time.monotonic()
                 # @codesyncer-decision: prepare → trigger 분리 — 펌프 간 시작 격차 최소화
                 refill_started = []
                 for p_name in low_pumps:
@@ -3343,7 +3350,7 @@ class StrictSequenceEngine(FlowEngine):
                 self._run_complete_threads(
                     refill_started, "refill_complete", f"{step_name} refill")
 
-                refill_elapsed = time.time() - refill_start
+                refill_elapsed = time.monotonic() - refill_start
                 end_time += refill_elapsed
                 total_refill_time += refill_elapsed
 
@@ -3366,7 +3373,7 @@ class StrictSequenceEngine(FlowEngine):
             # 각 펌프를 (purge_max − purge_i)만큼 늦게 출발시키면 모든 채널의
             # 시약이 '동시에' 합류 진입을 시작하고 '동시에' 끝남 (fill_i 소진과
             # dosing 창 종료가 일치). offsets 미지정 시 기존 동작과 동일.
-            _now = time.time()
+            _now = time.monotonic()
             for p_name, rate in flow_map.items():
                 pump = self.pumps[p_name]
                 rate = float(rate)
@@ -3392,7 +3399,7 @@ class StrictSequenceEngine(FlowEngine):
             #   True 면 즉시 SafetyError — 타이머만 돌고 액체는 안 움직이는 '조용한
             #   빈 도징'을 1~2s 안에 차단. None(판별 불가 드라이버)은 통과(과차단 방지),
             #   빈 시린지 자동정지는 current_vol 가드로 오탐 제외.
-            _nw2 = time.time()
+            _nw2 = time.monotonic()
             for _pn in list(getattr(self, "_dosing_started", set())):
                 if _pn in _start_verified:
                     continue
@@ -3431,9 +3438,9 @@ class StrictSequenceEngine(FlowEngine):
             # @codesyncer-decision: 실제 경과 시간 기반 volume tracking
             # - 기존: dt(예정값)로 차감 → loop overhead/RS-485 지연으로 drift 누적
             # - 수정: sleep 전후 시간 측정 → 실제 경과 시간으로 정확한 차감
-            loop_start = time.time()
+            loop_start = time.monotonic()
             time.sleep(dt)
-            actual_dt = time.time() - loop_start
+            actual_dt = time.monotonic() - loop_start
 
             for p_name, rate in flow_map.items():
                 pump = self.pumps[p_name]
@@ -3442,7 +3449,7 @@ class StrictSequenceEngine(FlowEngine):
                         continue  # 스태거로 아직 시작 전인 펌프는 차감하지 않음
                     pump.current_vol = max(0.0, float(pump.current_vol) - (float(rate) * (actual_dt / 60.0)))
 
-            elapsed = time.time() - start_time
+            elapsed = time.monotonic() - start_time
             pct = min(100.0, (elapsed / duration_sec) * 100.0)
             if step_name:
                 self._emit_phase(step_name, pct)
@@ -3460,9 +3467,9 @@ class StrictSequenceEngine(FlowEngine):
                     and _is_smart_pump(self.pumps.get(p))
                     and hasattr(getattr(self.pumps.get(p), "driver", None), "is_stopped")]
         if _grace > 0 and _pending:
-            _deadline = time.time() + _grace
-            _grace_t0 = time.time()
-            while _pending and time.time() < _deadline:
+            _deadline = time.monotonic() + _grace
+            _grace_t0 = time.monotonic()
+            while _pending and time.monotonic() < _deadline:
                 self._check_abort()
                 _still = []
                 for p_name in _pending:
@@ -3476,7 +3483,7 @@ class StrictSequenceEngine(FlowEngine):
                 _pending = _still
                 if _pending:
                     time.sleep(0.5)
-            _waited = time.time() - _grace_t0
+            _waited = time.monotonic() - _grace_t0
             if _pending:
                 self._log(f"[{step_name}] ⚠ 자동정지 유예 {_grace:.0f}s 초과 — 강제 정지: "
                           f"{', '.join(_pending)} (미토출 의심)")
@@ -3509,7 +3516,7 @@ class StrictSequenceEngine(FlowEngine):
             self._collection_timer.resume()
 
         if step_name:
-            elapsed = time.time() - start_time
+            elapsed = time.monotonic() - start_time
             self._emit_phase(step_name, 100.0)
             self._log(f"[{step_name}] done (elapsed={elapsed:.1f}s refill={total_refill_time:.1f}s)")
 

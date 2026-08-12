@@ -103,7 +103,7 @@ class SamplerCoordinator:
         if self._at_vial == vial_id:
             return True, f"니들 이미 {vial_id}"
         self._log(f"니들 이동 → {vial_id}")
-        t0 = time.time()
+        t0 = time.monotonic()
         try:
             ok, msg = self.sampler.move_to_vial(vial_id)
         except Exception as e:
@@ -114,7 +114,7 @@ class SamplerCoordinator:
         # 흡입 개시 전의 안정화로 위치를 옮겨 동일 효과)
         time.sleep(self.DELAY_BEFORE_DIP_S)
         self._at_vial = vial_id
-        self._log(f"니들 {vial_id} 도달 ({time.time() - t0:.1f}s)")
+        self._log(f"니들 {vial_id} 도달 ({time.monotonic() - t0:.1f}s)")
         return True, msg
 
     def after_withdraw(self):

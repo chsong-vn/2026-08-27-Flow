@@ -40,7 +40,7 @@ class MonitoringMixin:
         마지막 스냅은 배관도 센서 도트용으로 캐시(_last_sensor_phases)."""
         if not hasattr(self, 'dash_tab') or not phases:
             return
-        t = time.time() - self.st
+        t = time.monotonic() - self.st
         for key, v in phases.items():
             s = self.dh_phase.setdefault(str(key), {"t": [], "v": []})
             s["t"].append(t)
@@ -55,7 +55,7 @@ class MonitoringMixin:
     def update_monitor_data(self, temp, pressures, p_status, v_status):
         if not hasattr(self, 'dash_tab'): return
         d = self.dash_tab
-        t = time.time() - self.st
+        t = time.monotonic() - self.st
         self.dh["t"].append(t)
         self.dh["temp"].append(temp)
         self.lcd_t.display(temp)
@@ -175,7 +175,7 @@ class MonitoringMixin:
 
         if name != getattr(self, "_phase_name", ""):
             self._phase_name = name
-            self._phase_start_ts = time.time()
+            self._phase_start_ts = time.monotonic()
             self._phase_tick_timer.start(1000)
 
         self._phase_last_pct = pct
@@ -186,7 +186,7 @@ class MonitoringMixin:
         start = getattr(self, "_phase_start_ts", None)
         if start is None:
             return
-        elapsed = int(time.time() - start)
+        elapsed = int(time.monotonic() - start)
         name = getattr(self, "_phase_name", "")
         pct = getattr(self, "_phase_last_pct", 0.0)
         self.lbl_phase.setText(f"{name}  {pct:.0f}%  {elapsed}s")

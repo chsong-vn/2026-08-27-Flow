@@ -38,11 +38,11 @@ class ReaxusPump:
                 self.ser.write(full_cmd.encode())
 
                 response = ""
-                start_time = time.time()
+                start_time = time.monotonic()
                 timeout = 2.0 
 
                 while True:
-                    if time.time() - start_time > timeout:
+                    if time.monotonic() - start_time > timeout:
                         break
                     
                     if self.ser.in_waiting > 0:

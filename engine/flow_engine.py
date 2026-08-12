@@ -50,7 +50,8 @@ class FlowEngine:
             headers = ["Time_s", "Status", "Temp_C"] + [f"P_{k}_Bar" for k in self.pumps]
             self.writer.writerow(headers)
 
-            self.start_time = time.time()
+            # CSV Time_s 경과축 = monotonic (P2, 2026-08-12) — NTP 점프 무관
+            self.start_time = time.monotonic()
             print(f"[Info] Log saved to: {filepath}")
 
             # Perfetto 트레이스 (CSV 와 동일 생명주기·타임스탬프 — ui.perfetto.dev 로 열람)
@@ -68,8 +69,8 @@ class FlowEngine:
     def _log(self, status):
         # Injection 시작 기준 경과 타이머 prefix — 사용자가 step 내부 타이밍을 추적하기 쉽도록
         inj = getattr(self, "injection_start_ts", None)
-        if inj is not None and time.time() >= inj:
-            el = int(time.time() - inj)
+        if inj is not None and time.monotonic() >= inj:
+            el = int(time.monotonic() - inj)
             h, rem = divmod(el, 3600)
             m, s = divmod(rem, 60)
             prefix = f"[T+{h}:{m:02d}:{s:02d}] " if h > 0 else f"[T+{m:02d}:{s:02d}] "
@@ -98,7 +99,7 @@ class FlowEngine:
 
         if not self.writer: return
 
-        elap = round(time.time() - self.start_time, 1)
+        elap = round(time.monotonic() - self.start_time, 1)
 
         # 온도 읽기 (CSV 값 규약 유지: None→0, 예외/히터없음→-999)
         t_val = -999

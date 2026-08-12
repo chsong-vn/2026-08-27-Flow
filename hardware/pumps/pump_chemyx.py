@@ -106,8 +106,8 @@ class ChemyxPump:
 
                     # 응답 읽기 (최대 1초 대기)
                     response = b''
-                    start_time = time.time()
-                    while (time.time() - start_time) < 1.0:
+                    start_time = time.monotonic()
+                    while (time.monotonic() - start_time) < 1.0:
                         if ser.in_waiting > 0:
                             response += ser.read(ser.in_waiting)
                             time.sleep(0.05)
