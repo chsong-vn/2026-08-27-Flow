@@ -216,8 +216,8 @@
                     "level_channel_index": 0,
                     "tube_vol_selector": 0.0224,
                     "tube_vol_switcher": 0.0507,
-                    "tube_vol_inlet": 0.0,
-                    "tube_vol_valve_pump": 1.8796,
+                    "tube_vol_inlet": 0.0196,
+                    "tube_vol_valve_pump": 1.8811,
                     "tube_vol_pump_merge": 0.0
                 },
                 "position": "inlet"
@@ -244,8 +244,8 @@
                     "tube_vol_reagent": 0.5,
                     "tube_vol_selector": 0.0224,
                     "tube_vol_switcher": 0.0507,
-                    "tube_vol_inlet": 0.0,
-                    "tube_vol_valve_pump": 1.8796,
+                    "tube_vol_inlet": 0.0196,
+                    "tube_vol_valve_pump": 1.8811,
                     "tube_vol_pump_merge": 0.0
                 },
                 "position": "inlet"
@@ -268,8 +268,8 @@
                     "wash_volume": 3.0,
                     "tube_vol_selector": 0.0224,
                     "tube_vol_switcher": 0.0507,
-                    "tube_vol_inlet": 0.0,
-                    "tube_vol_valve_pump": 1.8796,
+                    "tube_vol_inlet": 0.0196,
+                    "tube_vol_valve_pump": 1.8811,
                     "tube_vol_pump_merge": 0.0
                 },
                 "position": "inlet"
@@ -293,8 +293,8 @@
                     "wash_volume": 5.0,
                     "tube_vol_selector": 0.0224,
                     "tube_vol_switcher": 0.0507,
-                    "tube_vol_inlet": 0.0,
-                    "tube_vol_valve_pump": 1.8796,
+                    "tube_vol_inlet": 0.0196,
+                    "tube_vol_valve_pump": 1.8811,
                     "tube_vol_pump_merge": 0.0
                 },
                 "position": "inlet"
