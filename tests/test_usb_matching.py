@@ -53,14 +53,17 @@ _ROLE = {"COM9": "runze", "COM14": "chemyx", "COM11": "ftdi"}
 probe_calls = []   # (probe_name, port) 순서 기록
 
 
-def _install(present=("COM9", "COM14", "COM11")):
+def _install(present=("COM9", "COM14", "COM11"), roles=None):
     probe_calls.clear()
+    role = dict(_ROLE)
+    if roles:
+        role.update(roles)     # 시나리오별 포트 실체 재정의 (예: COM9=chemyx 재넘버링)
     _lp.comports = lambda: [p for p in LIVE if p.device in present]
 
     def mk(pname):
         def _fn(com, *a, **k):
             probe_calls.append((pname, com))
-            return _ROLE.get(com) == pname     # 그 포트의 실제 종류일 때만 True
+            return role.get(com) == pname      # 그 포트의 실제 종류일 때만 True
         return _fn
     U._PROBE_REGISTRY = {"chemyx": mk("chemyx"), "runze": mk("runze"),
                          "reaxus": mk("reaxus")}
@@ -154,6 +157,43 @@ cfg5.cached_inventory = {
 re5 = cfg5.get_device_info("heater")
 check("E3 probe 없으면 유일 VID/PID 매칭 그대로 (COM11)",
       re5["port"] == "COM11" and re5.get("_auto_matched") is True, f"{re5['port']}")
+
+# ── F: 포트 도용 방지 — Chemyx 가 probe 로 COM9 점유 후 Runze static 폴백 거부 ──
+#    실기 재현: COM 재넘버링으로 Chemyx 버스가 COM9(옛 Runze 번호)로 이동.
+#    Chemyx 는 probe 로 COM9 정확 매칭, Runze 는 낡은 static COM9 로 폴백 시도 →
+#    도용 금지(Mock). (hw_manager 는 motor=chemyx 를 selector=runze 보다 먼저 해석)
+print("[F] 포트 도용 방지 (Chemyx COM9 점유 → Runze static COM9 거부)")
+# COM9 가 재넘버링으로 실제 Chemyx 버스가 된 상황 (옛 Runze 번호를 물려받음)
+_install(present=("COM9", "COM11"), roles={"COM9": "chemyx"})
+cfgF = SystemConfig()
+cfgF.cached_inventory = {
+    "chemyx1": {"name": "시린지펌프1", "port": "COM8", "vid": "1A86",
+                "pid": "7523", "serial": None, "probe": "chemyx"},
+    # Runze static 포트가 낡아 COM9 (지금은 Chemyx 것)
+    "runze1": {"name": "12-way 1", "port": "COM9", "vid": "1A86",
+               "pid": "7523", "serial": None, "probe": "runze"}}
+# 해석 순서: motor(chemyx) → selector(runze)
+rF_c = cfgF.get_device_info("chemyx1")
+rF_r = cfgF.get_device_info("runze1")
+check("F1 Chemyx probe 로 COM9 점유", rF_c["port"] == "COM9"
+      and rF_c.get("_auto_matched") is True, f"{rF_c['port']}")
+check("F2 Runze static COM9 도용 거부 → Mock", rF_r["port"] == "COM_Mock"
+      and rF_r.get("_port_conflict") is True, f"{rF_r['port']}")
+
+# F3: 도용 대상이 아닌 static 폴백은 그대로 (정상 장치 오작동 금지)
+print("[F3] 무관 static 폴백은 보존")
+_install(present=("COM9", "COM11"), roles={"COM9": "chemyx"})
+cfgG = SystemConfig()
+cfgG.cached_inventory = {
+    "chemyx1": {"name": "시린지펌프1", "port": "COM8", "vid": "1A86",
+                "pid": "7523", "serial": None, "probe": "chemyx"},
+    # 히터: 고유 VID/PID, present 아님 → static COM5 폴백 (COM9 아님 = 도용 아님)
+    "heater": {"name": "히터", "port": "COM5", "vid": "067B",
+               "pid": "23A3", "serial": "AWATB147612", "probe": None}}
+cfgG.get_device_info("chemyx1")            # COM9 claim
+rH = cfgG.get_device_info("heater")
+check("F3 히터 static COM5 유지 (도용 아님)", rH["port"] == "COM5"
+      and not rH.get("_port_conflict"), f"{rH['port']}")
 
 print()
 print("RESULT:", "ALL PASS" if not fails else f"{len(fails)} FAIL: {fails}")

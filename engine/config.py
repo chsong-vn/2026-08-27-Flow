@@ -69,6 +69,8 @@ class SystemConfig:
         #   SystemConfig 는 핫리로드 시 재생성되므로 인스턴스 캐시가 자동 무효화됨.
         self._usb_match_cache: Dict[Any, Any] = {}
         self._usb_class_cache: Dict[str, str] = {}
+        # 신원확인(probe)으로 점유된 포트 — static 폴백의 도용 방지 (부팅 1회 스캔)
+        self._claimed_ports: set = set()
 
         # Safety/runtime attributes consumed by other modules
         self.max_temp = 120.0
@@ -188,12 +190,31 @@ class SystemConfig:
             if auto_port:
                 result["port"] = auto_port
                 result["_auto_matched"] = True
+                self._claimed_ports.add(auto_port)   # 신원확인(probe) 점유 등록
                 print(f"[Config] Auto matched {result.get('name', dev_id)} -> {auto_port}")
+                return result
             else:
                 result["_auto_matched"] = False
                 fallback = result.get("port")
                 if fallback and fallback != "Mock_Port":
                     print(f"[Config] Auto match failed, fallback port used: {fallback}")
+
+        # @codesyncer-decision(2026-08-12, 포트 도용 방지): static 폴백(신원 미확인)이
+        #   '다른 장치가 probe 로 신원확인해 점유한' 포트를 훔치지 못하게 막는다.
+        #   증상: COM 재넘버링으로 Chemyx 버스가 COM9 로 이동 → Chemyx 는 probe 로
+        #   COM9 정확 매칭했는데, Runze 가 낡은 static COM9 로 폴백해 셀렉터가 먼저
+        #   COM9 를 열어 점유 → Chemyx 가 PermissionError. static 은 '자기 신원이
+        #   확인 안 된' 번호이므로, 이미 신원확인된 포트면 그 장치는 '미연결'로 보고
+        #   Mock 처리한다(present 장치의 포트를 지켜준다). 사용자 지적: "runze 는 자기
+        #   아이디도 아닌데 왜 매칭해?" = 정확히 이 도용을 막자는 것.
+        final_port = result.get("port")
+        if (final_port and final_port != "Mock_Port"
+                and not result.get("_auto_matched")
+                and final_port in self._claimed_ports):
+            print(f"[Config] ⚠ {result.get('name', dev_id)}: static 포트 {final_port} 는 "
+                  f"이미 다른 장치가 신원확인(probe)으로 점유 — 도용 방지 위해 미연결(Mock) 처리")
+            result["port"] = "COM_Mock"
+            result["_port_conflict"] = True
 
         return result
 
