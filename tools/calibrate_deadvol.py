@@ -41,7 +41,7 @@ import time
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 if hasattr(sys.stdout, "reconfigure"):
-    sys.stdout.reconfigure(encoding="utf-8")
+    sys.stdout.reconfigure(encoding="utf-8", line_buffering=True)
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
@@ -69,6 +69,46 @@ def segments_from_marks(marks):
 def breakthrough_volume(rate_ml_min, t_start, t_detect):
     """가스→액체 전이 시각에서 주입점→센서 데드볼륨(mL)."""
     return volume_ml(rate_ml_min, max(0.0, t_detect - t_start))
+
+
+def push_bounded(rate, target_ml, pump=None, sim=None, writer=None,
+                 read_phase=None, t0_ref=None):
+    """정확히 target_ml 만큼 정속 주입 후 정지 (동기 — 밀고 멈춤). 반환 실제 주입량.
+
+    마지막 스텝은 남은 부피의 소요시간만큼만 sleep 해 목표에 근접 착지(과주입 최소).
+    개루프라 목표 초과는 poll 한 틱 이내로 억제된다."""
+    target_ml = float(target_ml)
+    if target_ml <= 0:
+        return 0.0
+    if pump is not None:
+        pump.set_flow(rate)
+        pump.start()
+    injected = 0.0
+    last = time.monotonic()
+    t0 = t0_ref if t0_ref is not None else last
+    try:
+        while injected < target_ml - 1e-9:
+            rem_s = (target_ml - injected) / max(rate, 1e-6) * 60.0
+            time.sleep(min(0.05, max(0.0, rem_s)))
+            now = time.monotonic()
+            dv = volume_ml(rate, now - last)
+            last = now
+            injected += dv
+            if sim is not None:
+                sim.add_pump(dv)
+            if writer is not None:
+                try:
+                    writer.writerow([round(now - t0, 3), round(injected, 5), "push",
+                                     (read_phase() if read_phase else "?")])
+                except Exception:
+                    pass
+    finally:
+        if pump is not None:
+            try:
+                pump.stop()
+            except Exception:
+                pass
+    return injected
 
 
 # ══════════════════════════════════════════════════════════════════════
@@ -263,10 +303,80 @@ def run_blowout(mfc, read_phase, sccm, max_s, stable_s=3.0, sim=None, poll=0.2,
                     pass
 
 
+def _manual_and_blow(mfc, read_phase, blow_cfg, sim, read_input, manual_clear):
+    """세그먼트 확정 후: 수동 데드레그 배출(손) → N2 blow-out. 다음 세그먼트 준비."""
+    if manual_clear:
+        read_input("  N2 로 못 미는 부분(데드레그)을 손으로 비우고 ENTER ... ")
+    print("  N2 blow-out ...")
+    ok, dur = run_blowout(mfc, read_phase, blow_cfg.get("sccm", 20.0),
+                          blow_cfg.get("max_s", 90.0), stable_s=blow_cfg.get("stable_s", 3.0),
+                          sim=sim, sim_purge_rate=blow_cfg.get("sim_rate"))
+    print(f"  {'✓ GAS 안정(완전 배출)' if ok else '✗ 미완 — 잔존 확인'} ({dur:.1f}s)")
+    return ok
+
+
+def run_segment_calibration(rate, segments, estimates, pump, sim, mfc, read_phase,
+                            writer, blow_cfg, read_input=input, manual_clear=True):
+    """배관 구간별 반복 캘리브 — 사용자 워크플로우:
+      밀고(목표 부피) → 눈으로 확인 → +넉지로 끝점에 수렴 → 확정 →
+      손으로 데드레그 배출 → N2 블로우 → 다음 구간.
+
+    유체는 앞으로만 가므로: 미달이면 +로 조금씩 더 밀어 '딱 도달'을 찾고,
+    과주입이면 x → 블로우 후 더 작은 추정으로 재시작. 반환 {label: 확정 mL}.
+    """
+    results = {}
+    t0 = time.monotonic()
+    for lab in segments:
+        est = float(estimates.get(lab, 0.1))
+        print(f"\n=== [{lab}] 시작 추정 {est:.4f} mL ({rate} mL/min 정속) ===")
+        cum = push_bounded(rate, est, pump, sim, writer, read_phase, t0)
+        print(f"  주입 {cum:.4f} mL — 유체 선단이 '{lab}' 끝점에 도달했는지 확인.")
+        done = False
+        while True:
+            ans = read_input(
+                f"  [{lab}] o=딱도달(확정) / +<mL>=조금더 / x=과주입(블로우후재시작) "
+                f"/ s=스킵 : ").strip().lower()
+            if ans == "o":
+                results[lab] = cum
+                print(f"  ✔ {lab} 실측 데드볼륨 = {cum:.4f} mL")
+                done = True
+                break
+            elif ans == "s":
+                print(f"  – {lab} 스킵")
+                break
+            elif ans == "x":
+                _manual_and_blow(mfc, read_phase, blow_cfg, sim, read_input, manual_clear)
+                nw = read_input(f"    재시작 추정 mL (직전 {cum:.4f} 보다 작게) : ").strip()
+                try:
+                    est2 = float(nw)
+                except Exception:
+                    est2 = cum * 0.7
+                cum = push_bounded(rate, est2, pump, sim, writer, read_phase, t0)
+                print(f"  재주입 {cum:.4f} mL.")
+            elif ans.startswith("+"):
+                try:
+                    add = float(ans[1:])
+                except Exception:
+                    print("    형식: +0.02")
+                    continue
+                dv = push_bounded(rate, add, pump, sim, writer, read_phase, t0)
+                cum += dv
+                print(f"  누적 {cum:.4f} mL.")
+            else:
+                print("    입력: o / +<mL> / x / s")
+        # 확정/스킵 뒤 다음 구간 위해 수동배출 + N2 블로우
+        if done or ans == "s":
+            _manual_and_blow(mfc, read_phase, blow_cfg, sim, read_input, manual_clear)
+    return results
+
+
 # ══════════════════════════════════════════════════════════════════════
 # 자체검증 (--sim) — 순수계산 + 각 모드가 참값을 회복하는지
 # ══════════════════════════════════════════════════════════════════════
 def self_test():
+    # 실시간 sleep 누적을 줄이려 sim 은 고유량(짧은 실측시간)으로 — 정확도는
+    # poll×rate/60 오차로 결정되므로 유량↑ 시 tolerance 도 함께 완화.
+    RATE = 12.0   # mL/min (12/60=0.2 mL/s → 0.2 mL 를 ~1s 에 도달)
     fails = []
 
     def ck(name, cond, detail=""):
@@ -280,18 +390,18 @@ def self_test():
     ck("marks 차분 B=0.09", abs(segs[1][1] - 0.09) < 1e-9, str(segs))
     ck("marks 차분 C=0.12", abs(segs[2][1] - 0.12) < 1e-9)
 
-    print("[2] breakthrough — 참 데드볼륨 0.20 mL 회복 (0.5mL/min, poll 0.02)")
+    print(f"[2] breakthrough — 참 데드볼륨 0.20 mL 회복 ({RATE}mL/min)")
     sim = _SimRig(true_dv_ml=0.20)
-    inj = Injector(0.5, sim=sim)
+    inj = Injector(RATE, sim=sim)
     dv = run_breakthrough(inj, lambda: sim.read_phase(), timeout_s=60, poll=0.02)
     ck("브레이크스루 감지", dv is not None)
-    # 오차 = poll×rate/60 ≈ 0.02×0.5/60 ≈ 0.00017 mL + 스레드 지연. 여유 0.01 mL.
-    ck("데드볼륨 0.20±0.01 회복", dv is not None and abs(dv - 0.20) < 0.01,
+    # 오차 ≈ Injector 틱(0.05s)×rate/60 = 한 스텝 부피. 여유 0.02 mL.
+    ck("데드볼륨 0.20±0.02 회복", dv is not None and abs(dv - 0.20) < 0.02,
        f"측정 {dv:.4f} mL" if dv else "None")
 
     print("[3] marks — 스크립트 입력으로 3랜드마크 (참 0.09/0.18/0.30 근처)")
     sim3 = _SimRig(true_dv_ml=999)   # 센서 무관, 부피만
-    inj3 = Injector(1.0, sim=sim3)   # 1 mL/min = 0.01667 mL/s
+    inj3 = Injector(RATE, sim=sim3)
     # 가짜 입력: 각 목표 누적부피에 도달하면 ENTER. 부피는 배경스레드가 키우므로
     # 시간으로 근사 대기 후 마크.
     targets = [0.09, 0.18, 0.30]
@@ -318,6 +428,34 @@ def self_test():
                           stable_s=1.0, sim=simB, poll=0.02, sim_purge_rate=0.5)
     ck("blow-out 후 GAS 안정 복귀", ok, f"{dur:.1f}s")
 
+    print("[5] push_bounded — 목표 0.12 mL 딱 밀고 정지 (과주입 억제)")
+    simP = _SimRig(true_dv_ml=999)
+    got = push_bounded(0.6, 0.12, sim=simP)
+    ck("0.12±0.005 착지", abs(got - 0.12) < 0.005, f"{got:.4f} mL")
+
+    print("[6] segment 캘리브 — 참 끝점 0.15 mL 를 +넉지로 수렴 후 확정")
+    simS = _SimRig(true_dv_ml=999, purge_dv_ml=0.02)
+    _SEG_RATE = RATE
+    TRUE_END = 0.15
+
+    def seg_input(prompt):
+        p = str(prompt)
+        if "손으로" in p:            # 수동배출 프롬프트
+            return ""
+        if "재시작 추정" in p:        # 과주입 재시작 추정 입력 프롬프트만 (확인 프롬프트의
+            return "0.05"            #   '블로우후재시작' 문구와 구분)
+        # 확정 프롬프트: 누적(simS._pumped)이 참 끝점 이상이면 'o', 아니면 조금 더
+        if simS._pumped >= TRUE_END - 1e-9:
+            return "o"
+        return "+0.01"
+    res = run_segment_calibration(
+        _SEG_RATE, ["SEG"], {"SEG": 0.10}, None, simS, None,
+        lambda: simS.read_phase(), None,
+        {"sccm": 20, "max_s": 10, "stable_s": 0.5, "sim_rate": 2.0},
+        read_input=seg_input, manual_clear=True)
+    ck("segment 참끝점 0.15±0.02 수렴", abs(res.get("SEG", 0) - TRUE_END) < 0.02,
+       f"확정 {res.get('SEG')} mL")
+
     print("\nRESULT:", "ALL PASS" if not fails else f"{len(fails)} FAIL: {fails}")
     return 1 if fails else 0
 
@@ -329,11 +467,15 @@ def main():
     ap.add_argument("--channel", default="Group A", help="주입 펌프(채널)명")
     ap.add_argument("--source-port", type=int, default=2, help="12-way 소스 포트(염료/용매)")
     ap.add_argument("--rate", type=float, default=0.5, help="주입 유량 mL/min (정속)")
-    ap.add_argument("--mode", choices=["breakthrough", "marks", "blowout"],
-                    default="breakthrough")
+    ap.add_argument("--mode", choices=["segment", "breakthrough", "marks", "blowout"],
+                    default="segment")
     ap.add_argument("--sensor", default="collect", help="OPB 센서 키 (config sensors)")
     ap.add_argument("--labels", default="QUAD1,QUAD2,SENSOR,REACTOR",
-                    help="marks 모드 랜드마크 (콤마 구분)")
+                    help="segment/marks 구간 라벨 (콤마 구분)")
+    ap.add_argument("--estimates", default="",
+                    help="segment 시작 추정 (예: 'QUAD1=0.09,QUAD2=0.045') — 없으면 0.1")
+    ap.add_argument("--no-manual-clear", action="store_true",
+                    help="segment 확정 후 '손으로 데드레그 배출' 프롬프트 생략")
     ap.add_argument("--timeout", type=float, default=300.0, help="breakthrough 타임아웃 s")
     ap.add_argument("--blowout", action="store_true", help="측정 후 N2 blow-out 수행")
     ap.add_argument("--n2-sccm", type=float, default=20.0)
@@ -382,8 +524,31 @@ def main():
             return "?"
 
     inj = Injector(args.rate, pump=pump, writer=w, log_phase=read_phase)
+    blow_cfg = {"sccm": args.n2_sccm, "max_s": args.n2_sec, "stable_s": 3.0}
     try:
-        if args.mode == "breakthrough":
+        if args.mode == "segment":
+            labels = [s.strip() for s in args.labels.split(",") if s.strip()]
+            ests = {}
+            for kv in args.estimates.split(","):
+                if "=" in kv:
+                    k, v = kv.split("=", 1)
+                    try:
+                        ests[k.strip()] = float(v)
+                    except Exception:
+                        pass
+            print(f"  배관 구간별 캘리브 — {labels}")
+            print("  각 구간: 목표까지 밀기 → 눈으로 확인 → +로 미세조정 → o 확정 "
+                  "→ 손으로 데드레그 배출 → N2 블로우 → 다음")
+            res = run_segment_calibration(
+                args.rate, labels, ests, pump, None, mfc, read_phase, w, blow_cfg,
+                manual_clear=not args.no_manual_clear)
+            print("\n  ══ 실측 데드볼륨 요약 ══")
+            for lab in labels:
+                if lab in res:
+                    print(f"    {lab:12s} = {res[lab]:.4f} mL")
+            print("  → 이 값을 tubing_measurements.json 의 해당 tube_vol_* 키에 반영하면"
+                  " 됩니다 (Claude 에게 주면 매핑해 드립니다).")
+        elif args.mode == "breakthrough":
             print("  주입 시작 — 센서 가스→액체 대기...")
             dv = run_breakthrough(inj, read_phase, args.timeout)
             if dv is None:
