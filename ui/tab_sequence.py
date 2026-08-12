@@ -2492,6 +2492,16 @@ class SequenceTab(QWidget):
             #   더블클릭 자체를 UI 레벨에서 차단. QThread.finished 시그널로
             #   완료/abort 어떤 경로로 끝나도 자동 복원.
             self.btn_run.setEnabled(False)
+
+            # @codesyncer(2026-08-12): Pause 버튼 래치 해제 — btn_p 는 checkable 인데
+            #   런 종료 경로가 checked 를 초기화하지 않아, '일시정지 상태로 끝난 런'
+            #   다음에는 첫 Pause 클릭이 해제(else 분기)로 소비돼 **정지되지 않고
+            #   "Running" 이 표시**됐다(두 번 눌러야 멈춤). 엔진은 런 시작 시
+            #   pause_event 를 재장전하므로 버튼도 같은 시점에 정렬한다.
+            btn_p = getattr(self.app, "btn_p", None)
+            if btn_p is not None:
+                btn_p.setChecked(False)
+                btn_p.setText("Pause")
             self.app.worker.finished.connect(self._on_worker_finished)
 
             self.app.worker.start()

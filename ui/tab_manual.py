@@ -159,18 +159,12 @@ class ManualTab(QWidget):
                 lay.addWidget(ar)
         lay.addStretch()
 
-        # ── 전역 E-STOP (감사 2026-07-13): 계측 SW 필수 관례 — 상시 노출 비상정지.
-        #   전 펌프(그룹/수동/푸시) 정지 + N2 0 + Outlet→WASTE + 시퀀스 abort.
-        #   비상정지는 확인창 금지(즉시), 시리얼 일괄 호출은 데몬 스레드(GUI 무블록).
-        #   채널별 STOP(적색 아웃라인)과 구분되는 '채움 적색' = HMI E-stop 관례.
-        self.btn_estop = QPushButton("E-STOP")
-        self.btn_estop.setMinimumHeight(40)
-        self.btn_estop.setMinimumWidth(104)
-        self.btn_estop.setCursor(Qt.PointingHandCursor)
-        self.btn_estop.setToolTip(
-            "비상 정지 — 모든 펌프 정지 · N2 차단 · Outlet→WASTE · 실행 중 시퀀스 중단")
-        self.btn_estop.clicked.connect(self._estop_all)
-        lay.addWidget(self.btn_estop)
+        # @codesyncer-decision(2026-08-12, 사용자 지시): Manual 탭 전역 E-STOP 폐지.
+        #   상단바 Control 카드(main_window_ui: monitor_card)가 4개 페이지 위에
+        #   상시 노출되므로 이 탭의 중복 버튼은 '상시 노출' 근거를 이미 충족했고,
+        #   두 핸들러의 범위가 서로 달라(여기=N2·Outlet / 상단바=히터·분취기)
+        #   어느 쪽을 눌러도 안전상태가 되지 않는 결함이었다. 범위는 전부
+        #   `core/app_control.RunControlMixin.estop` 으로 이관됨(N2 차단 포함).
 
         # 초기값
         self._fs_set("feed", f"{num_pumps} PUMPS")
@@ -185,82 +179,6 @@ class ManualTab(QWidget):
         self._fs_timer.start(1500)
 
         return self._fs_frame
-
-    def _estop_all(self):
-        """전역 비상정지 — 확인창 없이 즉시, 장비 일괄 안전상태로.
-
-        범위: 그룹/수동/푸시 펌프 stop · MFC 0 sccm · 샘플러 emergency_stop ·
-        Outlet→WASTE(1) · 엔진 abort_flag(실행 중 시퀀스 중단). 장비별 예외 격리."""
-        app = self.app
-
-        def _run():
-            # Deep Wash 실행 중이면 함께 중단 (E-Stop 범위에 포함)
-            try:
-                eng = getattr(self, "_dw_engine", None)
-                if eng is not None and eng.running:
-                    eng.stop()
-            except Exception:
-                pass
-            try:
-                if getattr(app, "engine", None) is not None:
-                    app.engine.abort_flag = True
-                    # @codesyncer(검증 2026-08-12): pause_event.set() 누락 보완 —
-                    #   일시정지 중 E-STOP 이면 엔진이 pause_event.wait() 에 영원히
-                    #   블록되어 cleanup(히터 OFF 포함)에 도달하지 못했다.
-                    #   app_control.estop 과 동일 규약으로 정렬.
-                    if hasattr(app.engine, "pause_event"):
-                        app.engine.pause_event.set()
-            except Exception:
-                pass
-            for p in (getattr(app, "pumps", {}) or {}).values():
-                try:
-                    # @codesyncer(검증 2026-08-12): _abort_refill 누락 보완 — 리필 대기
-                    #   워커가 최대 ~60s 블라인드 슬립 후 다음 런의 도징 펌프에 stop 을
-                    #   쏘는 교차 런 오발사를 즉시 탈출로 차단 (estop 과 동일 규약).
-                    if hasattr(p, "_abort_refill"):
-                        p._abort_refill = True
-                    p.stop()
-                except Exception:
-                    pass
-            for mp in (getattr(app, "manual_pumps", {}) or {}).values():
-                try:
-                    mp.stop()
-                except Exception:
-                    pass
-            pp = getattr(app, "push_pump", None)
-            if pp is not None:
-                try:
-                    pp.stop()
-                except Exception:
-                    pass
-            m = getattr(app, "mfc", None)
-            if m is not None:
-                try:
-                    m.set_flow(0.0)
-                except Exception:
-                    pass
-            for sp in (getattr(app, "samplers", {}) or {}).values():
-                try:
-                    if hasattr(sp, "emergency_stop"):
-                        sp.emergency_stop()
-                    elif hasattr(sp, "stop"):
-                        sp.stop()
-                except Exception:
-                    pass
-            v = (getattr(app, "valves", {}) or {}).get("Outlet")
-            if v is not None:
-                try:
-                    v.set_position(1)
-                except Exception:
-                    pass
-            try:
-                app.signals.sig_log.emit(
-                    "[E-STOP] 비상정지 실행 — 전 펌프 정지 · N2 0 · Outlet WASTE"
-                    + (" · 시퀀스 중단" if getattr(app, "engine", None) else ""))
-            except Exception:
-                pass
-
-        threading.Thread(target=_run, daemon=True).start()
 
     # ── Deep Wash (전 라인 세척) ──────────────────────────────────
     def _deep_wash_targets(self):
@@ -349,15 +267,7 @@ class ManualTab(QWidget):
     def _style_flow_strip(self):
         """노드 카드/아이콘칩/타이틀/셰브론/프레임 팔레트 재적용 (테마 전환 대응)"""
         P = self._pal()
-        if getattr(self, "btn_estop", None) is not None:
-            # 채움 적색 = HMI E-stop 관례 (채널 STOP 아웃라인과 시각 구분)
-            self.btn_estop.setStyleSheet(
-                f"QPushButton {{ background: {P.ACCENT_RED}; color: white; "
-                f"font-weight: {T.FW_BOLD}; font-size: {T.FS_SM}; "
-                f"letter-spacing: 1px; border: none; border-radius: {T.R_MD}; "
-                f"padding: 0 14px; }}"
-                f"QPushButton:hover {{ background: #e5534b; }}"
-                f"QPushButton:pressed {{ background: #b62324; }}")
+        # (2026-08-12) 전역 E-STOP 은 상단바로 단일화 — 이 탭 버튼 스타일링 제거
         self._update_deepwash_btn()
         if getattr(self, "_fs_frame", None):
             self._fs_frame.setStyleSheet(
