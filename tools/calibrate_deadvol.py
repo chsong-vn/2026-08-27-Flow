@@ -316,44 +316,34 @@ def _manual_and_blow(mfc, read_phase, blow_cfg, sim, read_input, manual_clear):
 
 
 def run_segment_calibration(rate, segments, estimates, pump, sim, mfc, read_phase,
-                            writer, blow_cfg, read_input=input, manual_clear=True):
-    """배관 구간별 반복 캘리브 — 사용자 워크플로우:
-      밀고(목표 부피) → 눈으로 확인 → +넉지로 끝점에 수렴 → 확정 →
-      손으로 데드레그 배출 → N2 블로우 → 다음 구간.
+                            writer, blow_cfg, read_input=input, manual_clear=True,
+                            blow_at_end=False):
+    """배관 구간별 캘리브. 반환 {label: 누적 mL}(주입점→그 랜드마크). 구간 부피는
+    호출측이 인접 차분으로 얻는다 — 유체는 펌프 한쪽에서만 들어와 모든 측정이 누적.
 
-    유체는 앞으로만 가므로: 미달이면 +로 조금씩 더 밀어 '딱 도달'을 찾고,
-    과주입이면 x → 블로우 후 더 작은 추정으로 재시작. 반환 {label: 확정 mL}.
+    blow_at_end=False (구간별 검증): 랜드마크마다 확정 후 손배출+N2블로우, 다음
+      랜드마크는 다시 주입점부터(신선한 선단). 과주입=x → 블로우 후 그 랜드마크 재시작.
+    blow_at_end=True (누적 1패스, 권장): 중간 blow 없이 선단을 계속 전진시키며
+      랜드마크마다 확정(총 누적 기록). 끝에서 손배출+N2블로우 1회. 과주입=x →
+      누적이라 전체 패스 재시작(블로우 후 처음부터). 낭비 없이 빠름.
     """
-    results = {}
     t0 = time.monotonic()
-    for lab in segments:
-        est = float(estimates.get(lab, 0.1))
-        print(f"\n=== [{lab}] 시작 추정 {est:.4f} mL ({rate} mL/min 정속) ===")
-        cum = push_bounded(rate, est, pump, sim, writer, read_phase, t0)
-        print(f"  주입 {cum:.4f} mL — 유체 선단이 '{lab}' 끝점에 도달했는지 확인.")
-        done = False
+
+    def confirm_loop(lab, cum, is_cumulative):
+        """한 랜드마크 확인 루프. 반환 (action, cum). action∈{'ok','skip','restart'}."""
         while True:
             ans = read_input(
-                f"  [{lab}] o=딱도달(확정) / +<mL>=조금더 / x=과주입(블로우후재시작) "
+                f"  [{lab}] o=딱도달(확정) / +<mL>=조금더 / "
+                f"x=과주입({'전체재시작' if is_cumulative else '블로우후재시작'}) "
                 f"/ s=스킵 : ").strip().lower()
             if ans == "o":
-                results[lab] = cum
-                print(f"  ✔ {lab} 실측 데드볼륨 = {cum:.4f} mL")
-                done = True
-                break
-            elif ans == "s":
+                return "ok", cum
+            if ans == "s":
                 print(f"  – {lab} 스킵")
-                break
-            elif ans == "x":
-                _manual_and_blow(mfc, read_phase, blow_cfg, sim, read_input, manual_clear)
-                nw = read_input(f"    재시작 추정 mL (직전 {cum:.4f} 보다 작게) : ").strip()
-                try:
-                    est2 = float(nw)
-                except Exception:
-                    est2 = cum * 0.7
-                cum = push_bounded(rate, est2, pump, sim, writer, read_phase, t0)
-                print(f"  재주입 {cum:.4f} mL.")
-            elif ans.startswith("+"):
+                return "skip", cum
+            if ans == "x":
+                return "restart", cum
+            if ans.startswith("+"):
                 try:
                     add = float(ans[1:])
                 except Exception:
@@ -364,9 +354,60 @@ def run_segment_calibration(rate, segments, estimates, pump, sim, mfc, read_phas
                 print(f"  누적 {cum:.4f} mL.")
             else:
                 print("    입력: o / +<mL> / x / s")
-        # 확정/스킵 뒤 다음 구간 위해 수동배출 + N2 블로우
-        if done or ans == "s":
+
+    # ── 누적 1패스 (blow_at_end=True) ─────────────────────────────
+    if blow_at_end:
+        while True:   # 과주입 시 전체 패스 재시작
+            results, total, restart = {}, 0.0, False
+            print("\n  [누적 모드] 중간 blow 없이 선단을 계속 전진 — 랜드마크마다 확정.")
+            for lab in segments:
+                inc = float(estimates.get(lab, 0.1))
+                pushed = push_bounded(rate, inc, pump, sim, writer, read_phase, t0)
+                total += pushed
+                print(f"\n=== [{lab}] +{pushed:.4f} → 누적 {total:.4f} mL. "
+                      f"선단이 '{lab}' 끝점 도달했는지 확인.")
+                act, total = confirm_loop(lab, total, is_cumulative=True)
+                if act == "restart":
+                    print("  ⚠ 누적 모드 과주입 — 전체 배출 후 처음부터 다시.")
+                    restart = True
+                    break
+                if act == "ok":
+                    results[lab] = total
+                    print(f"  ✔ {lab} 누적 = {total:.4f} mL")
+            if restart:
+                _manual_and_blow(mfc, read_phase, blow_cfg, sim, read_input, manual_clear)
+                continue
+            break
+        print("\n  ── 패스 완료 — 최종 배출 ──")
+        _manual_and_blow(mfc, read_phase, blow_cfg, sim, read_input, manual_clear)
+        return results
+
+    # ── 구간별 검증 (blow_at_end=False) — 랜드마크마다 blow ──────────
+    results = {}
+    for lab in segments:
+        est = float(estimates.get(lab, 0.1))
+        print(f"\n=== [{lab}] 시작 추정 {est:.4f} mL ({rate} mL/min 정속) ===")
+        cum = push_bounded(rate, est, pump, sim, writer, read_phase, t0)
+        print(f"  주입 {cum:.4f} mL — 유체 선단이 '{lab}' 끝점에 도달했는지 확인.")
+        while True:
+            act, cum = confirm_loop(lab, cum, is_cumulative=False)
+            if act == "ok":
+                results[lab] = cum
+                print(f"  ✔ {lab} 누적 = {cum:.4f} mL")
+                break
+            if act == "skip":
+                break
+            # restart: 블로우 후 더 작은 추정으로 이 랜드마크 재시작
             _manual_and_blow(mfc, read_phase, blow_cfg, sim, read_input, manual_clear)
+            nw = read_input(f"    재시작 추정 mL (직전 {cum:.4f} 보다 작게) : ").strip()
+            try:
+                est2 = float(nw)
+            except Exception:
+                est2 = cum * 0.7
+            cum = push_bounded(rate, est2, pump, sim, writer, read_phase, t0)
+            print(f"  재주입 {cum:.4f} mL.")
+        # 다음 랜드마크 위해 손배출 + N2 블로우
+        _manual_and_blow(mfc, read_phase, blow_cfg, sim, read_input, manual_clear)
     return results
 
 
@@ -456,6 +497,45 @@ def self_test():
     ck("segment 참끝점 0.15±0.02 수렴", abs(res.get("SEG", 0) - TRUE_END) < 0.02,
        f"확정 {res.get('SEG')} mL")
 
+    print("[7] segment blow_at_end — 누적 2랜드마크(참 0.10/0.22), 중간 blow 없음")
+    simE = _SimRig(true_dv_ml=999, purge_dv_ml=0.02)
+    TRUE_CUM = {"L1": 0.10, "L2": 0.22}   # 누적 참값
+    order = ["L1", "L2"]
+    blows = {"n": 0}
+    _orig_blow = globals()["run_blowout"]
+
+    def _counting_blow(*a, **k):
+        blows["n"] += 1
+        return _orig_blow(*a, **k)
+    globals()["run_blowout"] = _counting_blow
+
+    def end_input(prompt):
+        p = str(prompt)
+        if "손으로" in p:
+            return ""
+        # 확정: 현재 누적(simE._pumped)이 '아직 확정 안 된 첫 랜드마크'의 참값 이상이면 o
+        nxt = next((lab for lab in order if lab not in end_input.done), None)
+        if nxt is None:
+            return "o"
+        if simE._pumped >= TRUE_CUM[nxt] - 1e-9:
+            end_input.done.add(nxt)
+            return "o"
+        return "+0.01"
+    end_input.done = set()
+    try:
+        resE = run_segment_calibration(
+            RATE, order, {"L1": 0.08, "L2": 0.10}, None, simE, None,
+            lambda: simE.read_phase(), None,
+            {"sccm": 20, "max_s": 10, "stable_s": 0.5, "sim_rate": 5.0},
+            read_input=end_input, manual_clear=True, blow_at_end=True)
+    finally:
+        globals()["run_blowout"] = _orig_blow
+    ck("L1 누적 0.10±0.02", abs(resE.get("L1", 0) - 0.10) < 0.02, f"{resE.get('L1')}")
+    ck("L2 누적 0.22±0.02", abs(resE.get("L2", 0) - 0.22) < 0.02, f"{resE.get('L2')}")
+    segE = segments_from_marks([(l, resE[l]) for l in order if l in resE])
+    ck("구간 L1→L2 ≈ 0.12", abs(segE[1][1] - 0.12) < 0.03, f"{segE[1][1]:.3f}")
+    ck("중간 blow 없음 — 끝에서 1회만", blows["n"] == 1, f"blow {blows['n']}회")
+
     print("\nRESULT:", "ALL PASS" if not fails else f"{len(fails)} FAIL: {fails}")
     return 1 if fails else 0
 
@@ -476,6 +556,8 @@ def main():
                     help="segment 시작 추정 (예: 'QUAD1=0.09,QUAD2=0.045') — 없으면 0.1")
     ap.add_argument("--no-manual-clear", action="store_true",
                     help="segment 확정 후 '손으로 데드레그 배출' 프롬프트 생략")
+    ap.add_argument("--blow-at-end", action="store_true",
+                    help="segment 모드에서 중간 blow 없이 누적 1패스로 밀고 끝에서만 배출(권장)")
     ap.add_argument("--timeout", type=float, default=300.0, help="breakthrough 타임아웃 s")
     ap.add_argument("--blowout", action="store_true", help="측정 후 N2 blow-out 수행")
     ap.add_argument("--n2-sccm", type=float, default=20.0)
@@ -536,18 +618,22 @@ def main():
                         ests[k.strip()] = float(v)
                     except Exception:
                         pass
-            print(f"  배관 구간별 캘리브 — {labels}")
-            print("  각 구간: 목표까지 밀기 → 눈으로 확인 → +로 미세조정 → o 확정 "
-                  "→ 손으로 데드레그 배출 → N2 블로우 → 다음")
+            print(f"  배관 랜드마크 캘리브 — {labels}")
+            if args.blow_at_end:
+                print("  [누적 1패스] 중간 blow 없이 선단 계속 전진 → 랜드마크마다 확인 "
+                      "→ 끝에서 손배출+N2블로우 1회")
+            else:
+                print("  [구간별 검증] 랜드마크마다: 밀기 → 확인 → 확정 → 손배출 → N2블로우 → 다음")
             res = run_segment_calibration(
                 args.rate, labels, ests, pump, None, mfc, read_phase, w, blow_cfg,
-                manual_clear=not args.no_manual_clear)
-            print("\n  ══ 실측 데드볼륨 요약 ══")
-            for lab in labels:
-                if lab in res:
-                    print(f"    {lab:12s} = {res[lab]:.4f} mL")
-            print("  → 이 값을 tubing_measurements.json 의 해당 tube_vol_* 키에 반영하면"
-                  " 됩니다 (Claude 에게 주면 매핑해 드립니다).")
+                manual_clear=not args.no_manual_clear, blow_at_end=args.blow_at_end)
+            # 기록값 = 주입점→랜드마크 누적. 구간 부피 = 인접 차분.
+            print("\n  ══ 실측 요약 (누적 = 주입점→랜드마크, 구간 = 인접 차분) ══")
+            ordered = [(lab, res[lab]) for lab in labels if lab in res]
+            for lab, seg, cum in segments_from_marks(ordered):
+                print(f"    {lab:16s} 구간 {seg:.4f} mL   (누적 {cum:.4f} mL)")
+            print("  → 구간 부피를 tubing_measurements.json 의 해당 tube_vol_* 키에 반영"
+                  " (Claude 에게 주면 매핑해 드립니다).")
         elif args.mode == "breakthrough":
             print("  주입 시작 — 센서 가스→액체 대기...")
             dv = run_breakthrough(inj, read_phase, args.timeout)
