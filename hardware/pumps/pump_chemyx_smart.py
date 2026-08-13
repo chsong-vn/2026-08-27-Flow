@@ -259,7 +259,9 @@ class ChemyxSmartPump:
 
         try:
             self.set_valves_safe(selector_port=source_port_idx, switcher_pos=self.POS_SOURCE)
-            self.status = f"Withdrawing {fill_vol:.1f}mL @{self.refill_rate:.0f}mL/min (Port {source_port_idx})"
+            # @codesyncer(2026-08-13, 사용자 관측): 유속 표시 :.0f 반올림이 1.7 을
+            #   "2mL/min" 으로 보여 실구동(1.7)과 다르게 읽힘 — 소수 1자리로 통일.
+            self.status = f"Withdrawing {fill_vol:.1f}mL @{self.refill_rate:.1f}mL/min (Port {source_port_idx})"
             with self.lock:
                 self.prepare_parameters(self.refill_rate, -fill_vol, "Refill")
             return True
@@ -341,7 +343,7 @@ class ChemyxSmartPump:
             # (다운스트림은 prime_prepare가 POS_REACTOR로 따로 채움)
             self.status = f"Wash: Valve → Waste (Port {waste_port})"
             self.set_valves_safe(selector_port=waste_port, switcher_pos=self.POS_SOURCE)
-            self.status = f"Wash: Infusing {actual_vol:.1f}mL → Waste @{self.wash_speed:.0f}mL/min"
+            self.status = f"Wash: Infusing {actual_vol:.1f}mL → Waste @{self.wash_speed:.1f}mL/min"
             with self.lock:
                 self.prepare_parameters(self.wash_speed, actual_vol, "Wash-Infuse")
             return True
@@ -408,7 +410,7 @@ class ChemyxSmartPump:
         try:
             self.status = f"Wash: Valve → Solvent (Port {solvent_port})"
             self.set_valves_safe(selector_port=solvent_port, switcher_pos=self.POS_SOURCE)
-            self.status = f"Wash: Withdrawing {actual_vol:.1f}mL @{self.wash_speed:.0f}mL/min (Port {solvent_port})"
+            self.status = f"Wash: Withdrawing {actual_vol:.1f}mL @{self.wash_speed:.1f}mL/min (Port {solvent_port})"
             with self.lock:
                 self.prepare_parameters(self.wash_speed, -actual_vol, "Wash-Withdraw")
             return True
@@ -492,7 +494,7 @@ class ChemyxSmartPump:
 
         try:
             self.set_valves_safe(switcher_pos=self.POS_REACTOR)
-            self.status = f"Prime: Infusing {prime_vol:.1f}mL → Reactor @{self.prime_rate:.0f}mL/min"
+            self.status = f"Prime: Infusing {prime_vol:.1f}mL → Reactor @{self.prime_rate:.1f}mL/min"
             with self.lock:
                 self.prepare_parameters(self.prime_rate, prime_vol, "Prime")
             return True

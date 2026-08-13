@@ -182,7 +182,7 @@
         {
             "id": "dev_6bc9c51a",
             "name": "펌프_17",
-            "driver": "질소 MFC (Modbus)",
+            "driver": "시린지 펌프 (NRG)",
             "port": "Mock_Port"
         },
         {
@@ -214,8 +214,6 @@
                     "capacity": 6.0,
                     "tube_len": 0.0,
                     "tube_id": 0.0,
-                    "refill_rate": 12.0,
-                    "prime_rate": 8.0,
                     "wash_speed": 5.0,
                     "wash_count": 1,
                     "wash_volume": 3.0,
@@ -262,7 +260,7 @@
             }
         ],
         "heater": {
-            "driver_id": "dev_6b175206"
+            "driver_id": null
         },
         "outlet": {
             "driver_id": "dev_esp32v_5"
@@ -284,9 +282,9 @@
         }
     },
     "system_params": {
-        "reactor_len_m": 3.056,
+        "reactor_len_m": 3.06,
         "reactor_id_mm": 1.0,
-        "post_reactor_vol_ml": 0.2066,
+        "post_reactor_vol_ml": 0.21,
         "collection_line_vol_ml": 0.25,
         "mixing_line_id_mm": 1.5,
         "mixing_line_len_cm": 5.4,
