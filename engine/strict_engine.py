@@ -1639,7 +1639,6 @@ class StrictSequenceEngine(FlowEngine):
                 _start_well = self.collector.get_well_id(self.current_tube) if hasattr(self.collector, 'get_well_id') else f"Tube {self.current_tube}"
                 self._log(f"Collector homing started (parallel) -> {_start_well}")
 
-            initial_refill_done = False
             prev_inlet_ports = None
 
             for idx, exp in enumerate(sequence_plan):
@@ -1815,11 +1814,14 @@ class StrictSequenceEngine(FlowEngine):
                             )
                     time.sleep(1.0)
 
-                # Step 1.5: initial refill once after first heating
-                if not initial_refill_done:
-                    self._emit_status(f"Step {exp_id}/{total_steps}: initial refill")
-                    self._initial_refill(flows)
-                    initial_refill_done = True
+                # @codesyncer-decision(2026-08-13, 사용자 워크플로 개편): Step 1.5
+                #   '초기 리필' 삭제 — 구 토폴로지(푸시펌프 없음)에서 Phase-0 프라임용
+                #   세척액 3mL 를 미리 받아두던 단계. 신 배관(Solvent→QUAD-1)에선
+                #   하류 충전은 푸시가 전담하고, 시약펌프 자기 분기는 프리필 Phase-0 가
+                #   '딱 데드볼륨만' 즉석 정량 리필→전량 push 로 채운다(여유분 금지 —
+                #   사용자 확정). 리필→세척 순서가 만들던 시린지 피크 6mL(실물 5mL
+                #   초과 위험)도 함께 제거. 이제 첫 액체 단계 = 시스템 세척(빈 시린지
+                #   가정 성립). 구 동작은 git 이력의 _initial_refill 호출 참조.
 
                 # Step 2: wash
                 if self._should_run_mode(self.wash_mode, idx, ports_changed):
@@ -2383,6 +2385,8 @@ class StrictSequenceEngine(FlowEngine):
             raise
 
     def _initial_refill(self, flows: Dict[str, float]):
+        # ⚠ 미사용(2026-08-13 워크플로 개편) — 시퀀스 Step 1.5 호출 삭제됨.
+        #   Phase-0 정량 리필(_smart_prefill_logic)이 역할을 대체. 레거시 복원용 보존.
         # @codesyncer-decision: prepare(셋업) → trigger(start) → 병렬 대기
         # - Phase 1a: 각 펌프에 순차적으로 밸브+stop+rate+vol 전송 (기계 미동작, 격차 무관)
         # - Phase 1b: START만 연속 전송 (~0.1s/pump, A-C 격차 ≤ 0.3s)
@@ -3553,18 +3557,41 @@ class StrictSequenceEngine(FlowEngine):
             self._log("Pre-fill skipped: no syringe pumps")
             return
 
-        # Phase 0: prime reactor with residual syringe contents
-        # @codesyncer-decision: prepare → trigger 분리 — 펌프 간 시작 격차 최소화
-        # @codesyncer-decision: 1-소스 라우팅은 Phase 0 스킵 — Chemyx 에선 '용매 잔량
-        #   플러시'지만 1-소스에선 순수 시약을 waste 로 방출하는 동작이 됨. 잔류물은
-        #   NRG 어댑터 refill 이 펌웨어 실측 부피 기준으로 흡수(과충전 방지)한다.
-        self._emit_status("Pre-fill phase 0: prime reactor")
+        # Phase 0: 자기 분기 '딱 데드볼륨' 정량 프라임 (2026-08-13 재설계)
+        # @codesyncer-decision(사용자 확정): 포트1 세척액을 자기 분기 데드볼륨
+        #   (3way 내부 + pump_merge)만큼 '정확히' 리필한 뒤 전량 push — 용매 선단이
+        #   QUAD 진입점에 딱 착지하고 시린지 잔량 0(시약과 혼합 없음). 여유분 금지
+        #   (하류 공용부 침범 = 회계 불일치). 하류(QUAD 이후)는 푸시펌프 전담.
+        #   전제: 직전 시스템 세척이 시린지를 비움(세척 배출=전량 배출). 잔량이
+        #   남아 있으면 부족분만 채우고, 데드볼륨 미설정(0)이면 스킵.
+        # @codesyncer-decision: 1-소스 라우팅은 Phase 0 스킵 — Chemyx 에선 '용매
+        #   플러시'지만 1-소스에선 순수 시약을 waste 로 방출하는 동작이 됨.
+        self._emit_status("Pre-fill phase 0: prime own branch (exact dead volume)")
         prime_started = []
         for p_name in smart_names:
             pump = self.pumps[p_name]
             if self._pump_routing(p_name) != "external_valve":
                 continue
-            if float(getattr(pump, "current_vol", 0.0)) > 0.1 and hasattr(pump, "prime_prepare"):
+            line_inj = (float((getattr(self.cfg, "valve_internal_vol", {}) or {})
+                              .get(p_name, 0.0) or 0.0)
+                        + float((getattr(self.cfg, "line_vol_pump_merge", {}) or {})
+                                .get(p_name, 0.0) or 0.0))
+            if line_inj <= 0:
+                self._log(f"  [{p_name}] Phase-0 스킵 — 분기 데드볼륨 미설정(0). "
+                          f"배관도 칩/원장으로 tube_vol_switcher·pump_merge 입력 필요")
+                continue
+            cur = float(getattr(pump, "current_vol", 0.0) or 0.0)
+            need = max(0.0, line_inj - cur)
+            if cur > line_inj + 0.02:
+                self._log(f"  [{p_name}] ⚠ Phase-0: 잔량 {cur:.3f} > 분기 데드볼륨 "
+                          f"{line_inj:.3f} — 전량 push 로 과량 진입(세척 배출 확인 필요)")
+            if need > 0.005 and hasattr(pump, "refill"):
+                self._wait_pause_or_abort("prefill prime refill")
+                self._log(f"  [{p_name}] Phase-0 정량 리필 {need:.3f}mL "
+                          f"(분기 데드볼륨 {line_inj:.3f})")
+                pump.refill(1, volume=need)
+            if (float(getattr(pump, "current_vol", 0.0) or 0.0) > 0.005
+                    and hasattr(pump, "prime_prepare")):
                 self._wait_pause_or_abort("prefill prime")
                 if pump.prime_prepare():
                     prime_started.append(p_name)

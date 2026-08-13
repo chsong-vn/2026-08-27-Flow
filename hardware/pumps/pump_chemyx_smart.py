@@ -329,7 +329,17 @@ class ChemyxSmartPump:
         self.is_refilling = True
         self._abort_refill = False
 
-        actual_vol = min(self.wash_volume, self.capacity)
+        # @codesyncer(2026-08-13, 워크플로 개편): 배출량 = '시린지 잔량 전량' —
+        #   세척 종료 시 빈 시린지를 보장한다(프리필 Phase-0 정량 리필의 전제).
+        #   구현이 wash_volume 고정이던 시절엔 잔량<고정량이면 과배출 명령,
+        #   잔량>고정량이면 잔재가 남았음. (엔진의 시약 잔량 폐액 배출 경로도
+        #   전량 배출이 정합.)
+        actual_vol = min(max(float(self.current_vol), 0.0), self.capacity)
+        if actual_vol < 0.05:
+            print(f"   [{self.name}] Wash-Infuse 스킵 — 배출할 잔량 없음 "
+                  f"({self.current_vol:.2f}mL)")
+            self.is_refilling = False
+            return False
         self._pending_wash_vol = actual_vol
 
         duration_calc = (actual_vol / self.wash_speed) * 60.0
@@ -404,7 +414,18 @@ class ChemyxSmartPump:
         # @codesyncer-decision: 교정된 순서(withdraw 먼저)에서 _pending_wash_vol을
         # 여기서 설정해야 함. 기존엔 infuse_prepare에서만 설정 → withdraw가 먼저
         # 실행되면 0으로 읽혀 흡입량이 0이 되던 결함.
-        actual_vol = min(self.wash_volume, self.capacity)
+        # @codesyncer(2026-08-13): 잔량 클램프 — '빈 시린지 가정'이 깨져 있어도
+        #   용량 초과 흡입(실물 5mL 시린지 오버트래블)을 차단한다.
+        _avail = max(0.0, float(self.capacity) - float(self.current_vol))
+        actual_vol = min(self.wash_volume, _avail)
+        if actual_vol < self.wash_volume - 1e-9:
+            print(f"   [{self.name}] ⚠ Wash 흡입 {actual_vol:.2f}mL 로 제한 — "
+                  f"잔량 {self.current_vol:.2f} + 요청 {self.wash_volume:.2f} > "
+                  f"용량 {self.capacity:.1f}")
+        if actual_vol < 0.05:
+            print(f"   [{self.name}] Wash-Withdraw 스킵 — 가용 공간 없음")
+            self.is_refilling = False
+            return False
         self._pending_wash_vol = actual_vol
 
         try:
