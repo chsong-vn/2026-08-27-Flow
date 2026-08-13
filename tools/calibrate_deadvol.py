@@ -23,10 +23,20 @@
 
 실행:
   py -3.14 tools/calibrate_deadvol.py --sim                 # 무하드웨어 자체검증(+회귀)
+  py -3.14 tools/calibrate_deadvol.py --channel "Group A" --prime-cycles 2 \
+        --blow-at-end                                       # 첫 측정: 프라임+자동충전+누적1패스
+  py -3.14 tools/calibrate_deadvol.py --channel "Group_B" --blow-at-end
   py -3.14 tools/calibrate_deadvol.py --channel "Group A" --source-port 2 \
         --rate 0.5 --mode breakthrough --sensor collect --blowout
   py -3.14 tools/calibrate_deadvol.py --channel "Group A" --source-port 2 \
         --rate 0.3 --mode marks --labels "QUAD1,QUAD2,SENSOR,REACTOR"
+
+시린지 준비 (segment 모드 — 기존 운전 로직 재사용, 2026-08-13):
+  WITHDRAW 충전은 ChemyxSmartPump.refill() 그대로 — 12way→소스포트+3way→SOURCE 로
+  흡인 후 3way→REACTOR 복원. --prime-cycles N 은 [withdraw→포트12 배출] 사이클로
+  소스라인(~1.98mL)의 가스/구용액 제거(측정 0점 전제 = 시린지·커먼라인 기포 없는
+  측정액). --charge auto 는 추정합×2+0.5 충전, 잔량 추적·소진 경고, 측정 중 'r' 로
+  재충전(3-way 격리라 선단·누적 불변). 시작 시 플런저 '빈' 상태 확인 후 0점.
 
 산출: logs/DEADVOL_<타임스탬프>.csv (연속 로그) + 콘솔 리포트(구간별 mL + config 대조).
 안전: 조회/정속주입만. 실측 전 라인을 N2 로 퍼지(가스 충전)해 두어야 브레이크스루가
@@ -315,9 +325,75 @@ def _manual_and_blow(mfc, read_phase, blow_cfg, sim, read_input, manual_clear):
     return ok
 
 
+def charge_syringe(pump, source_port, vol_ml, read_input=input):
+    """시린지 충전(WITHDRAW) — 엔진과 동일한 운전 로직(ChemyxSmartPump.refill 재사용):
+    12-way→소스포트 + 3-way→SOURCE 정렬 → refill_rate 로 withdraw → 완료 대기 →
+    3-way→REACTOR 복원까지 refill() 이 전부 수행. 반환 실제 충전량(mL)."""
+    vol_ml = float(vol_ml)
+    if vol_ml <= 0:
+        return 0.0
+    if pump is None:                                   # sim
+        return vol_ml
+    if hasattr(pump, "refill"):
+        cap = float(getattr(pump, "capacity", 6.0) or 6.0)
+        cur = float(getattr(pump, "current_vol", 0.0) or 0.0)
+        vol_ml = min(vol_ml, max(0.0, cap - cur))
+        if vol_ml <= 0:
+            print(f"  ⚠ 충전 불가 — current_vol {cur:.2f}/{cap:.1f} mL (여유 없음)")
+            return 0.0
+        pump.refill(source_port_idx=int(source_port), volume=vol_ml)
+        return vol_ml
+    print("  ⚠ 스마트펌프 아님 — 수동 충전: 3-way→SOURCE, withdraw, 3-way→REACTOR")
+    read_input(f"  {vol_ml:.2f} mL 수동 충전 완료 후 ENTER ... ")
+    return vol_ml
+
+
+def expel_to_waste(pump, vol_ml, rate, waste_port=12, writer=None, read_phase=None):
+    """시린지 내용물(기포 섞인 프라임분)을 12-way 폐기 포트로 INFUSE 배출 —
+    엔진 Wash-Infuse 와 동일 경로(3-way→SOURCE + 포트12). 반환 배출량."""
+    if pump is None:
+        return float(vol_ml)
+    if hasattr(pump, "set_valves_safe"):
+        pump.set_valves_safe(selector_port=int(waste_port),
+                             switcher_pos=int(getattr(pump, "POS_SOURCE", 1)))
+    out = push_bounded(rate, vol_ml, pump, None, writer, read_phase)
+    if hasattr(pump, "current_vol"):
+        pump.current_vol = max(0.0, float(pump.current_vol) - out)
+    return out
+
+
+def prime_source_line(pump, source_port, prime_ml, cycles, expel_rate,
+                      writer=None, read_phase=None):
+    """첫 사용 프라임: 소스라인(inlet+12way+12way→3way→시린지 ≈ 1.98 mL)의 가스/
+    구용액을 [withdraw(소스) → 포트12 배출] 사이클로 제거 — 시린지·커먼라인이 기포
+    없는 측정액으로 차야 개루프 0점이 성립한다. 마지막 사이클 후 시린지는 빈 상태."""
+    for i in range(int(cycles)):
+        print(f"  ── 프라임 {i + 1}/{cycles}: withdraw {prime_ml:.2f} mL → 포트12 배출 ──")
+        got = charge_syringe(pump, source_port, prime_ml)
+        expel_to_waste(pump, got, expel_rate, writer=writer, read_phase=read_phase)
+
+
+def _default_estimates(cfg, channel, labels):
+    """config 기반 시작 추정 = 기대값의 90% — 일부러 모자라게 도착시켜 '+' 로 수렴
+    (누적 모드 과주입 x=전체 재시작 방지). 기본 라벨(QUAD1/QUAD2/SENSOR/REACTOR) 전용.
+    SENSOR/REACTOR 분할비 0.61/0.39 = 원장 mixing 분할(58.3/37.2 µL) 근사."""
+    try:
+        li = float(getattr(cfg, "line_vol_pump_merge", {}).get(channel, 0.0) or 0.0) \
+            + float(getattr(cfg, "valve_internal_vol", {}).get(channel, 0.0) or 0.0)
+        tj = {int(k): float(v or 0.0) for k, v in
+              (getattr(cfg, "tjunction_line_vols", {}) or {}).items()}
+        mix = float(getattr(cfg, "mixing_line_dead_vol", 0.0) or 0.0)
+        cand = {"QUAD1": li, "QUAD2": tj.get(1, 0.0),
+                "SENSOR": tj.get(2, 0.0) + mix * 0.61, "REACTOR": mix * 0.39}
+        return {lab: round(cand[lab.upper()] * 0.9, 4) for lab in labels
+                if cand.get(lab.upper(), 0.0) > 0}
+    except Exception:
+        return {}
+
+
 def run_segment_calibration(rate, segments, estimates, pump, sim, mfc, read_phase,
                             writer, blow_cfg, read_input=input, manual_clear=True,
-                            blow_at_end=False):
+                            blow_at_end=False, charge_ml=None, recharge=None):
     """배관 구간별 캘리브. 반환 {label: 누적 mL}(주입점→그 랜드마크). 구간 부피는
     호출측이 인접 차분으로 얻는다 — 유체는 펌프 한쪽에서만 들어와 모든 측정이 누적.
 
@@ -326,14 +402,48 @@ def run_segment_calibration(rate, segments, estimates, pump, sim, mfc, read_phas
     blow_at_end=True (누적 1패스, 권장): 중간 blow 없이 선단을 계속 전진시키며
       랜드마크마다 확정(총 누적 기록). 끝에서 손배출+N2블로우 1회. 과주입=x →
       누적이라 전체 패스 재시작(블로우 후 처음부터). 낭비 없이 빠름.
+    charge_ml: 시린지 최초 충전량 — 지정 시 잔량을 추적해 소진 전에 경고하고,
+      부족하면 요청 밀기량을 잔량으로 클램프한다(과인출 방지 — Chemyx 는 빈
+      시린지에서 infuse 시 조용한 무토출이 될 수 있음).
+    recharge: 호출하면 시린지를 재충전하고 '추가된 mL' 반환하는 콜백('r' 입력).
+      재충전 동안 3-way 가 SOURCE 로 반응기측을 격리하므로 선단(누적 0점)은
+      움직이지 않는다 — 패스 중간 삽입이 안전 (엔진 refill 로직 그대로).
     """
     t0 = time.monotonic()
+    budget = {"rem": (float(charge_ml) if charge_ml is not None else None)}
+
+    def _push(target_ml):
+        """예산 추적 밀기 — 잔량 클램프 + 차감."""
+        target_ml = float(target_ml)
+        if budget["rem"] is not None and target_ml > budget["rem"] + 1e-9:
+            print(f"  ⚠ 시린지 잔량 {budget['rem']:.3f} mL < 요청 {target_ml:.3f} mL — "
+                  + ("'r' 재충전 후 계속하세요" if recharge is not None else "잔량으로 클램프"))
+            target_ml = max(0.0, budget["rem"])
+        dv = push_bounded(rate, target_ml, pump, sim, writer, read_phase, t0)
+        if budget["rem"] is not None:
+            budget["rem"] = max(0.0, budget["rem"] - dv)
+        return dv
+
+    def _budget_note(next_need):
+        if budget["rem"] is not None and budget["rem"] < float(next_need) * 1.5 + 0.05:
+            print(f"  ⚠ 시린지 잔량 {budget['rem']:.3f} mL (다음 예상 {next_need:.3f}) — "
+                  + ("'r' 재충전 권장" if recharge is not None else "잔량 주의"))
+
+    def _do_recharge():
+        if recharge is None:
+            print("    재충전 수단 없음 (--charge 0 이거나 스마트펌프 아님)")
+            return
+        added = float(recharge() or 0.0)
+        if budget["rem"] is not None:
+            budget["rem"] += added
+            print(f"  ✚ 재충전 +{added:.3f} mL — 잔량 {budget['rem']:.3f} mL "
+                  f"(3-way 격리로 선단·누적 불변)")
 
     def confirm_loop(lab, cum, is_cumulative):
         """한 랜드마크 확인 루프. 반환 (action, cum). action∈{'ok','skip','restart'}."""
         while True:
             ans = read_input(
-                f"  [{lab}] o=딱도달(확정) / +<mL>=조금더 / "
+                f"  [{lab}] o=딱도달(확정) / +<mL>=조금더 / r=시린지 재충전 / "
                 f"x=과주입({'전체재시작' if is_cumulative else '블로우후재시작'}) "
                 f"/ s=스킵 : ").strip().lower()
             if ans == "o":
@@ -343,17 +453,21 @@ def run_segment_calibration(rate, segments, estimates, pump, sim, mfc, read_phas
                 return "skip", cum
             if ans == "x":
                 return "restart", cum
+            if ans == "r":
+                _do_recharge()
+                continue
             if ans.startswith("+"):
                 try:
                     add = float(ans[1:])
                 except Exception:
                     print("    형식: +0.02")
                     continue
-                dv = push_bounded(rate, add, pump, sim, writer, read_phase, t0)
+                dv = _push(add)
                 cum += dv
-                print(f"  누적 {cum:.4f} mL.")
+                print(f"  누적 {cum:.4f} mL." + (
+                    f"  (잔량 {budget['rem']:.3f})" if budget["rem"] is not None else ""))
             else:
-                print("    입력: o / +<mL> / x / s")
+                print("    입력: o / +<mL> / r / x / s")
 
     # ── 누적 1패스 (blow_at_end=True) ─────────────────────────────
     if blow_at_end:
@@ -362,7 +476,8 @@ def run_segment_calibration(rate, segments, estimates, pump, sim, mfc, read_phas
             print("\n  [누적 모드] 중간 blow 없이 선단을 계속 전진 — 랜드마크마다 확정.")
             for lab in segments:
                 inc = float(estimates.get(lab, 0.1))
-                pushed = push_bounded(rate, inc, pump, sim, writer, read_phase, t0)
+                _budget_note(inc)
+                pushed = _push(inc)
                 total += pushed
                 print(f"\n=== [{lab}] +{pushed:.4f} → 누적 {total:.4f} mL. "
                       f"선단이 '{lab}' 끝점 도달했는지 확인.")
@@ -387,7 +502,8 @@ def run_segment_calibration(rate, segments, estimates, pump, sim, mfc, read_phas
     for lab in segments:
         est = float(estimates.get(lab, 0.1))
         print(f"\n=== [{lab}] 시작 추정 {est:.4f} mL ({rate} mL/min 정속) ===")
-        cum = push_bounded(rate, est, pump, sim, writer, read_phase, t0)
+        _budget_note(est)
+        cum = _push(est)
         print(f"  주입 {cum:.4f} mL — 유체 선단이 '{lab}' 끝점에 도달했는지 확인.")
         while True:
             act, cum = confirm_loop(lab, cum, is_cumulative=False)
@@ -404,7 +520,7 @@ def run_segment_calibration(rate, segments, estimates, pump, sim, mfc, read_phas
                 est2 = float(nw)
             except Exception:
                 est2 = cum * 0.7
-            cum = push_bounded(rate, est2, pump, sim, writer, read_phase, t0)
+            cum = _push(est2)
             print(f"  재주입 {cum:.4f} mL.")
         # 다음 랜드마크 위해 손배출 + N2 블로우
         _manual_and_blow(mfc, read_phase, blow_cfg, sim, read_input, manual_clear)
@@ -536,6 +652,39 @@ def self_test():
     ck("구간 L1→L2 ≈ 0.12", abs(segE[1][1] - 0.12) < 0.03, f"{segE[1][1]:.3f}")
     ck("중간 blow 없음 — 끝에서 1회만", blows["n"] == 1, f"blow {blows['n']}회")
 
+    print("[8] 충전 예산 — 잔량 소진 시 클램프 → 'r' 재충전 → 완주 (누적 0점 불변)")
+    simR = _SimRig(true_dv_ml=999, purge_dv_ml=0.02)
+    TRUE_R = 0.15
+    rc = {"n": 0}
+
+    def _recharge():
+        rc["n"] += 1
+        return 0.5          # 시린지 +0.5 mL (선단은 안 움직임 — 3-way 격리 모사: no-op)
+
+    state = {"prev": -1.0, "last": ""}
+
+    def rc_input(prompt):
+        p = str(prompt)
+        if "손으로" in p:
+            return ""
+        if simR._pumped >= TRUE_R - 1e-9:
+            return "o"
+        if state["last"] != "r" and abs(simR._pumped - state["prev"]) < 1e-12:
+            state["last"] = "r"      # 예산 소진 — 밀리지 않음 → 재충전
+            return "r"
+        state["prev"] = simR._pumped
+        state["last"] = "+"
+        return "+0.01"
+    resR = run_segment_calibration(
+        RATE, ["SEG"], {"SEG": 0.10}, None, simR, None,
+        lambda: simR.read_phase(), None,
+        {"sccm": 20, "max_s": 10, "stable_s": 0.5, "sim_rate": 2.0},
+        read_input=rc_input, manual_clear=True, blow_at_end=True,
+        charge_ml=0.12, recharge=_recharge)
+    ck("예산 소진 → 재충전 발생", rc["n"] >= 1, f"재충전 {rc['n']}회")
+    ck("재충전 후 참끝점 0.15±0.02 수렴", abs(resR.get("SEG", 0) - TRUE_R) < 0.02,
+       f"확정 {resR.get('SEG')}")
+
     print("\nRESULT:", "ALL PASS" if not fails else f"{len(fails)} FAIL: {fails}")
     return 1 if fails else 0
 
@@ -558,6 +707,16 @@ def main():
                     help="segment 확정 후 '손으로 데드레그 배출' 프롬프트 생략")
     ap.add_argument("--blow-at-end", action="store_true",
                     help="segment 모드에서 중간 blow 없이 누적 1패스로 밀고 끝에서만 배출(권장)")
+    ap.add_argument("--charge", default="auto",
+                    help="측정 전 시린지 충전량 mL — 엔진 refill 로직으로 withdraw "
+                         "(auto=추정합×2+0.5, 0=충전 생략·수동 준비)")
+    ap.add_argument("--prime-cycles", type=int, default=0,
+                    help="첫 사용 프라임 [withdraw→포트12 배출] 반복 (채널 첫 측정 권장 2 — "
+                         "소스라인 ~1.98mL 의 가스/구용액 제거)")
+    ap.add_argument("--prime-ml", type=float, default=None,
+                    help="프라임 1회 withdraw 량 (기본: config 소스라인 합+0.3)")
+    ap.add_argument("--expel-rate", type=float, default=2.0,
+                    help="프라임 폐기 배출 유량 mL/min")
     ap.add_argument("--timeout", type=float, default=300.0, help="breakthrough 타임아웃 s")
     ap.add_argument("--blowout", action="store_true", help="측정 후 N2 blow-out 수행")
     ap.add_argument("--n2-sccm", type=float, default=20.0)
@@ -618,7 +777,47 @@ def main():
                         ests[k.strip()] = float(v)
                     except Exception:
                         pass
+            if not ests:
+                ests = _default_estimates(cfg, args.channel, labels)
+                if ests:
+                    print(f"  [자동 시작추정 = config 기대값×0.9] {ests}")
             print(f"  배관 랜드마크 캘리브 — {labels}")
+
+            # ── 시린지 충전 오케스트레이션 (기존 운전 로직: refill/wash 경로 재사용) ──
+            need = sum(float(ests.get(lab, 0.1)) for lab in labels)
+            smart = hasattr(pump, "refill") and hasattr(pump, "current_vol")
+            cap = float(getattr(pump, "capacity", 6.0) or 6.0)
+            charge_ml, recharge_cb = None, None
+            if str(args.charge).strip().lower() not in ("0", "0.0", "off", "none"):
+                target = (min(cap * 0.8, max(1.5, 2.0 * need + 0.5))
+                          if str(args.charge).strip().lower() == "auto"
+                          else float(args.charge))
+                print(f"  [충전 계획] 패스 예상 {need:.3f} mL → 충전 {target:.2f} mL "
+                      f"(시린지 용량 {cap:.1f} mL, 측정 중 'r'=재충전)")
+                if smart:
+                    # 개루프 부피 추적 0점 — 플런저 실위치가 진실 (엔진 시퀀스 시작 리셋과 동일 사상)
+                    input("  시린지 플런저가 '빈(최하단)' 상태인지 확인 후 ENTER ... ")
+                    pump.current_vol = 0.0
+                if args.prime_cycles > 0:
+                    pml = args.prime_ml
+                    if pml is None:
+                        pml = (float(getattr(cfg, "line_vol_valve_pump", {}).get(args.channel, 0.0) or 0.0)
+                               + float(getattr(cfg, "selector_internal_vol", {}).get(args.channel, 0.0) or 0.0)
+                               + float(getattr(cfg, "line_vol_inlet", {}).get(args.channel, 0.0) or 0.0)
+                               + 0.3) or 2.3
+                    pml = min(pml, cap * 0.9)
+                    print(f"  [프라임] {args.prime_cycles}회 × {pml:.2f} mL "
+                          f"(withdraw @refill_rate → 포트12 배출 @{args.expel_rate} mL/min)")
+                    prime_source_line(pump, args.source_port, pml, args.prime_cycles,
+                                      args.expel_rate, writer=w, read_phase=read_phase)
+                charge_ml = charge_syringe(pump, args.source_port, target)
+                print(f"  ✚ 충전 완료 {charge_ml:.2f} mL — 3-way=REACTOR (측정 준비)")
+                if smart:
+                    def recharge_cb(_tgt=target):
+                        avail = max(0.0, cap - float(getattr(pump, "current_vol", 0.0) or 0.0))
+                        return charge_syringe(pump, args.source_port, min(_tgt, avail))
+            else:
+                print("  [충전 생략] 시린지에 측정액이 이미 충전·프라임돼 있다고 가정 (수동 준비)")
             if args.blow_at_end:
                 print("  [누적 1패스] 중간 blow 없이 선단 계속 전진 → 랜드마크마다 확인 "
                       "→ 끝에서 손배출+N2블로우 1회")
@@ -626,7 +825,8 @@ def main():
                 print("  [구간별 검증] 랜드마크마다: 밀기 → 확인 → 확정 → 손배출 → N2블로우 → 다음")
             res = run_segment_calibration(
                 args.rate, labels, ests, pump, None, mfc, read_phase, w, blow_cfg,
-                manual_clear=not args.no_manual_clear, blow_at_end=args.blow_at_end)
+                manual_clear=not args.no_manual_clear, blow_at_end=args.blow_at_end,
+                charge_ml=charge_ml, recharge=recharge_cb)
             # 기록값 = 주입점→랜드마크 누적. 구간 부피 = 인접 차분.
             print("\n  ══ 실측 요약 (누적 = 주입점→랜드마크, 구간 = 인접 차분) ══")
             ordered = [(lab, res[lab]) for lab in labels if lab in res]
