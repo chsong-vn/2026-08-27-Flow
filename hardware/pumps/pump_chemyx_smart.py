@@ -55,6 +55,14 @@ class ChemyxSmartPump:
         self.driver.disconnect()
 
     def stop(self):
+        # @codesyncer(2026-08-13, 사용자 승인): 수동 STOP 이 스마트 동작(리필/세척/
+        #   프라임) 진행 중이면 abort 로 승격 — 기존엔 모터만 멈춰 complete 핸들러가
+        #   '자연 완료'로 오인, 부분 동작을 전량으로 과계상했다(세척 흡입 정지에도
+        #   3.0mL done → current_vol 과대 → 조용한 미달 토출). abort 경로는 경과
+        #   시간 기반 부분 회계로 처리된다.
+        if getattr(self, "is_refilling", False):
+            self._abort_refill = True
+            print(f"   [{self.name}] STOP → 진행 중 스마트 동작 abort 승격 (부분 회계)")
         self.driver.stop()
         self.running = False
 
@@ -386,8 +394,12 @@ class ChemyxSmartPump:
             self.driver.stop()
 
             if self._abort_refill:
-                self.status = "Wash Aborted (infuse)"
-                print(f"   [{self.name}] Wash aborted during infuse")
+                # 부분 회계 — 경과시간×유속만큼은 실제로 배출됨
+                partial = min(self.wash_speed * (elapsed / 60.0), actual_vol)
+                self.current_vol = max(0, self.current_vol - partial)
+                self.status = f"Wash Aborted (infuse ~{partial:.2f}mL)"
+                print(f"   [{self.name}] Wash aborted during infuse "
+                      f"(~{partial:.2f}mL 배출 반영, 잔량 {self.current_vol:.2f})")
                 self.is_refilling = False
                 return False
 
@@ -411,6 +423,7 @@ class ChemyxSmartPump:
         """
         if self.is_refilling: return False
         self.is_refilling = True
+        self._abort_refill = False   # 스테일 abort 리셋 (다른 prepare 들과 동일 — 누락돼 있었음)
         # @codesyncer-decision: 교정된 순서(withdraw 먼저)에서 _pending_wash_vol을
         # 여기서 설정해야 함. 기존엔 infuse_prepare에서만 설정 → withdraw가 먼저
         # 실행되면 0으로 읽혀 흡입량이 0이 되던 결함.
@@ -462,8 +475,12 @@ class ChemyxSmartPump:
             self.driver.stop()
 
             if self._abort_refill:
-                self.status = "Wash Aborted (withdraw)"
-                print(f"   [{self.name}] Wash aborted during withdraw")
+                # 부분 회계 — 경과시간×유속만큼은 실제로 흡입됨 (refill abort 와 동일 패턴)
+                partial = min(self.wash_speed * (elapsed / 60.0), actual_vol)
+                self.current_vol = min(self.current_vol + partial, self.capacity)
+                self.status = f"Wash Aborted (withdraw ~{partial:.2f}mL)"
+                print(f"   [{self.name}] Wash aborted during withdraw "
+                      f"(~{partial:.2f}mL 흡입 반영)")
                 self.is_refilling = False
                 return
 
@@ -544,6 +561,14 @@ class ChemyxSmartPump:
             self._verify_running("Prime", volume=prime_vol, rate=self.prime_rate)
             elapsed = self._wait_pump_done(prime_vol, self.prime_rate, max_multiplier=1.5)
             self.driver.stop()
+            if self._abort_refill:
+                # 부분 회계 — abort 분기가 없어 전량 차감되던 경로 (2026-08-13 정합화)
+                partial = min(self.prime_rate * (elapsed / 60.0), prime_vol)
+                self.current_vol = max(0, self.current_vol - partial)
+                self.status = f"Prime Aborted (~{partial:.2f}mL)"
+                print(f"   [{self.name}] Prime aborted after {elapsed:.1f}s "
+                      f"(~{partial:.2f}mL push 반영)")
+                return
             self.current_vol = max(0, self.current_vol - prime_vol)
             self.status = f"Prime Done ({prime_vol:.1f}mL, {elapsed:.0f}s)"
             print(f"   [{self.name}] Prime complete ({elapsed:.1f}s, remaining={self.current_vol:.1f}mL)")
