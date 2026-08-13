@@ -155,15 +155,28 @@ class _SimRig:
 # 라이브 하드웨어 래핑 (best-effort — 리그 안정 시)
 # ══════════════════════════════════════════════════════════════════════
 def _load_live(channel, source_port):
-    """SystemConfig+HardwareManager 로 펌프/센서/MFC/밸브 확보. 실패 시 예외."""
+    """SystemConfig+HardwareManager 로 펌프/센서/MFC/밸브 확보. 실패 시 예외.
+
+    HardwareManager 는 (cfg, signals) 시그니처 — CLI 에선 WorkerSignals 를
+    직접 만들어 준다(QObject 라 QCoreApplication 안전망 선생성, 이벤트루프 미기동)."""
     from engine.config import SystemConfig
     from core.hw_manager import HardwareManager
+    try:
+        from PyQt5.QtCore import QCoreApplication
+        if QCoreApplication.instance() is None:
+            globals()["_qapp_keepalive"] = QCoreApplication([])
+    except Exception:
+        pass
+    from core.worker import WorkerSignals
     cfg = SystemConfig()
-    hw = HardwareManager(cfg)
+    hw = HardwareManager(cfg, WorkerSignals())
     hw.init_hw()
     pump = (hw.pumps or {}).get(channel)
     if pump is None:
         raise RuntimeError(f"펌프 '{channel}' 없음 — 채널명 확인 (있는 것: {list((hw.pumps or {}))})")
+    if "mock" in type(pump).__name__.lower():
+        print(f"  ⚠⚠ '{channel}' 이 Mock 폴백입니다 — 실펌프 연결 실패. 이대로 진행하면"
+              f" '가짜 측정'이 됩니다. COM 점유(앱 실행중?)/케이블을 확인하세요.")
     sensor = getattr(hw, "phase_sensor", None)
     mfc = getattr(hw, "mfc", None)
     return cfg, hw, pump, sensor, mfc
