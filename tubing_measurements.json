@@ -44,7 +44,7 @@
             ],
             "note": "2026-08-05 실측: 시린지펌프↔3way 라인 내부 1.83 mL (튜빙 ID 0.8 mm, 루어 포함 구간). 키 정의상 12way→3way 앞단 구간은 별도 — 실측 시 합산 필요. 루어어댑터·유니온 데드볼륨은 components.ml 채우면 자동 합산" },
           "tube_vol_switcher":   { "current_config_ml": 0.0,  "measured_ml": 0.0507, "length_cm": null, "id_mm": null, "note": "스펙값: Runze Mrv-01B 3-way(M02 유로) 'Dead volume (Port to Port)' 50.68 µL (매뉴얼 2.4, 2026-08-05 반영). ※유로가 M04면 101.35 µL로 수정" },
-          "tube_vol_pump_merge": { "current_config_ml": 0.0,  "measured_ml": null, "length_cm": 35.7, "id_mm": 0.8, "note": "2026-08-12 실측: 3way 반응기측 포트 → 자기 정션 진입 배관, ID 0.8 mm × 357 mm → π×0.4²×357 = 179.45 µL. 4그룹 전부 동일 길이 (A/B→QUAD-1, C/D→QUAD-2 로 목적지는 다름)" },
+          "tube_vol_pump_merge": { "current_config_ml": 0.0,  "measured_ml": null, "length_cm": 45.0, "id_mm": 0.8, "note": "2026-08-13 재실측: 3way 반응기측 포트 → 자기 정션(QUAD) 진입 배관, ID 0.8 mm × 450 mm → π×0.4²×450 = 226.19 µL (구 2026-08-12 357 mm=179.45 µL 를 배관 교체로 대체). 4그룹 전부 동일 길이 (A/B→QUAD-1, C/D→QUAD-2 로 목적지는 다름)" },
           "tube_vol_solvent":    { "current_config_ml": 1.35, "measured_ml": 2.3394, "length_cm": null, "id_mm": null, "note": "2026-08-13 구간합산(12way→3way 110 mm 갱신): 포트1 세척액 라인 0.8 mm × 850 mm = 427.3 µL (시약 포트 150 mm 와 다름; 포트12 폐기 라인도 동일 850 mm — 전 그룹 공통) + 12way 내부 22.4 + 12way→3way→시린지 1889.7 = 2.3394 mL" },
           "tube_vol_reagent":    { "current_config_ml": 0.95, "measured_ml": 1.9875, "length_cm": null, "id_mm": null, "note": "2026-08-13 구간합산(12way→3way 110 mm 갱신): 시약 인렛 0.8 mm × 150 mm = 75.4 µL + 12way 내부 22.4 + 12way→3way→시린지 1889.7 = 1.9875 mL" }
         },
@@ -59,7 +59,7 @@
             ],
             "note": "2026-08-05 실측: 시린지펌프↔3way 라인 내부 1.83 mL (튜빙 ID 0.8 mm, 루어 포함 구간). 키 정의상 12way→3way 앞단 구간은 별도 — 실측 시 합산 필요. 루어어댑터·유니온 데드볼륨은 components.ml 채우면 자동 합산" },
           "tube_vol_switcher":   { "current_config_ml": 0.0,  "measured_ml": 0.0507, "length_cm": null, "id_mm": null, "note": "스펙값: Runze Mrv-01B 3-way(M02 유로) 'Dead volume (Port to Port)' 50.68 µL (매뉴얼 2.4, 2026-08-05 반영). ※유로가 M04면 101.35 µL로 수정" },
-          "tube_vol_pump_merge": { "current_config_ml": 0.0,  "measured_ml": null, "length_cm": 35.7, "id_mm": 0.8, "note": "2026-08-12 실측: 3way 반응기측 포트 → 자기 정션 진입 배관, ID 0.8 mm × 357 mm → π×0.4²×357 = 179.45 µL. 4그룹 전부 동일 길이 (A/B→QUAD-1, C/D→QUAD-2 로 목적지는 다름)" },
+          "tube_vol_pump_merge": { "current_config_ml": 0.0,  "measured_ml": null, "length_cm": 45.0, "id_mm": 0.8, "note": "2026-08-13 재실측: 3way 반응기측 포트 → 자기 정션(QUAD) 진입 배관, ID 0.8 mm × 450 mm → π×0.4²×450 = 226.19 µL (구 2026-08-12 357 mm=179.45 µL 를 배관 교체로 대체). 4그룹 전부 동일 길이 (A/B→QUAD-1, C/D→QUAD-2 로 목적지는 다름)" },
           "tube_vol_solvent":    { "current_config_ml": 0.95, "measured_ml": 2.3394, "length_cm": null, "id_mm": null, "note": "2026-08-13 구간합산(12way→3way 110 mm 갱신): 포트1 세척액 라인 0.8 mm × 850 mm = 427.3 µL (시약 포트 150 mm 와 다름; 포트12 폐기 라인도 동일 850 mm — 전 그룹 공통) + 12way 내부 22.4 + 12way→3way→시린지 1889.7 = 2.3394 mL" },
           "tube_vol_reagent":    { "current_config_ml": 0.5,  "measured_ml": 1.9875, "length_cm": null, "id_mm": null, "note": "2026-08-13 구간합산(12way→3way 110 mm 갱신): 시약 인렛 0.8 mm × 150 mm = 75.4 µL + 12way 내부 22.4 + 12way→3way→시린지 1889.7 = 1.9875 mL" }
         },
@@ -74,7 +74,7 @@
             ],
             "note": "2026-08-05 실측: 시린지펌프↔3way 라인 내부 1.83 mL (튜빙 ID 0.8 mm, 루어 포함 구간). 키 정의상 12way→3way 앞단 구간은 별도 — 실측 시 합산 필요. 루어어댑터·유니온 데드볼륨은 components.ml 채우면 자동 합산" },
           "tube_vol_switcher":   { "current_config_ml": 0.0,  "measured_ml": 0.0507, "length_cm": null, "id_mm": null, "note": "스펙값: Runze Mrv-01B 3-way(M02 유로) 'Dead volume (Port to Port)' 50.68 µL (매뉴얼 2.4, 2026-08-05 반영). ※유로가 M04면 101.35 µL로 수정" },
-          "tube_vol_pump_merge": { "current_config_ml": 0.0,  "measured_ml": null, "length_cm": 35.7, "id_mm": 0.8, "note": "2026-08-12 실측: 3way 반응기측 포트 → 자기 정션 진입 배관, ID 0.8 mm × 357 mm → π×0.4²×357 = 179.45 µL. 4그룹 전부 동일 길이 (A/B→QUAD-1, C/D→QUAD-2 로 목적지는 다름)" },
+          "tube_vol_pump_merge": { "current_config_ml": 0.0,  "measured_ml": null, "length_cm": 45.0, "id_mm": 0.8, "note": "2026-08-13 재실측: 3way 반응기측 포트 → 자기 정션(QUAD) 진입 배관, ID 0.8 mm × 450 mm → π×0.4²×450 = 226.19 µL (구 2026-08-12 357 mm=179.45 µL 를 배관 교체로 대체). 4그룹 전부 동일 길이 (A/B→QUAD-1, C/D→QUAD-2 로 목적지는 다름)" },
           "tube_vol_solvent":    { "current_config_ml": 0.0,  "measured_ml": 2.3394, "length_cm": null, "id_mm": null, "note": "2026-08-13 구간합산(12way→3way 110 mm 갱신): 포트1 세척액 라인 0.8 mm × 850 mm = 427.3 µL (시약 포트 150 mm 와 다름; 포트12 폐기 라인도 동일 850 mm — 전 그룹 공통) + 12way 내부 22.4 + 12way→3way→시린지 1889.7 = 2.3394 mL" },
           "tube_vol_reagent":    { "current_config_ml": 0.0,  "measured_ml": 1.9875, "length_cm": null, "id_mm": null, "note": "2026-08-13 구간합산(12way→3way 110 mm 갱신): 시약 인렛 0.8 mm × 150 mm = 75.4 µL + 12way 내부 22.4 + 12way→3way→시린지 1889.7 = 1.9875 mL" }
         },
@@ -89,7 +89,7 @@
             ],
             "note": "2026-08-05 실측: 시린지펌프↔3way 라인 내부 1.83 mL (튜빙 ID 0.8 mm, 루어 포함 구간). 키 정의상 12way→3way 앞단 구간은 별도 — 실측 시 합산 필요. 루어어댑터·유니온 데드볼륨은 components.ml 채우면 자동 합산" },
           "tube_vol_switcher":   { "current_config_ml": 0.0,  "measured_ml": 0.0507, "length_cm": null, "id_mm": null, "note": "스펙값: Runze Mrv-01B 3-way(M02 유로) 'Dead volume (Port to Port)' 50.68 µL (매뉴얼 2.4, 2026-08-05 반영). ※유로가 M04면 101.35 µL로 수정" },
-          "tube_vol_pump_merge": { "current_config_ml": 0.0,  "measured_ml": null, "length_cm": 35.7, "id_mm": 0.8, "note": "2026-08-12 실측: 3way 반응기측 포트 → 자기 정션 진입 배관, ID 0.8 mm × 357 mm → π×0.4²×357 = 179.45 µL. 4그룹 전부 동일 길이 (A/B→QUAD-1, C/D→QUAD-2 로 목적지는 다름)" },
+          "tube_vol_pump_merge": { "current_config_ml": 0.0,  "measured_ml": null, "length_cm": 45.0, "id_mm": 0.8, "note": "2026-08-13 재실측: 3way 반응기측 포트 → 자기 정션(QUAD) 진입 배관, ID 0.8 mm × 450 mm → π×0.4²×450 = 226.19 µL (구 2026-08-12 357 mm=179.45 µL 를 배관 교체로 대체). 4그룹 전부 동일 길이 (A/B→QUAD-1, C/D→QUAD-2 로 목적지는 다름)" },
           "tube_vol_solvent":    { "current_config_ml": 0.0,  "measured_ml": 2.3394, "length_cm": null, "id_mm": null, "note": "2026-08-13 구간합산(12way→3way 110 mm 갱신): 포트1 세척액 라인 0.8 mm × 850 mm = 427.3 µL (시약 포트 150 mm 와 다름; 포트12 폐기 라인도 동일 850 mm — 전 그룹 공통) + 12way 내부 22.4 + 12way→3way→시린지 1889.7 = 2.3394 mL" },
           "tube_vol_reagent":    { "current_config_ml": 0.0,  "measured_ml": 1.9875, "length_cm": null, "id_mm": null, "note": "2026-08-13 구간합산(12way→3way 110 mm 갱신): 시약 인렛 0.8 mm × 150 mm = 75.4 µL + 12way 내부 22.4 + 12way→3way→시린지 1889.7 = 1.9875 mL" }
         }

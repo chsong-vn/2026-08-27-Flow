@@ -229,7 +229,7 @@
                     "tube_vol_switcher": 0.0507,
                     "tube_vol_inlet": 0.0754,
                     "tube_vol_valve_pump": 1.8897,
-                    "tube_vol_pump_merge": 0.1794
+                    "tube_vol_pump_merge": 0.2262
                 },
                 "position": "inlet"
             },
@@ -254,7 +254,7 @@
                     "tube_vol_switcher": 0.0507,
                     "tube_vol_inlet": 0.0754,
                     "tube_vol_valve_pump": 1.8897,
-                    "tube_vol_pump_merge": 0.1794
+                    "tube_vol_pump_merge": 0.2262
                 },
                 "position": "inlet"
             }
@@ -282,9 +282,9 @@
         }
     },
     "system_params": {
-        "reactor_len_m": 3.06,
+        "reactor_len_m": 3.056,
         "reactor_id_mm": 1.0,
-        "post_reactor_vol_ml": 0.21,
+        "post_reactor_vol_ml": 0.2066,
         "collection_line_vol_ml": 0.25,
         "mixing_line_id_mm": 1.5,
         "mixing_line_len_cm": 5.4,
