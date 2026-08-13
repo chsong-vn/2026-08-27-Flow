@@ -195,12 +195,23 @@ class HardwareManager:
                 # - 기존: refill_rate=40.0 하드코딩 → UI "시린지 충전 속도"/"프라이밍 속도" 무시됨
                 # - 수정: syringe_refill_rate → refill(WITHDRAW), priming_rate_ml_min → prime(INFUSE)
                 sys_p = self.cfg.config_data.get("system_params", {})
+                # @codesyncer-decision(2026-08-13, 오배정 사고): RS-485 pump_id 는
+                #   '장치' 고유값(펌프 전면판에 설정된 체인 주소) — 그룹 순번이 아니다.
+                #   다이얼로그가 순번+1 로 덮어써 온 탓에 B/C 그룹 제거 시 Group_D 가
+                #   ID 2 로 저장돼 엉뚱한 물리 펌프(ID2)가 구동된 사고. 해석 우선순위:
+                #   모터 장치 inventory.settings.pump_id → 역할 settings(레거시) → 0.
+                _dev_pid = ((m_info or {}).get("settings", {}) or {}).get("pump_id")
+                _pid = int(_dev_pid if _dev_pid is not None
+                           else settings.get('pump_id', 0))
+                if _dev_pid is not None and int(settings.get('pump_id', _dev_pid)) != int(_dev_pid):
+                    print(f"  - [{p_name}] ⚠ 역할 pump_id {settings.get('pump_id')} ≠ "
+                          f"장치({m_info.get('name')}) pump_id {_dev_pid} — 장치값 사용")
                 spec = {
                     'diameter': float(settings.get('diameter', 14.5)),
                     'capacity': float(settings.get('capacity', 10.0)),
                     'refill_rate': float(sys_p.get('syringe_refill_rate', 20.0)),
                     'prime_rate': float(sys_p.get('priming_rate_ml_min', 10.0)),
-                    'pump_id': int(settings.get('pump_id', 0)),
+                    'pump_id': _pid,
                     'wash_speed': float(settings.get('wash_speed', 15.0)),
                     'wash_count': int(settings.get('wash_count', 2)),
                     'wash_volume': float(settings.get('wash_volume', 5.0)),
@@ -250,6 +261,22 @@ class HardwareManager:
                 self.pumps[p_name] = MockPump(p_name)
 
             self._safe_connect(self.pumps[p_name], p_name)
+
+        # @codesyncer(2026-08-13, 오배정 사고 가드): 공유 RS-485 버스에서 두 그룹이
+        #   같은 pump_id 를 가지면 '둘 다 같은 물리 펌프'를 조용히 구동 — 치명적.
+        #   중복/미설정(0)을 부팅 시 크게 경고 (fault-masking 금지).
+        _chem_ids = {n: getattr(p, "pump_id", None) for n, p in self.pumps.items()
+                     if type(p).__name__ == "ChemyxSmartPump"}
+        _seen_ids = {}
+        for _n, _i in _chem_ids.items():
+            if not _i:
+                print(f"  ⚠⚠ [{_n}] Chemyx pump_id 미설정(0) — RS-485 주소 없음, "
+                      f"명령이 엉뚱한 펌프로 갈 수 있음. 장치 inventory settings.pump_id 등록 필요")
+            elif _i in _seen_ids:
+                print(f"  ⚠⚠ Chemyx pump_id 중복: [{_n}] 와 [{_seen_ids[_i]}] 가 모두 ID {_i} — "
+                      f"같은 물리 펌프를 구동하게 됨! config 확인 필수")
+            else:
+                _seen_ids[_i] = _n
 
         # 4. Fraction Collector
         c_conf = self.cfg.config_data["roles"].get("collector", {})

@@ -7,7 +7,10 @@
             "port": "COM9",
             "vid": "1A86",
             "pid": "7523",
-            "probe": "chemyx"
+            "probe": "chemyx",
+            "settings": {
+                "pump_id": 1
+            }
         },
         {
             "id": "dev_8ff42ede",
@@ -16,7 +19,10 @@
             "port": "COM9",
             "vid": "1A86",
             "pid": "7523",
-            "probe": "chemyx"
+            "probe": "chemyx",
+            "settings": {
+                "pump_id": 2
+            }
         },
         {
             "id": "dev_esp32v_1",
@@ -109,7 +115,10 @@
             "port": "COM9",
             "vid": "1A86",
             "pid": "7523",
-            "probe": "chemyx"
+            "probe": "chemyx",
+            "settings": {
+                "pump_id": 3
+            }
         },
         {
             "id": "dev_plate96_1",
@@ -165,7 +174,10 @@
             "port": "COM9",
             "vid": "1A86",
             "pid": "7523",
-            "probe": "chemyx"
+            "probe": "chemyx",
+            "settings": {
+                "pump_id": 4
+            }
         },
         {
             "id": "dev_6bc9c51a",
@@ -193,7 +205,8 @@
                     "motor": "dev_chemyx_2",
                     "selector": "dev_65ba215c",
                     "switcher": "dev_esp32v_1",
-                    "level": "dev_level_hcsr04_1"
+                    "level": "dev_level_hcsr04_1",
+                    "sampler": null
                 },
                 "settings": {
                     "pump_id": 1,
@@ -203,7 +216,7 @@
                     "tube_id": 0.0,
                     "refill_rate": 12.0,
                     "prime_rate": 8.0,
-                    "wash_speed": 8.0,
+                    "wash_speed": 5.0,
                     "wash_count": 1,
                     "wash_volume": 3.0,
                     "tube_vol_solvent": 2.3394,
@@ -223,58 +236,6 @@
                 "position": "inlet"
             },
             {
-                "name": "Group_B",
-                "drivers": {
-                    "motor": "dev_8ff42ede",
-                    "selector": "dev_7513a334",
-                    "switcher": "dev_esp32v_2"
-                },
-                "settings": {
-                    "pump_id": 2,
-                    "diameter": 12.45,
-                    "capacity": 6.0,
-                    "tube_len": 100.0,
-                    "tube_id": 1.0,
-                    "refill_rate": 12.0,
-                    "prime_rate": 8.0,
-                    "wash_speed": 8.0,
-                    "wash_count": 1,
-                    "wash_volume": 3.0,
-                    "tube_vol_solvent": 2.3394,
-                    "tube_vol_reagent": 1.9875,
-                    "tube_vol_selector": 0.0224,
-                    "tube_vol_switcher": 0.0507,
-                    "tube_vol_inlet": 0.0754,
-                    "tube_vol_valve_pump": 1.8897,
-                    "tube_vol_pump_merge": 0.1794
-                },
-                "position": "inlet"
-            },
-            {
-                "name": "Group_C",
-                "drivers": {
-                    "motor": "dev_438b3a93",
-                    "selector": "dev_4715d181",
-                    "switcher": "dev_esp32v_3"
-                },
-                "settings": {
-                    "pump_id": 3,
-                    "diameter": 12.45,
-                    "capacity": 6.0,
-                    "tube_vol_solvent": 2.3394,
-                    "tube_vol_reagent": 1.9875,
-                    "wash_speed": 8.0,
-                    "wash_count": 1,
-                    "wash_volume": 3.0,
-                    "tube_vol_selector": 0.0224,
-                    "tube_vol_switcher": 0.0507,
-                    "tube_vol_inlet": 0.0754,
-                    "tube_vol_valve_pump": 1.8897,
-                    "tube_vol_pump_merge": 0.1794
-                },
-                "position": "inlet"
-            },
-            {
                 "name": "Group_D",
                 "drivers": {
                     "motor": "dev_c97364b0",
@@ -284,13 +245,13 @@
                 },
                 "settings": {
                     "pump_id": 4,
-                    "diameter": 4.69,
-                    "capacity": 1.0,
+                    "diameter": 12.45,
+                    "capacity": 6.0,
                     "tube_vol_solvent": 2.3394,
                     "tube_vol_reagent": 1.9875,
-                    "wash_speed": 1.7,
-                    "wash_count": 2,
-                    "wash_volume": 5.0,
+                    "wash_speed": 5.0,
+                    "wash_count": 1,
+                    "wash_volume": 3.0,
                     "tube_vol_selector": 0.0224,
                     "tube_vol_switcher": 0.0507,
                     "tube_vol_inlet": 0.0754,
@@ -342,7 +303,7 @@
         "prefill_mode": "port_change",
         "syringe_wash_rate": 15.0,
         "syringe_wash_count": 2,
-        "hte_mode": true,
+        "hte_mode": false,
         "nitrogen_line": true,
         "hte_spacer_vol_ml": 0.2,
         "hte_gas_sccm": 20.0,

@@ -1903,10 +1903,14 @@ class HardwareConfigDialog(QDialog):
                 p['drivers']['switcher'] = None
             else:
                 p['drivers']['sampler'] = None
-            # @codesyncer-decision: pump_id = 그룹 인덱스+1 기반 자동 할당
-            # - RS-485 daisy chain에서 pump_id로 펌프 구분
-            # - 기존: save 시 pump_id 미저장 → JSON 원본값 의존
-            p['settings']['pump_id'] = self.curr_p_idx + 1
+            # @codesyncer-decision(2026-08-13 수정, 오배정 사고): pump_id 는 RS-485
+            #   '장치' 고유 체인주소 — 그룹 순번 자동할당(구: curr_p_idx+1)은 그룹
+            #   추가/삭제 시 ID 를 뒤섞는 결함(B/C 제거 → Group_D 가 ID2 로 저장돼
+            #   물리 펌프 2번이 구동된 사고). 기존값 보존, 신규 그룹만 순번 시드.
+            #   런타임(hw_manager)은 모터 장치 inventory.settings.pump_id 를 최우선
+            #   해석하므로 이 값은 레거시 폴백이다.
+            p['settings']['pump_id'] = int(p['settings'].get('pump_id')
+                                           or (self.curr_p_idx + 1))
             p['settings']['diameter'] = self.p_dia.value()
             p['settings']['capacity'] = self.p_cap.value()
             p['settings']['tube_vol_solvent'] = self.p_tube_vol_solvent.value()
