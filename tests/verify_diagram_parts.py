@@ -315,8 +315,36 @@ wqp.update_realtime({}, push_running=True, outlet_valve_pos=1)
 check("Q10c push(solvent)만 → tj[1]+tj[2] 흐름", wqp.spine[0].flowing
       and wqp.tj_out_pipe.flowing and all(q.flowing for q in wqp.push_parts[1]))
 
-# Q11 quad 두 케이스 bbox 비중첩 + 씬 포함 (레거시 콤보와 동일 기준)
-for _nm, _w in (("quad", wq), ("quad_push", wqp)):
+# Q12 그룹 부분집합 (2026-08-13): 장비는 있을 수도 없을 수도 —
+# (a) A/D 만 (entries 1,2 — 현 실구성 형태): QUAD 두 개, 런=둘째 행
+cfg_s = Cfg(["external_valve"] * 2, n2=True)
+cfg_s.tjunction_entry_map = {"Group_A": 1, "Group_B": 2}
+ws = FlowDiagramWidget(pump_configs=[], active_pumps=cfg_s.ACTIVE_PUMPS, inventory=[])
+ws.configure(cfg_s, App(cfg_s, 0, 1))
+tags_s = sorted(x.tag for x in ws.scene().items() if isinstance(x, PartTee) and x.tag)
+check("Q12a A/D형 QUAD-1/2 태그", tags_s == ["QUAD-1", "QUAD-2"], str(tags_s))
+check("Q12a 런 = 둘째 행", abs(ws.reactor.pos().y() - (70 + 60 + 1 * 136)) < 1,
+      str(ws.reactor.pos().y()))
+check("Q12a tj[1] 스파인 + tj[2] 런파이프",
+      [pl.edit[2] for pl in ws.spine if pl.edit] == [1]
+      and ws.tj_out_pipe is not None and ws.tj_out_pipe.edit[2] == 2)
+# (b) C/D 만 (entries 2,2 — vals 가 1 로 시작 안 함): 단일 정션 QUAD-2, tj[2] 런
+cfg_c = Cfg(["external_valve"] * 2, n2=True)
+cfg_c.tjunction_entry_map = {"Group_A": 2, "Group_B": 2}
+wc = FlowDiagramWidget(pump_configs=[], active_pumps=cfg_c.ACTIVE_PUMPS, inventory=[])
+wc.configure(cfg_c, App(cfg_c, 0, 1))
+tags_c = sorted(x.tag for x in wc.scene().items() if isinstance(x, PartTee) and x.tag)
+check("Q12b C/D형 단일 정션 QUAD-2", tags_c == ["QUAD-2"], str(tags_c))
+check("Q12b 스파인 tj 없음 + tj[2] 런파이프", not [p for p in wc.spine if p.edit]
+      and wc.tj_out_pipe is not None and wc.tj_out_pipe.edit[2] == 2,
+      str(wc.tj_out_pipe.edit if wc.tj_out_pipe else None))
+# 부분집합 realtime 스모크 (엔터리 분절 흐름 포함)
+ws.update_realtime({"Group_B": {"running": True}}, outlet_valve_pos=1)
+check("Q12c A/D형: D만 구동 → tj[1] 무흐름", not ws.spine[0].flowing)
+
+# Q11 quad 네 케이스 bbox 비중첩 + 씬 포함 (레거시 콤보와 동일 기준)
+for _nm, _w in (("quad", wq), ("quad_push", wqp), ("quad_2p_AD", ws),
+                ("quad_2p_CD", wc)):
     parts_q = [x for x in _w.scene().items() if isinstance(x, Part)]
     bad_q = []
     for x, y2 in itertools.combinations(parts_q, 2):

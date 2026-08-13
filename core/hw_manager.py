@@ -240,7 +240,8 @@ class HardwareManager:
                         syringe_diameter_mm=float(mset.get("syringe_diameter_mm", 4.6066)),
                         syringe_volume_ul=float(mset.get("syringe_volume_ul", 1000.0)),
                         max_flowrate_ml_min=float(mset.get("max_flowrate_ml_min", 5.0)),
-                        pump_id=int(settings.get("pump_id", group_idx + 1)),
+                        pump_id=int(mset.get("pump_id",
+                                             settings.get("pump_id", group_idx + 1))),
                         use_encoder=bool(mset.get("use_encoder", True)),
                         main_valve_enabled=True,
                         aux_valve_enabled=bool(mset.get("aux_valve_enabled", False)),
@@ -253,7 +254,9 @@ class HardwareManager:
                         'wash_count': int(settings.get('wash_count', 0)),
                         'wash_volume': settings.get('wash_volume'),
                         'dead_vol_solvent': float(settings.get('tube_vol_solvent', 0.0)),
-                        'pump_id': int(settings.get('pump_id', group_idx + 1)),
+                        # 장치 인벤토리 settings.pump_id 최우선 (Chemyx 와 동일 원칙)
+                        'pump_id': int(mset.get('pump_id',
+                                                settings.get('pump_id', group_idx + 1))),
                     }
                     spec = {k: v for k, v in spec.items() if v is not None}
                     self.pumps[p_name] = NRGSmartPump(p_name, low, spec)

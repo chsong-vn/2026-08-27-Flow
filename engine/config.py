@@ -380,6 +380,17 @@ class SystemConfig:
                     self.tjunction_entry_map[str(k)] = max(1, int(v))
                 except Exception:
                     continue
+        # @codesyncer(2026-08-13): 그룹은 있을 수도/없을 수도(A/D 만 등 임의 부분집합).
+        #   활성 펌프가 맵에 미기재면 엔진이 진입 1(보수적)로 가정 — 실배관이 후행
+        #   정션(QUAD-2)이면 타이밍 오계산이므로 부팅 시 크게 경고. 잉여 키(제외
+        #   그룹)는 무해하게 남는다.
+        if self.tjunction_entry_map:
+            _missing = [p for p in self.ACTIVE_PUMPS
+                        if p not in self.tjunction_entry_map]
+            if _missing:
+                print(f"[Config] ⚠ tjunction_entry_map 미기재 활성 펌프 {_missing} — "
+                      f"진입 구간 1 로 가정합니다. 실배관이 QUAD-2 진입이면 "
+                      f"system_params.tjunction_entry_map 에 추가하세요.")
 
         mixing_id = self._safe_float(sp.get("mixing_line_id_mm", 1.5), 1.5)
         mixing_len = self._safe_float(sp.get("mixing_line_len_cm", 150.0), 150.0)

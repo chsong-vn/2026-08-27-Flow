@@ -1049,6 +1049,11 @@ class FlowDiagramWidget(QGraphicsView):
         #   + K≤2)면 실물 그대로 'QUAD 크로스' 토폴로지로 그린다 — 캐스케이드 티
         #   폐지. 표현 불가 맵(비단조/정션 3개+)은 콘솔 경고 후 레거시 캐스케이드
         #   폴백(엔진 계산은 entry_map 그대로 정확 — 그림만 근사).
+        # @codesyncer(2026-08-13): 그룹 부분집합(A/D 만, C/D 만 등) 대응 — 진입값이
+        #   1 부터 시작하지 않아도(예: C/D 만 → vals=[2]) 정션 수 ≤2 + 행순 단조면
+        #   quad 로 그린다. 라벨/tj 키는 실제 진입값 사용(엔진과 1:1). C/D 만 +
+        #   push 구성은 solvent 가 그림상 그 정션으로 직결(실배관은 QUAD-1 경유 —
+        #   미사용 상류 정션 생략의 근사).
         entry_cfg = getattr(cfg, "tjunction_entry_map", {}) or {}
         entries = ([max(1, int(entry_cfg.get(p, 1) or 1)) for p in pumps]
                    if entry_cfg else [])
@@ -1057,7 +1062,7 @@ class FlowDiagramWidget(QGraphicsView):
         if entries and n >= 2:
             vals = sorted(set(entries))
             mono = all(entries[i] <= entries[i + 1] for i in range(n - 1))
-            if mono and vals == list(range(1, len(vals) + 1)) and len(vals) <= 2:
+            if mono and len(vals) <= 2:
                 quad = True
                 for i, e in enumerate(entries):
                     q_groups.setdefault(e, []).append(i)
