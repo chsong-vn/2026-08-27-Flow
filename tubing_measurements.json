@@ -111,10 +111,19 @@
         "reactor": {
           "current_config": { "id_mm": 1.0, "len_m": 3.82, "computed_ml": 3.0002 },
           "measured_ml": 2.4,
-          "note": "2026-08-12 실측: 반응기 부피 2.4 mL — 반영 시 reactor_len_m 을 등가 길이(2.4/단면적)로 환산 (기존 config 계산치 3.00 mL)"
+          "illuminated_ml": 2.1,
+          "dark_inlet_ml": 0.15,
+          "dark_outlet_ml": 0.15,
+          "note": "2026-08-12 실측: 반응기 부피 2.4 mL — 반영 시 reactor_len_m 을 등가 길이(2.4/단면적)로 환산 (기존 config 계산치 3.00 mL). 2026-08-13 추가: 총 2.4 mL 중 광조사 없는 암부 = 앞단 0.15 + 뒷단 0.15 mL(2.4 에 포함) → 조사(illuminated) 부피 2.1 mL. 수송 타이밍(t_head)은 총 2.4 가 맞고, 광화학 체류시간 계산엔 2.1 사용 — 엔진은 현재 총부피만 소비(illuminated_ml 은 기록용)"
         },
-        "post_reactor_vol_ml":    { "current_config_ml": 2.0, "measured_ml": null, "length_cm": null, "id_mm": null, "note": null },
-        "collection_line_vol_ml": { "current_config_ml": 1.0, "measured_ml": 0.24, "length_cm": null, "id_mm": null, "note": "2026-08-05 실측: outlet 3-way 기점 → 분취기 니들 240 µL. 아웃렛 밸브 자체 통로는 전용 키가 없어 이 구간에 합산되는 모델(밸브 기점 실측이므로 정합)" }
+        "post_reactor_vol_ml":    { "current_config_ml": 2.0, "measured_ml": null, "length_cm": 41.1, "id_mm": 0.8,
+          "segments": {
+            "reactor_to_sensor": { "length_cm": 32.5, "id_mm": 0.8, "ml": 0.1634, "note": "반응기 출구 → photo 센서 앞단, ID 0.8 mm × 325 mm = 163.36 µL (2026-08-13 실측)" },
+            "sensor_internal":   { "length_cm": 1.0,  "id_mm": 0.8, "ml": 0.0050, "note": "photo 센서 자체 통로, ID 0.8 mm × 10 mm = 5.03 µL" },
+            "sensor_to_outlet":  { "length_cm": 7.6,  "id_mm": 0.8, "ml": 0.0382, "note": "photo 센서 → 아웃렛 3-way 전단, ID 0.8 mm × 76 mm = 38.20 µL — 센서 트리거→밸브 도달 오프셋(38.2µL/F)의 근거" }
+          },
+          "note": "2026-08-13 실측(구간합 325+10+76 = 411 mm, 전부 ID 0.8 mm) → π×0.4²×411 = 206.59 µL. 구 기본값 2.0 mL 은 ~10배 과대(0.8 mm 로 ~4 m 상당)였음 — F=0.4 mL/min 에서 t_head 수송 269 s 과대. segments 는 기록용(반영값은 length_cm 합계로 계산)" },
+        "collection_line_vol_ml": { "current_config_ml": 1.0, "measured_ml": 0.25, "length_cm": null, "id_mm": null, "note": "2026-08-13 부피 실측 0.25 mL (2026-08-05 의 240 µL 실측을 갱신): outlet 3-way 기점 → 분취기 니들, ID 0.8 mm. 아웃렛 밸브 자체 통로는 전용 키가 없어 이 구간에 합산되는 모델(밸브 기점 실측이므로 정합)" }
       }
     }
   }

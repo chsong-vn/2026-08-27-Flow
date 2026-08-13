@@ -114,9 +114,20 @@ check("reactor", abs(cfg.reactor_vol - exp_rct) <= 5e-3,
       f"원장 {exp_rct:.4f} | 파생 {cfg.reactor_vol:.4f} "
       f"(Δ {abs(cfg.reactor_vol - exp_rct) * 1000:.2f}µL, 등가길이 환산)")
 # post / collection
-if sysm["post_reactor_vol_ml"]["measured_ml"] is None:
+exp_post = ledger_expected(sysm["post_reactor_vol_ml"])
+if exp_post is None:
     warn("post_reactor_vol_ml 미실측", f"config {sp_json['post_reactor_vol_ml']} mL "
          "그대로 — t_head 수송에 직접 들어가는 최대 미검증 항목")
+else:
+    check("post_reactor (반응기→photo센서→아웃렛)",
+          abs(sp_json["post_reactor_vol_ml"] - exp_post) <= 5e-4,
+          f"원장 {exp_post:.4f} | config {sp_json['post_reactor_vol_ml']}")
+    seg_post = sum(s["ml"] for s in
+                   sysm["post_reactor_vol_ml"].get("segments", {}).values())
+    if seg_post:
+        check("post_reactor 원장 내부일관(분할합=길이합)",
+              abs(exp_post - seg_post) <= 2e-4,
+              f"길이합 {exp_post:.4f} vs 분할합 {seg_post:.4f}")
 exp_col = sysm["collection_line_vol_ml"]["measured_ml"]
 check("collection_line", abs(sp_json["collection_line_vol_ml"] - exp_col) <= 5e-4,
       f"원장 {exp_col} | config {sp_json['collection_line_vol_ml']}")
@@ -257,8 +268,12 @@ print(f"    주입경로 도달(lifo pre) = {pre_l:.1f}s | fifo pre(=purge {purg
       f" 포함) = {pre_f:.1f}s | deficit {dvol:.4f} mL")
 post_share = float(sp_json["post_reactor_vol_ml"]) / (
     cfg.reactor_vol + cfg.mixing_line_dead_vol + float(sp_json["post_reactor_vol_ml"]))
-print(f"    ⚠ post_reactor 2.0 mL 미실측 = 수송부피의 {post_share * 100:.0f}%"
-      f" — 실측 시 t_head 오차 지배 항목")
+if exp_post is None:
+    print(f"    ⚠ post_reactor {sp_json['post_reactor_vol_ml']} mL 미실측 = 수송부피의 "
+          f"{post_share * 100:.0f}% — 실측 시 t_head 오차 지배 항목")
+else:
+    print(f"    post_reactor {sp_json['post_reactor_vol_ml']} mL 실측 반영 "
+          f"(수송부피의 {post_share * 100:.0f}%)")
 if sp_json.get("outlet_switch_delay_sec"):
     print(f"    (참고) outlet_switch_delay_sec override 활성: "
           f"{sp_json['outlet_switch_delay_sec']}s — 위 공식 대신 이 값이 최우선")

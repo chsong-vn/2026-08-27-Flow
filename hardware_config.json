@@ -323,10 +323,10 @@
         }
     },
     "system_params": {
-        "reactor_len_m": 3.06,
+        "reactor_len_m": 3.056,
         "reactor_id_mm": 1.0,
-        "post_reactor_vol_ml": 2.0,
-        "collection_line_vol_ml": 0.24,
+        "post_reactor_vol_ml": 0.2066,
+        "collection_line_vol_ml": 0.25,
         "mixing_line_id_mm": 1.5,
         "mixing_line_len_cm": 5.4,
         "priming_rate_ml_min": 1.7,
