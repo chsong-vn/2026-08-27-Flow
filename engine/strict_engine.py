@@ -3751,6 +3751,10 @@ def hte_build_profile(steps, *, reactor_vol, mixing, post, vol_collection,
                   + F0 * inj_path_sec / 60.0)
 
     # 슬러그별 퍼지(FIFO 과충전 선행배출) — primed 진행 시뮬
+    # @codesyncer(2026-08-13, 소스퍼지 무효화와 동일 물리): lifo(정확 흡입 신워크플로)
+    #   에선 슬러그별 과충전이 존재하지 않음 — v_purge=0 (마크 = v_head+슬러그+스페이서
+    #   누적만). primed 장부는 order 무관하게 진행(포트 재사용 판정용). fifo 레거시 유지.
+    _pv_lifo = str(purge_order or "fifo").lower() == "lifo"
     plan_primed = {p: set(ps) for p, ps in (primed or {}).items()}
     for st in steps:
         pv = 0.0
@@ -3761,7 +3765,8 @@ def hte_build_profile(steps, *, reactor_vol, mixing, post, vol_collection,
             l2 = float(dvp.get(p, 0.0) or 0.0) + float(dsel.get(p, 0.0) or 0.0)
             pr = plan_primed.setdefault(p, set())
             src = (l2 + (0.0 if st["ports"][p] in pr else l1)) * purge_factor
-            pv = max(pv, (src / f) * st["F"])
+            if not _pv_lifo:
+                pv = max(pv, (src / f) * st["F"])
             pr.add(st["ports"][p])
         st["v_purge"] = pv
 

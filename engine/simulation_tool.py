@@ -1,6 +1,9 @@
 """
 Flow Chemistry Simulation Tool
 
+⚠ 구 워크플로 재현 — 타이밍 신뢰 금지 (engine/test_detailed_timing.py 상단 배너 참조.
+  실행 진실원은 strict_engine. 2026-08-13 개편 미반영.)
+
 @codesyncer-context: 파라미터 입력 → Excel 생성 도구
 - 단일 조건 시뮬레이션
 - 다중 조건 비교 (파라미터 스윕)

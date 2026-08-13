@@ -1,7 +1,16 @@
 """
 Detailed Timing Simulation Test with Excel Export
 
-@codesyncer-context: 실제 simpy_engine.py 로직 기반
+⚠⚠ 구 워크플로 재현 (2026-08-13 이전) — 타이밍 결과를 신뢰하지 말 것 ⚠⚠
+  이 시뮬 체인(test_detailed_timing / simulation_tool / tools/run_simulation)은
+  구 시퀀스(초기 리필 3mL·세척 INFUSE먼저·prime=wash_volume·FIFO 소스퍼지)를
+  재현한다. 실행 진실원은 engine/strict_engine.py 뿐이며, 2026-08-13 워크플로
+  개편(초기리필 삭제·Phase-0 정량 0.277·세척 withdraw→전량배출·lifo·유령push
+  강등)이 여기 반영되지 않았다. 예상시간이 실기와 어긋나면 이 배너를 기억할 것.
+  (구 복제본 sequence_timeline.py/simpy_engine.py 는 소비자 0건으로
+  _archive_20260805/legacy_sim_20260813/ 이관 — 2026-08-13)
+
+@codesyncer-context: 실제 simpy_engine.py(아카이브됨) 로직 기반
 - Group A/B/C의 12-way, 3-way 밸브 전환 타이밍
 - 시린지 펌프 Infusing/Withdrawing 상태 및 속도
 - Outlet 밸브 전환 타이밍

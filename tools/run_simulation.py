@@ -1,6 +1,9 @@
 """
 간단한 시뮬레이션 실행 스크립트
 
+⚠ 구 워크플로 재현 — 타이밍 신뢰 금지 (engine/test_detailed_timing.py 상단 배너 참조.
+  실행 진실원은 strict_engine. 2026-08-13 개편 미반영.)
+
 사용법:
     1. 아래 파라미터를 원하는 값으로 수정
     2. python run_simulation.py 실행

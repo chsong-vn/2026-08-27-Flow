@@ -49,9 +49,8 @@ Hardware            ← 장비 드라이버 (시리얼/RS-485/MODBUS)
 | `trace_log.py` | `TraceLogger` | Chrome Trace Event 로거 — `logs/TRACE_*.json` → ui.perfetto.dev 타임라인 (docs/TRACING.md). 예외 완전 삼킴=엔진 무영향, `FLOWCHEM_TRACE=0` 비활성 |
 | `calculators.py` | `FlowCalculator` | 양론비 → 펌프 유량 변환 |
 | `safety_manager.py` | `SafetyManager` | 온도/압력 감시, SafetyError 발생 |
-| `sequence_timeline.py` | | 타임라인 빌더 |
 | `valve_timeline.py` | | 밸브 타이밍 |
-| `simpy_engine.py` | `SimPyEngine` | 시뮬레이션용 가상 엔진 |
+| ~~`sequence_timeline.py`·`simpy_engine.py`~~ | | **아카이브됨(2026-08-13)** — 소비자 0건의 엔진 복제 이중 로직(구 워크플로) → `_archive_20260805/legacy_sim_20260813/`. 시뮬은 test_detailed_timing 체인만 유지(⚠구 워크플로 배너 있음) |
 | `stock_stoich.py` | `compute_stock` | 다성분 stock 양론 순수 엔진 (UI/HW 무의존, limiting 앵커) |
 | `sampler_coordinator.py` | `SamplerCoordinator` | 오토샘플러 니들↔펌프 조율 (RoboChem Gen2 이식) |
 | `simulation_tool.py` | | `python -m engine.simulation_tool [--gui\|--sweep]` 시뮬 드라이버 |
@@ -125,8 +124,8 @@ NRG 펌프·GRBL 샘플러의 백엔드. 원본 무수정(LICENSE/NOTICE 동봉)
 
 ### ⚠ 이름 충돌 (헷갈리기 쉬움 — 상세는 docs/ARCHITECTURE.md §3)
 - `notebook_export/`(폴더, P&ID→CDXML 생성기 — `piping_cdxml.py`는 core가 import하는 **프로덕션 코드**) ≠ `core/notebook_export.py`(F-SCH JSON)
-- `engine/test_detailed_timing.py`는 테스트가 아니라 시뮬 라이브러리
-- SystemConfig 2곳: `engine/config.py`(진짜) vs `engine/sequence_timeline.py`(별개)
+- `engine/test_detailed_timing.py`는 테스트가 아니라 시뮬 라이브러리 (⚠구 워크플로 재현 — 타이밍 신뢰 금지 배너 참조)
+- ~~SystemConfig 2곳~~ 해소(2026-08-13): sequence_timeline.py 아카이브로 `engine/config.py`가 유일
 - `temp/`는 임시폴더가 아니라 **라이브 앱 상태**(시약 엑셀 2종) — 삭제 금지
 
 ---
