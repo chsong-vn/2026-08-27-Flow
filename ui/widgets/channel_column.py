@@ -154,6 +154,10 @@ class ChannelColumnCard(QFrame):
                 f"background: transparent; border: none;")
             self.sp_port.valueChanged.connect(self._update_port_tooltip)
             self._update_port_tooltip(self.sp_port.value())
+            # @codesyncer(2026-08-13, 사용자 요청): 포트 번호 입력 후 Enter = 즉시
+            #   이동 — 숫자 치고 MOVE 마우스 클릭까지 가는 왕복 제거 (키보드 운전).
+            self.sp_port.lineEdit().returnPressed.connect(self._enter_move_port)
+            self.sp_port.setToolTip("포트 번호 입력 후 Enter = 즉시 이동")
             self.btn_port_go = QPushButton("MOVE")
             self.btn_port_go.setMinimumHeight(T.H_BTN)
             self.btn_port_go.setCursor(Qt.PointingHandCursor)
@@ -208,6 +212,21 @@ class ChannelColumnCard(QFrame):
             rates.addLayout(col)
             setattr(self, f"sp_{key}", sp)
         root.addLayout(rates)
+
+        # ── 타겟 볼륨 (0 = 연속 구동, 기존 동작) ─────────────────
+        # @codesyncer(2026-08-13, 사용자 요청): 정량 수동 구동 — Chemyx 는 볼륨
+        #   모드가 네이티브(set_volume 후 도달 시 자동 정지)라 타겟만 넘기면 됨.
+        #   0 이면 기존처럼 용량 전체(=STOP 까지 연속). INFUSE/WITHDRAW 공용.
+        root.addWidget(_cap("Target Vol (mL) — 0 = 연속"))
+        self.sp_target = QDoubleSpinBox()
+        self.sp_target.setRange(0.0, 999.0)
+        self.sp_target.setDecimals(3)
+        self.sp_target.setSingleStep(0.01)
+        self.sp_target.setValue(0.0)
+        self.sp_target.setMinimumHeight(34)
+        self.sp_target.setAlignment(Qt.AlignCenter)
+        self.sp_target.setToolTip("이 부피만 구동 후 자동 정지 (0 = 연속, STOP 으로 정지)")
+        root.addWidget(self.sp_target)
 
         # ── 동작: [INFUSE | WITHDRAW] + STOP 전폭 분리 행 ──
         # @codesyncer-decision: STOP 을 동일 크기 회색 3연버튼에 끼우면
@@ -395,6 +414,15 @@ class ChannelColumnCard(QFrame):
         self._threaded(self.btn_vial_go,
                        lambda: self.sampler.move_to_vial(vial), busy_text="…")
 
+    def _enter_move_port(self):
+        """포트 번호 입력 후 Enter = 즉시 이동 (MOVE 클릭 대체).
+        interpretText 로 타이핑 중 텍스트를 값으로 확정한 뒤 이동."""
+        try:
+            self.sp_port.interpretText()
+        except Exception:
+            pass
+        self._move_port()
+
     # ── 펌프 동작 (덕타이핑 — Chemyx driver / 스마트 API 공용) ──
     def start_infuse(self):
         """헤더 '모두 토출'에서도 호출되는 공개 진입점."""
@@ -406,6 +434,7 @@ class ChannelColumnCard(QFrame):
         #   연타 시 start() 중복 호출 방지. 버튼 색은 설계상 상태무관(RUNNING 은 배지/도트).
         pump = self.pump
         rate = self.sp_infuse.value()
+        tgt = float(self.sp_target.value())
         drv = getattr(pump, "driver", None)
 
         def _run():
@@ -422,9 +451,10 @@ class ChannelColumnCard(QFrame):
             #   시퀀스 엔진(strict_engine)의 엄격 밸브-펌프 결합은 불변.
             if drv is not None and hasattr(drv, "set_rate") and hasattr(pump, "diameter"):
                 # Chemyx 계열: 직경+유속+양수 볼륨 전송 (기존 ChemyxMotorWidget 규약)
+                # 타겟>0 이면 그 부피만 — 펌프 볼륨 모드가 도달 시 자동 정지.
                 drv.set_diameter(pump.diameter)
                 drv.set_rate(rate)
-                drv.set_volume(abs(getattr(pump, "capacity", 10.0)))
+                drv.set_volume(tgt if tgt > 0 else abs(getattr(pump, "capacity", 10.0)))
                 drv.start()
             elif hasattr(pump, "set_flow") and hasattr(pump, "start"):
                 pump.set_flow(rate)
@@ -435,6 +465,7 @@ class ChannelColumnCard(QFrame):
     def _do_withdraw(self):
         pump = self.pump
         rate = self.sp_withdraw.value()
+        tgt = float(self.sp_target.value())
         drv = getattr(pump, "driver", None)
 
         def _run():
@@ -445,15 +476,16 @@ class ChannelColumnCard(QFrame):
                 if not ok:
                     raise RuntimeError(f"니들 이동 실패: {msg}")
                 try:
-                    pump.refill(1, volume=None)
+                    pump.refill(1, volume=(tgt if tgt > 0 else None))
                 finally:
                     self.sampler.lift_needle()
                 return
             def _raw_withdraw():
-                """모터 단독 흡인 (음수 볼륨) — 밸브 미개입."""
+                """모터 단독 흡인 (음수 볼륨) — 밸브 미개입.
+                타겟>0 이면 그 부피만 흡인 후 자동 정지 (펌프 볼륨 모드)."""
                 drv.set_diameter(pump.diameter)
                 drv.set_rate(rate)
-                drv.set_volume(-abs(getattr(pump, "capacity", 10.0)))
+                drv.set_volume(-(tgt if tgt > 0 else abs(getattr(pump, "capacity", 10.0))))
                 drv.start()
 
             _raw_ok = (drv is not None and hasattr(drv, "set_rate")
@@ -468,7 +500,7 @@ class ChannelColumnCard(QFrame):
                 _raw_withdraw()
             elif hasattr(pump, "refill"):
                 port = self.sp_port.value() if self.sp_port is not None else 1
-                pump.refill(port, volume=None)
+                pump.refill(port, volume=(tgt if tgt > 0 else None))
 
         self._threaded(self.btn_withdraw, _run, busy_text="…")
 
