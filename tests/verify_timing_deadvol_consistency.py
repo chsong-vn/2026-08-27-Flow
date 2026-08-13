@@ -80,6 +80,9 @@ def ledger_expected(entry):
 
 
 for pname, keys in prof["pumps"].items():
+    if pname not in settings:
+        print(f"  SKIP {pname} — 원장에 있으나 roles 미등록(그룹 제외됨)")
+        continue
     for key, entry in keys.items():
         exp = ledger_expected(entry)
         if exp is None:
@@ -133,6 +136,8 @@ check("collection_line", abs(sp_json["collection_line_vol_ml"] - exp_col) <= 5e-
       f"원장 {exp_col} | config {sp_json['collection_line_vol_ml']}")
 # 파생 합산 정체성: reagent = inlet + selector + valve_pump (원장 구간합 규칙)
 for pname in prof["pumps"]:
+    if pname not in settings:
+        continue
     s = settings.get(pname, {})
     ident = s.get("tube_vol_inlet", 0) + s.get("tube_vol_selector", 0) \
         + s.get("tube_vol_valve_pump", 0)
@@ -144,14 +149,22 @@ for pname in prof["pumps"]:
 print("=== PART B: _compute_plug_timing ↔ 독립 재구현 (실측 시나리오) ===")
 from engine.strict_engine import StrictSequenceEngine, hte_build_profile
 
-PUMPS = list(cfg.ACTIVE_PUMPS)                      # ['Group A', 'Group_B', ...]
-EM = dict(cfg.tjunction_entry_map)
+# @codesyncer(2026-08-13): N 펌프 일반형 — 그룹 구성(A/D 만 등)이 바뀌어도
+#   감사가 돌아야 한다. entry_map 은 '활성 펌프 전원 기재+단조'만 단언,
+#   시나리오는 활성 목록에서 동적 생성 (구 4펌프 하드코딩이 IndexError 낸 사고).
+PUMPS = list(cfg.ACTIVE_PUMPS)                      # 예: ['Group A', 'Group_D']
+N = len(PUMPS)
+EM = {p: max(1, int((cfg.tjunction_entry_map or {}).get(p, 1) or 1)) for p in PUMPS}
 TJ = dict(cfg.tjunction_line_vols)
 INJ = {p: cfg.line_vol_pump_merge[p] + cfg.valve_internal_vol[p] for p in PUMPS}
 SRC = {p: cfg.line_vol_valve_pump[p] + cfg.selector_internal_vol[p] for p in PUMPS}
 SRC_FIRST = {p: SRC[p] + cfg.line_vol_inlet[p] for p in PUMPS}
-check("entry_map 로드(실 config)", EM == {PUMPS[0]: 1, PUMPS[1]: 1,
-                                          PUMPS[2]: 2, PUMPS[3]: 2}, str(EM))
+check("entry_map 활성 펌프 전원 기재",
+      all(p in (cfg.tjunction_entry_map or {}) for p in PUMPS),
+      f"활성 {PUMPS} / 맵 {cfg.tjunction_entry_map}")
+_em_vals = [EM[p] for p in PUMPS]
+check("entry_map 행순 단조(배관도 표현 가능)",
+      all(_em_vals[i] <= _em_vals[i + 1] for i in range(N - 1)), str(EM))
 check("tj 실측 로드", TJ == {1: 0.0905, 2: 0.0452}, str(TJ))
 
 
@@ -193,16 +206,21 @@ def ref_model(flows, ordered, src, inj, tj, order, em):
     return purge, pre, dv, st
 
 
-A, B, C, D = PUMPS
+_ASYM = [0.2, 0.05, 0.1, 0.05, 0.08]
 SCENARIOS = [
-    ("균등 0.1×4 fifo", {A: .1, B: .1, C: .1, D: .1}, SRC, "fifo"),
-    ("균등 0.1×4 lifo", {A: .1, B: .1, C: .1, D: .1}, SRC, "lifo"),
-    ("비대칭 .2/.1/.05/.05", {A: .2, B: .1, C: .05, D: .05}, SRC, "fifo"),
-    ("C/D 전용", {A: 0, B: 0, C: .1, D: .1}, SRC, "fifo"),
-    ("B 단독", {A: 0, B: .1, C: 0, D: 0}, SRC, "lifo"),
-    ("D 단독", {A: 0, B: 0, C: 0, D: .1}, SRC, "lifo"),
-    ("첫사용(인렛 포함) 균등", {A: .1, B: .1, C: .1, D: .1}, SRC_FIRST, "fifo"),
+    (f"균등 0.1×{N} fifo", {p: .1 for p in PUMPS}, SRC, "fifo"),
+    (f"균등 0.1×{N} lifo", {p: .1 for p in PUMPS}, SRC, "lifo"),
+    ("비대칭", {p: r for p, r in zip(PUMPS, _ASYM)}, SRC, "fifo"),
+    ("첫사용(인렛 포함) 균등", {p: .1 for p in PUMPS}, SRC_FIRST, "fifo"),
 ]
+for _p in PUMPS:   # 각 채널 단독 (구식이 오계산하던 후행 진입 채널 포함)
+    SCENARIOS.append((f"{_p} 단독", {q: (.1 if q == _p else 0.0) for q in PUMPS},
+                      SRC, "lifo"))
+_emax = max(_em_vals)
+if _emax > min(_em_vals):   # 마지막 진입그룹 전용 (앞 구간 비통과 케이스)
+    SCENARIOS.append((f"진입{_emax} 그룹 전용",
+                      {q: (.1 if EM[q] == _emax else 0.0) for q in PUMPS},
+                      SRC, "fifo"))
 for name, flows, src, order in SCENARIOS:
     eng = StrictSequenceEngine._compute_plug_timing(
         flows, PUMPS, src, INJ, TJ, order, entry_map=EM)
@@ -216,9 +234,10 @@ for name, flows, src, order in SCENARIOS:
 
 # 정보: 구 페어와이즈 식이었으면 생겼을 오차 (실측 수치)
 print("  --- 구 페어와이즈 식 대비 오차(정보) ---")
-for name, flows in (("균등 0.1×4", {A: .1, B: .1, C: .1, D: .1}),
-                    ("D 단독 0.1", {A: 0, B: 0, C: 0, D: .1}),
-                    ("C/D 전용 0.1", {A: 0, B: 0, C: .1, D: .1})):
+P_LAST = PUMPS[-1]
+for name, flows in ((f"균등 0.1×{N}", {p: .1 for p in PUMPS}),
+                    (f"{P_LAST} 단독 0.1",
+                     {q: (.1 if q == P_LAST else 0.0) for q in PUMPS})):
     _, pre_new, _, _ = StrictSequenceEngine._compute_plug_timing(
         flows, PUMPS, {p: 0 for p in PUMPS}, INJ, TJ, "lifo", entry_map=EM)
     _, pre_old, _, _ = StrictSequenceEngine._compute_plug_timing(
@@ -239,7 +258,8 @@ dv = {"inlet": dict(cfg.line_vol_inlet), "valve_pump": dict(cfg.line_vol_valve_p
       "selector": dict(cfg.selector_internal_vol),
       "switcher": dict(cfg.valve_internal_vol),
       "pump_merge": dict(cfg.line_vol_pump_merge)}
-steps = [dict(flows={D: 0.1}, F=0.1, v_slug=0.1, q_equiv=1.0, ports={D: 2})]
+steps = [dict(flows={P_LAST: 0.1}, F=0.1, v_slug=0.1, q_equiv=1.0,
+              ports={P_LAST: 2})]
 common = dict(reactor_vol=cfg.reactor_vol, mixing=cfg.mixing_line_dead_vol,
               post=float(sp_json["post_reactor_vol_ml"]), vol_collection=0.24,
               deadvols=dv, active_pumps=PUMPS, tj=TJ, purge_factor=1.0,
@@ -247,14 +267,16 @@ common = dict(reactor_vol=cfg.reactor_vol, mixing=cfg.mixing_line_dead_vol,
               v_wash_sol=0.0, v_wash_gas=0.1)
 vh_new = hte_build_profile([dict(s) for s in steps], tj_entry=EM, **common)["v_head"]
 vh_old = hte_build_profile([dict(s) for s in steps], tj_entry=None, **common)["v_head"]
-# D 단독: 구식은 D가 정션 구간 미통과(0초) — 차이는 정확히 tj[2] 부피여야 함
-check("HTE v_head 차등 = tj[2] 부피(D 단독)",
-      abs((vh_new - vh_old) - TJ[2]) < 1e-6,
-      f"Δv_head {vh_new - vh_old:.4f} mL vs tj[2] {TJ[2]} mL")
+# 마지막 진입그룹 단독: 구식(페어와이즈)은 후행 채널이 공유구간 미통과 —
+# 차이는 정확히 tj[e_max]=tj[2] 부피여야 함 (entry 2 채널이 있을 때)
+if EM[P_LAST] == max(_em_vals) and max(_em_vals) == 2:
+    check(f"HTE v_head 차등 = tj[2] 부피({P_LAST} 단독)",
+          abs((vh_new - vh_old) - TJ[2]) < 1e-6,
+          f"Δv_head {vh_new - vh_old:.4f} mL vs tj[2] {TJ[2]} mL")
 
 # ══ PART D: t_head 수송 구성요소 분해 (정보) ══════════════════════════
-print("=== PART D: t_head 구성요소 (균등 0.1×4, F=0.4) ===")
-F = 0.4
+print(f"=== PART D: t_head 구성요소 (균등 0.1×{N}, F={0.1 * N:.1f}) ===")
+F = 0.1 * N
 flows = {p: 0.1 for p in PUMPS}
 purge, pre_f, dvol, stag = StrictSequenceEngine._compute_plug_timing(
     flows, PUMPS, SRC, INJ, TJ, "fifo", entry_map=EM)
