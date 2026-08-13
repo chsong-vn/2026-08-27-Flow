@@ -1863,10 +1863,12 @@ class StrictSequenceEngine(FlowEngine):
                 self._switch_valves_for_phase(reagent_sources)
 
                 # ── 타이머 이벤트 빌드 ─────────────────────────────
-                # @codesyncer-decision: t_head_sec 결정 우선순위
-                #   1. system_params.outlet_switch_delay_sec  — 실측값(색소 테스트 등)
-                #   2. 기본 = reactor_vol / total_flow (= residence_time) — 데드볼륨 작은 시스템 가정
-                #   (이전 기본: mixing+reactor+post+collection — config 7.656mL는 실제보다 매우 큼)
+                # @codesyncer-decision: t_head_sec 결정 우선순위 (주석 현행화 2026-08-13
+                #   — 구 주석 'reactor/F만'은 코드와 불일치했음)
+                #   1. system_params.outlet_switch_delay_sec — 실측값(색소 테스트 등) 최우선
+                #   2. 기본 = (reactor + mixing + post)/총유량 + pre_sec(주입경로 도달,
+                #      lifo=분기+정션만) + deficit (+compliance) — 전 구간 실측 반영
+                #      (2026-08-12~13: reactor 2.4002 / mixing 0.0954 / post 0.2066)
                 sp_cfg = self.cfg.config_data.get("system_params", {}) if hasattr(self, "cfg") else {}
                 override_delay = sp_cfg.get("outlet_switch_delay_sec")
                 if override_delay is not None and float(override_delay) > 0:

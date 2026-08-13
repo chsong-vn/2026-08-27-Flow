@@ -346,10 +346,28 @@ class HardwareManager:
                 self.push_pump = ReaxusPump(pp_port, name="PushPump")
             elif pp_driver == "Vapourtec" and 'VapourtecPump' in globals():
                 self.push_pump = VapourtecPump(pp_port)
+            # @codesyncer-decision(2026-08-13, 유령 push 사고): 매칭 실패 시 Mock 폴백
+            #   폐지 — push_pump 가 '존재'하기만 하면 엔진이 push_pump_active=True 로
+            #   HPLC push 경로를 타고 레거시 시린지 푸시(Step 4.5b)를 꺼버린다.
+            #   미연결 Reaxus 는 모든 명령이 조용한 no-op 라 '아무도 밀지 않는데
+            #   수집 창은 push 유량으로 예약'되는 fault-masking 이 실런에서 확인됨.
+            #   연결 실패/매칭 실패 = None 강등 → 엔진이 레거시 푸시로 폴백.
+            if self.push_pump is not None:
+                _pp_ok = False
+                try:
+                    _pp_ok = bool(self.push_pump.connect())
+                except Exception as e:
+                    print(f"  - PushPump 연결 예외: {e}")
+                if _pp_ok:
+                    print("  - PushPump 연결 완료")
+                else:
+                    print("  ⚠⚠ [PushPump] 연결 실패 — push_pump=None 강등 "
+                          "(유령 HPLC push 방지). 엔진은 레거시 시린지 푸시 경로 사용. "
+                          "Reaxus 케이블/포트 연결 후 재시작하면 HPLC push 활성화.")
+                    self.push_pump = None
             else:
-                # 드라이버 매칭 실패 시 Mock 폴백 (연결되지 않은 상태로 존재)
-                self.push_pump = MockPump("PushPump")
-            self._safe_connect(self.push_pump, "PushPump")
+                print(f"  ⚠⚠ [PushPump] 드라이버 매칭 실패({pp_info.get('driver')}) — "
+                      f"None 강등, 레거시 시린지 푸시 경로 사용")
 
         # 5-1. NRG Manual Syringe Pumps (역할에 속하지 않은 수동 시린지 펌프)
         # @codesyncer-decision: roles.manual_pumps 는 list of driver_id. 시퀀스 엔진은 건드리지 않고
