@@ -1729,11 +1729,21 @@ class StrictSequenceEngine(FlowEngine):
                     flows, _ordered, line_src, line_inj, _tj_vols, _purge_order,
                     entry_map=_tj_entry)
                 deficit_sec = (deficit_vol / total_flow) * 60.0 if total_flow > 0 else 0.0
-                # 주입 창은 order 무관하게 purge 만큼 연장 — 과충전분 전량 토출(잔량 0) 보장
-                dosing_sec = inject_sec + purge_sec
+                # @codesyncer-decision(2026-08-13, 사용자 확정 — 소스퍼지 무효화):
+                #   구 모델의 도징 창 연장(inject+purge)은 '리필 과충전분(세척액)이
+                #   시약보다 먼저 토출된다'(FIFO)는 가정의 배출 시간이었다. 신 워크플로
+                #   (배럴 비움 + 시약 딱 흡입 + 정량 Phase-0)에선 과충전이 존재하지
+                #   않아, 연장분은 빈 시린지 공회전 → 자동정지 게이트 강제정지의 원인
+                #   (2026-08-13 실런 로그). lifo(=흡입/주입 왕복 물리: 마지막 흡입분
+                #   =시약이 3way 앞에서 먼저 출발)에서는 연장 없이 inject_sec 만 —
+                #   시약 꼬리는 정확히 3way 에 착지하고 이후 수송은 푸시가 담당.
+                #   fifo(레거시 설정)는 기존 동작 유지.
+                _lifo = str(_purge_order or "fifo").lower() == "lifo"
+                dosing_sec = inject_sec + (0.0 if _lifo else purge_sec)
                 if purge_sec > 0 or mixing_vol > 0:
                     self._log(
-                        f"  [DeadVol] order={_purge_order}, src purge +{purge_sec:.1f}s, "
+                        f"  [DeadVol] order={_purge_order}, src purge "
+                        f"{'미적용(lifo)' if _lifo else f'+{purge_sec:.1f}s'}, "
                         f"pre-plug {pre_sec:.1f}s, mixing {mixing_vol:.3f}mL"
                     )
                 self._emit_status(f"Step {exp_id}/{total_steps}: preparing")

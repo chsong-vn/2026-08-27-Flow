@@ -300,6 +300,7 @@
         "max_step_volume_ml": 500.0,
         "wash_mode": "port_change",
         "prefill_mode": "port_change",
+        "purge_order": "lifo",
         "syringe_wash_rate": 15.0,
         "syringe_wash_count": 2,
         "hte_mode": false,
