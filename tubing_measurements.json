@@ -114,7 +114,8 @@
           "illuminated_ml": 2.1,
           "dark_inlet_ml": 0.15,
           "dark_outlet_ml": 0.15,
-          "note": "2026-08-12 실측: 반응기 부피 2.4 mL — 반영 시 reactor_len_m 을 등가 길이(2.4/단면적)로 환산 (기존 config 계산치 3.00 mL). 2026-08-13 추가: 총 2.4 mL 중 광조사 없는 암부 = 앞단 0.15 + 뒷단 0.15 mL(2.4 에 포함) → 조사(illuminated) 부피 2.1 mL. 수송 타이밍(t_head)은 총 2.4 가 맞고, 광화학 체류시간 계산엔 2.1 사용 — 엔진은 현재 총부피만 소비(illuminated_ml 은 기록용)"
+          "spare_reactor_ml": 2.6,
+          "note": "2026-08-12 실측: 반응기 부피 2.4 mL — 반영 시 reactor_len_m 을 등가 길이(2.4/단면적)로 환산 (기존 config 계산치 3.00 mL). 2026-08-13 추가: 총 2.4 mL 중 광조사 없는 암부 = 앞단 0.15 + 뒷단 0.15 mL(2.4 에 포함) → 조사(illuminated) 부피 2.1 mL. 수송 타이밍(t_head)은 총 2.4 가 맞고, 광화학 체류시간 계산엔 2.1 사용 — 엔진은 현재 총부피만 소비(illuminated_ml 은 기록용). 예비 반응기 1개 = 2.6 mL(2026-08-13 기록) — 교체 장착 시 measured_ml=2.6 으로 바꾸고 --apply (암부 실측도 재확인)"
         },
         "post_reactor_vol_ml":    { "current_config_ml": 2.0, "measured_ml": null, "length_cm": 41.1, "id_mm": 0.8,
           "segments": {

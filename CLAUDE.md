@@ -134,16 +134,19 @@ NRG 펌프·GRBL 샘플러의 백엔드. 원본 무수정(LICENSE/NOTICE 동봉)
 ## 현재 하드웨어 구성
 
 ```
-[시약1-12] → 12way밸브(Runze×3, COM9 데이지체인 addr1~3) → 3way밸브(ESP32-S3-ETH-8DI-8RO, ★USB-C 시리얼 COM7 — 이더넷 미사용 결정 2026-07-31, ch1~4=Group A/B/C/D) → 시린지펌프(Chemyx×4, COM8 RS-485)
+[시약1-12] → 12way밸브(Runze×4, COM14 데이지체인) → 3way밸브(ESP32-S3-ETH-8DI-8RO, ★USB-C 시리얼 COM7 — 이더넷 미사용 결정 2026-07-31, ch1~4=Group A/B/C/D) → 시린지펌프(Chemyx×4, COM9 RS-485)
                                                                               ↓
-                                                                        마이크로반응기 (3.99m, ID 0.8mm, 1.98mL)
+                                                        합류: Solvent+A+B→QUAD-1 → (+C+D)→QUAD-2 → 가스T(MFC) → OPB센서   ← 2026-08-12 재구성, tjunction_entry_map
                                                                               ↓
-                                                                        항온조 히터 (COM5, MODBUS)
+                                                        광반응기 코일 (실측 2.4 mL — 암부 앞/뒤 0.15 mL 포함, 조사 2.1 mL / 예비 반응기 2.6 mL)
                                                                               ↓
-                                                                        3way 아웃렛밸브 (ESP32 ch5) → 분획수집기 (COM15, Plate96)
+                                                        항온조 히터 (COM5, MODBUS)
+                                                                              ↓
+                                                        반응기→photo센서→아웃렛 (411 mm = 206.6 µL 실측) → 3way 아웃렛밸브 (ESP32 ch5) → 분획수집기 (COM15, Plate96)
 ```
 
-**펌프 그룹**: Group A / B / C — 각각 (시린지모터 + 12way셀렉터 + 3way스위처) 세트
+**펌프 그룹**: Group A / B / C / D — 각각 (시린지모터 + 12way셀렉터 + 3way스위처) 세트
+**배관 실측 원장**: `tubing_measurements.json` (구간별 부피·이력) → `tools/apply_tubing_measurements.py --apply` 로 config 반영 · 정합 검증 `tests/verify_timing_deadvol_consistency.py`
 
 ---
 
