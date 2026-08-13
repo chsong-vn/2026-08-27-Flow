@@ -142,7 +142,7 @@ NRG 펌프·GRBL 샘플러의 백엔드. 원본 무수정(LICENSE/NOTICE 동봉)
                                                                               ↓
                                                         항온조 히터 (COM5, MODBUS)
                                                                               ↓
-                                                        반응기→photo센서→아웃렛 (411 mm = 206.6 µL 실측) → 3way 아웃렛밸브 (ESP32 ch5) → 분획수집기 (COM15, Plate96)
+                                                        반응기→photo센서→아웃렛 (411 mm = 206.6 µL 실측) → 3way 아웃렛밸브 (ESP32 ch5, ⚠SW 배선반전 invert 중 — docs/아웃렛_배선반전_주의.md) → 분획수집기 (COM15, Plate96)
 ```
 
 **펌프 그룹**: Group A / B / C / D — 각각 (시린지모터 + 12way셀렉터 + 3way스위처) 세트

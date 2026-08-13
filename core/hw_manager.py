@@ -118,7 +118,16 @@ class HardwareManager:
                 self._safe_connect(self.valves["Outlet"], "Outlet")
             elif outlet_driver == "ESP32EthValve" and 'ESP32EthValve' in globals():
                 o_channel = int(o_info.get("channel", 1))
-                self.valves["Outlet"] = ESP32EthValve(o_info["port"], channel=o_channel)
+                # @codesyncer(2026-08-13): invert = collector/waste 튜브 반대 체결을
+                #   소프트웨어에서 흡수 (docs/아웃렛_배선반전_주의.md 필독)
+                o_invert = bool(o_info.get("invert", False))
+                self.valves["Outlet"] = ESP32EthValve(o_info["port"], channel=o_channel,
+                                                      invert=o_invert)
+                if o_invert:
+                    print("  ⚠⚠ [Outlet] 배선 반전 모드(invert) — collector/waste 튜브가 "
+                          "반대로 체결된 상태를 SW 로 흡수 중. 무전원 기본 물리 경로가 "
+                          "COLLECT 쪽임에 주의. 재배관 시 config invert 제거 필수 "
+                          "(docs/아웃렛_배선반전_주의.md)")
                 self._safe_connect(self.valves["Outlet"], "Outlet")
             else:
                 self.valves["Outlet"] = MockValve("Outlet_Virtual")
@@ -178,7 +187,8 @@ class HardwareManager:
                     self._safe_connect(sw_obj, f"Sw_{p_name}")
                 elif sw_driver == "ESP32EthValve" and 'ESP32EthValve' in globals():
                     sw_channel = int(sw_info.get("channel", group_idx + 1))
-                    sw_obj = ESP32EthValve(sw_info["port"], channel=sw_channel)
+                    sw_obj = ESP32EthValve(sw_info["port"], channel=sw_channel,
+                                           invert=bool(sw_info.get("invert", False)))
                     self._safe_connect(sw_obj, f"Sw_{p_name}")
                 elif sw_driver == "RunzeSV07Valve" and 'RunzeSV07Valve' in globals():
                     sw_addr = int(sw_info.get("address", default_sw_addr))

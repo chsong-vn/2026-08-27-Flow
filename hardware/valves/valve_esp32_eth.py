@@ -174,11 +174,20 @@ class ESP32EthValve:
     _serial_registry = {}  # {"host:port": _TcpLink}
     _lock_registry = {}    # {"host:port": threading.Lock}
 
-    def __init__(self, port, baudrate=None, channel=1):
+    def __init__(self, port, baudrate=None, channel=1, invert=False):
         # baudrate 는 ArduinoValve 시그니처 호환용 (미사용)
+        # @codesyncer-decision(2026-08-13, 사용자 지시 — 배선 반전 흡수): invert=True 면
+        #   '논리 위치'(1=WASTE/SOURCE, 2=COLLECT/REACTOR)를 유지한 채 보드로 보내는
+        #   와이어 명령만 반전(1↔2)한다. 아웃렛의 collector/waste 튜브가 물리적으로
+        #   반대로 체결된 것을 재배관 없이 소프트웨어에서 흡수 — 엔진/타이머/Manual/
+        #   배관도는 전부 논리 위치만 보므로 무수정. position(진실)도 논리 값.
+        #   ⚠ 문서 필독: docs/아웃렛_배선반전_주의.md — 무전원(릴레이 OFF) 기본
+        #   물리 경로가 반전되는 부작용 있음. 재배관으로 원복 시 invert 도 제거할 것.
         self.port = (port or "").strip()
         self.channel = channel
+        self.invert = bool(invert)
         self.position = 1
+        self.wire_position = None   # 마지막 전송 와이어 위치 (디버깅/검증용)
         self.is_connected = False
         self.is_serial = bool(re.match(r"(?i)^com\d+$", self.port))
         if self.is_serial:
@@ -246,15 +255,20 @@ class ESP32EthValve:
     def set_position(self, pos):
         target = str(pos).upper()
         if target in ["1", "SOURCE", "REFILL", "WASTE"]:
-            cmd, new_pos = "1", 1
+            new_pos = 1
         elif target in ["2", "REACTOR", "INFUSE", "COLLECT"]:
-            cmd, new_pos = "2", 2
+            new_pos = 2
         else:
             return
+        # 와이어 명령 = 논리 위치 (invert 면 1↔2 반전 — 배선 반대 체결 흡수)
+        wire = (3 - new_pos) if self.invert else new_pos
+        cmd = str(wire)
 
         if self._is_mock():
-            print(f"   [ESP32EthValve ch{self.channel}] (Virtual) -> position {cmd}")
+            print(f"   [ESP32EthValve ch{self.channel}] (Virtual) -> position {cmd}"
+                  + (f" (논리 {new_pos}, invert)" if self.invert else ""))
             self.position = new_pos
+            self.wire_position = wire
             return
 
         link = self._get_link()
@@ -289,9 +303,11 @@ class ESP32EthValve:
                     link.drain()
                     resp = link.request(msg, expected)
                     last_resp = resp
-                    print(f"   [ESP32EthValve ch{self.channel}] TX: {msg.strip()} → RX: {resp}")
+                    print(f"   [ESP32EthValve ch{self.channel}] TX: {msg.strip()} → RX: {resp}"
+                          + (f" (논리 {new_pos}, invert)" if self.invert else ""))
                     if expected in resp:
-                        self.position = new_pos   # ACK 확인 후에만 진실 갱신
+                        self.position = new_pos   # ACK 확인 후에만 진실 갱신 (논리 위치)
+                        self.wire_position = wire
                         return
                     if attempt < 2:
                         print(f"   [ESP32EthValve ch{self.channel}] Retry {attempt+1}/2...")

@@ -57,7 +57,8 @@
             "name": "3-way outlet (ETH)",
             "driver": "3방향 밸브 (ESP32 이더넷)",
             "port": "COM7",
-            "channel": 5
+            "channel": 5,
+            "invert": true
         },
         {
             "id": "dev_65ba215c",
