@@ -193,6 +193,36 @@ def main():
     else:
         skipped.append("reactor")
 
+    # @codesyncer-decision(2026-08-14): 암부(무조사) 구간을 config 로 반영 —
+    #   measured_ml(총부피)은 수송 타이밍용, 유속은 '조사부피'(총−암부) 기준이라
+    #   config.py 가 reactor_dark_* 로 조사부피를 도출한다. 원장에 암부가 없으면
+    #   키를 만들지 않고(=0) 조사=총 으로 남아 구버전과 동일 동작.
+    for _lk, _ck in (("dark_inlet_ml", "reactor_dark_inlet_ml"),
+                     ("dark_outlet_ml", "reactor_dark_outlet_ml")):
+        if rx.get(_lk) is None:
+            continue
+        _cur = float(sp.get(_ck, 0.0) or 0.0)
+        _new = round(float(rx[_lk]), 4)
+        if abs(_cur - _new) > 1e-9:
+            changes.append((_ck, _cur, _new, "원장(암부)"))
+        sp[_ck] = _new
+
+    # @codesyncer-decision(2026-08-15): photo 센서 → 아웃렛 밸브 구간을 전용 키로 노출.
+    #   HEAD 실측 프로브(HeadArrivalProbe)가 '센서에서 잡힌 선단'을 '밸브 기준 t_head'
+    #   로 환산할 때 이 오프셋이 필요하다. 원장 post_reactor 의 segments 에 이미
+    #   실측이 있으므로 파생 반영만 한다(이중 입력 금지).
+    _pr = (sysm.get("post_reactor_vol_ml") or {}).get("segments") or {}
+    _s2o = _pr.get("sensor_to_outlet") or {}
+    _s2o_ml = _s2o.get("ml")
+    if _s2o_ml is None and _s2o.get("length_cm") and _s2o.get("id_mm"):
+        _s2o_ml = vol_from_length(_s2o["length_cm"], _s2o["id_mm"])
+    if _s2o_ml is not None:
+        _cur = float(sp.get("sensor_to_outlet_vol_ml", 0.0) or 0.0)
+        _new = round(float(_s2o_ml), 4)
+        if abs(_cur - _new) > 1e-9:
+            changes.append(("sensor_to_outlet_vol_ml", _cur, _new, "원장(post 구간분해)"))
+        sp["sensor_to_outlet_vol_ml"] = _new
+
     # ── 리포트 ───────────────────────────────────────────────────────
     if seeded:
         print(f"기본값 시드(키 명시, 값 0.0): {len(seeded)}건 — {', '.join(seeded)}\n")

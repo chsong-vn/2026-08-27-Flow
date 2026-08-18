@@ -34,6 +34,11 @@ class FlowEngine:
         self._stop_event = threading.Event()
         self._monitor_thread = None
         self._emergency_triggered = False
+        # @codesyncer(2026-08-18, 실기 발견): CSV 행 기록은 호출 스레드에서 직접
+        #   수행되는데 락이 없어, 병행 스레드(PrecalChain 등)와 메인 스레드가
+        #   동시에 로그하는 창에서 행이 조용히 유실됐다(트레이스에는 남고 CSV만
+        #   빠짐 — N2Precal 실행 여부 오진의 원인). writer 접근 전체를 직렬화.
+        self._log_lock = threading.Lock()
 
     def _init_log(self, name_prefix="Exp", trace=True):
         try:
@@ -99,33 +104,37 @@ class FlowEngine:
 
         if not self.writer: return
 
-        elap = round(time.monotonic() - self.start_time, 1)
+        # 온도/압력 읽기~writerow 전체를 락으로 직렬화 — 병행 스레드 동시 로깅 시
+        # 행 유실 방지 (센서 read 는 각 드라이버 락이 있어도, writer/flush 공유가 문제)
+        with self._log_lock:
+            if not self.writer: return
+            elap = round(time.monotonic() - self.start_time, 1)
 
-        # 온도 읽기 (CSV 값 규약 유지: None→0, 예외/히터없음→-999)
-        t_val = -999
-        t_read = None
-        if self.heater:
+            # 온도 읽기 (CSV 값 규약 유지: None→0, 예외/히터없음→-999)
+            t_val = -999
+            t_read = None
+            if self.heater:
+                try:
+                    t_read = self.heater.get_temperature()
+                    t_val = t_read if t_read is not None else 0
+                except: pass
+
+            # 압력 읽기 (CSV 값 규약 유지)
+            p_vals = []
+            p_reads = {}
+            for k, p in self.pumps.items():
+                try:
+                    v = p.get_pressure()
+                    p_vals.append(v if v is not None else 0)
+                    if v is not None:
+                        p_reads[k] = v
+                except:
+                    p_vals.append(-999)
+
             try:
-                t_read = self.heater.get_temperature()
-                t_val = t_read if t_read is not None else 0
+                self.writer.writerow([elap, msg, t_val] + p_vals)
+                self.csv_file.flush()
             except: pass
-
-        # 압력 읽기 (CSV 값 규약 유지)
-        p_vals = []
-        p_reads = {}
-        for k, p in self.pumps.items():
-            try:
-                v = p.get_pressure()
-                p_vals.append(v if v is not None else 0)
-                if v is not None:
-                    p_reads[k] = v
-            except:
-                p_vals.append(-999)
-
-        try:
-            self.writer.writerow([elap, msg, t_val] + p_vals)
-            self.csv_file.flush()
-        except: pass
 
         # 트레이스 카운터 — 실측값만 기록 (None→0 을 그래프에 올리면
         # 가열 반응 중 가짜 '급랭'으로 읽힘 — 검증 발견)

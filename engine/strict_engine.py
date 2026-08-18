@@ -447,6 +447,286 @@ class _HteSensorSync(threading.Thread):
                 f"잡음무시 {self.spurious} · 누적보정 {self.total_shift:+.1f}s")
 
 
+class HeadArrivalProbe(threading.Thread):
+    """표준(연속류) 경로 HEAD 도달 실측 프로브 — RoboChem 센서구동 로직 이식.
+
+    @codesyncer-context(2026-08-15): 표준 경로는 전 구간 개루프였다. t_head 는
+      배관 실측값에서 해석적으로 계산될 뿐 '실제로 언제 도달했는지'를 아무도 안
+      본다. 그래서 반응기 암부 0.3 mL 미계상(=37.5s @0.48) 같은 오차가 실런에서
+      '분취기가 먼저 전환'으로만 나타나고 로그엔 흔적이 남지 않았다(2026-08-14).
+      반응기 출구~아웃렛 밸브 사이에 OPB 위상센서가 이미 물려 있는데도 표준
+      경로는 이를 전혀 소비하지 않았다(HTE 드롭 모드만 HteSensorSync 로 사용).
+
+    @codesyncer-decision: RoboChem `WaitForPhaseChange`/`MonitorPhase` 의 계약을
+      그대로 가져온다 — 센서=트리거, 시간=타임아웃×여유, 실패는 항상 타이밍 폴백.
+      1. 예상창(t_exp ± window) 게이트 — 창 밖 엣지는 잡기포로 보고 무시
+      2. 타임아웃(창 마감) 도달 시 예외가 아니라 '미검출' 로그 후 종료
+      3. 일시정지 중 엣지 무시 (HteSensorSync 와 동일 불변식)
+      4. finally 에서 반드시 monitor("never") — 센서 상태 누수 금지
+      RoboChem 과 다른 점: 저쪽은 가스 분절 슬러그라 상전이가 항상 존재하지만
+      이 시스템의 표준 경로는 연속 액체다. 그래서 검출기를 2개 둔다.
+        · 상전이 엣지(read_event) — 가스 스페이서가 있을 때
+        · ADC 스텝(analog) — 유색 시약 선단. 베이스라인 대비 |Δ| >= adc_delta 가
+          confirm_n 회 연속이면 선단으로 인정 (단발 노이즈 방어)
+      둘 다 무신호면 아무 일도 일어나지 않고 기존 타이밍이 그대로 쓰인다.
+
+    @codesyncer-risk: mode="anchor" 는 실측 엣지로 CollectionTimer 클록을 이동시켜
+      수집 경계 전체를 옮긴다. 센서 오검출이 곧 분획 어긋남이므로 기본값은 "off",
+      권장 도입 순서는 off → observe(관측·로깅만, 제어 무영향) → anchor.
+      observe 로 몇 런 돌려 Δ 가 재현되면 그 값을 outlet_switch_delay_sec 로
+      고정하는 것도 anchor 없이 쓰는 유효한 출구다.
+
+    @param t_expected_sec: 센서 위치 기준 예상 도달 시각 (pumping-elapsed).
+      t_head 는 '아웃렛 밸브' 기준이므로 호출부가 (sensor→valve 부피)/F 를 빼서 넘긴다.
+    """
+
+    MODES = ("off", "observe", "anchor")
+    MIN_BASE = 5      # ADC 베이스라인 확정에 필요한 최소 표본 수
+
+    def __init__(self, engine, sensor, key, timer, t_expected_sec, window_sec,
+                 mode="observe", adc_delta=0.0, confirm_n=3, poll=0.1,
+                 valve_lag_sec=0.0, confirm_sec=1.0):
+        super().__init__(daemon=True, name="HeadArrivalProbe")
+        self.engine = engine
+        self.sensor = sensor
+        self.key = key
+        self.timer = timer
+        self.t_exp = float(t_expected_sec)
+        self.w = float(window_sec)
+        self.mode = str(mode or "off").lower()
+        self.adc_delta = float(adc_delta or 0.0)
+        self.confirm_n = max(1, int(confirm_n))
+        self.poll = float(poll)
+        self.valve_lag = float(valve_lag_sec or 0.0)
+        # @codesyncer(2026-08-18, 적대검증 P0 수정): 지속성 확인 창 — 후보(상전이/
+        #   ADC 스텝)가 이 시간 동안 유지돼야 발화. 기포는 지나가고 되돌아오므로
+        #   탈락, 진짜 선단은 유지. 발화 시각은 '첫 후보 시각'으로 소급(지연 무보정
+        #   문제 회피). 부피 환산: V = F × confirm_sec (0.48mL/min·1s ≈ 8µL).
+        self.confirm_sec = max(0.0, float(confirm_sec))
+        # P0: GAS 분류 배제용 — 이 키의 채널 임계(드라이버와 동일 판정 기준)
+        _smap = getattr(sensor, "sensors", {}) or {}
+        self._ch = _smap.get(self.key)
+        try:
+            _t = (getattr(sensor, "thresholds", {}) or {}).get(self._ch)
+            self._thr = float(_t) if _t is not None else None
+        except Exception:
+            self._thr = None
+        # 결과 (실측 리포트/트레이스용)
+        self.detected_sec = None      # 센서에서 선단이 잡힌 pumping-elapsed
+        self.delta_sec = None         # 실측 − 예상 (양수 = 예상보다 늦게 도달)
+        self.detector = None          # "phase" | "adc"
+        self.baseline_adc = None
+        self.applied_shift = 0.0
+        self.missed = False
+        self.spurious = 0
+        self._stop_evt = threading.Event()
+
+    def stop(self):
+        self._stop_evt.set()
+        if self.is_alive():
+            self.join(timeout=2.0)
+
+    def _elapsed(self):
+        try:
+            return (self.timer._pumping_elapsed()
+                    if self.timer is not None and self.timer.start_time is not None
+                    else 0.0)
+        except Exception:
+            return 0.0
+
+    def _paused(self):
+        try:
+            with self.timer._pause_lock:
+                return self.timer._pause_start is not None
+        except Exception:
+            return False
+
+    def _read_adc(self):
+        try:
+            v = self.sensor.analog(self.key)
+            return None if v is None or v < 0 else float(v)
+        except Exception:
+            return None
+
+    def run(self):
+        if self.mode not in ("observe", "anchor"):
+            return
+        try:
+            self.sensor.monitor(self.key, "always")
+        except Exception as e:
+            self.engine._log(f"  [HeadProbe] 모니터 무장 실패 — 타이밍 폴백: {e}")
+            return
+
+        t_open, t_close = self.t_exp - self.w, self.t_exp + self.w
+        self.engine._log(
+            f"  [HeadProbe] {self.mode} 무장 — 센서 '{self.key}' 예상 {self.t_exp:.1f}s "
+            f"(창 ±{self.w:.0f}s), 검출기 "
+            f"{'상전이+ADC(Δ≥' + format(self.adc_delta, '.0f') + ')' if self.adc_delta > 0 else '상전이'}")
+
+        base_samples, hits, drained = [], 0, False
+        hit_t0 = None          # ADC 후보 첫 히트 시각 — 소급 발화용
+        pend = None            # 지속성 확인 중 후보: (kind, t_first, want_liquid)
+        try:
+            while not self._stop_evt.is_set():
+                if getattr(self.engine, "abort_flag", False):
+                    return
+                if self._stop_evt.wait(self.poll):
+                    return
+                # @codesyncer-decision: 경과는 반드시 폴 대기 '뒤'에 읽는다. 대기 전에
+                #   읽은 값을 검출 시각으로 쓰면 엣지가 대기 중에 도착했을 때 최대 poll
+                #   만큼 과거로 기록되고, anchor 모드에선 그 오차가 그대로 재앵커된다.
+                el = self._elapsed()
+                if el > t_close and pend is None:
+                    self.missed = True
+                    self.engine._log(
+                        f"  [HeadProbe] ⚠ 창 {self.t_exp:.1f}±{self.w:.0f}s 안에 선단 미검출 "
+                        f"— 타이밍 그대로 사용(폴백). 시약에 광학 대비가 없거나 "
+                        f"실제 도달이 창 밖일 수 있음")
+                    return
+                # 일시정지 중엔 유량이 없다 — 진행 중이던 후보도 신뢰 불가
+                # (감압으로 계면이 왕복하는 구간 — P0 지속성 확인의 전제 붕괴)
+                if self._paused():
+                    if pend is not None or hits:
+                        self.spurious += 1
+                    pend, hits, hit_t0 = None, 0, None
+                    continue
+
+                adc = self._read_adc()
+                # @codesyncer(P0-1/P0-2, 적대검증 공격 1·2 수정): GAS 로 분류되는
+                #   표본(= 기포)은 베이스라인 축적과 ADC 검출 양쪽에서 배제한다.
+                #   드라이버와 동일 판정(adc <= 채널 임계 = 기체). 기포가 평균을
+                #   무너뜨리거나(공격1) 그 자체가 선단으로 오인되는(공격2) 경로 차단.
+                #   ⚠ 임계 아래로 읽히는 진한 유색 시약은 이 검출기로 못 본다 —
+                #   모드 A 의 문서화된 한계(배선메모 §유색), 임계 하향으로 대응.
+                is_gas = (self._thr is not None and adc is not None
+                          and adc <= self._thr)
+                # 베이스라인 = 선단 이전(선행 용매)의 광학값. 창 열리기 전 구간에서
+                # 모으는 게 정석이지만, 창이 이미 열린 채 프로브가 무장되는 경우
+                # (window 가 t_exp 보다 커서 t_open<0)에도 반드시 잡혀야 하므로
+                # '표본 MIN_BASE 개 확보'를 확정 조건으로 둔다.
+                if self.baseline_adc is None:
+                    if adc is not None and not is_gas:
+                        base_samples.append(adc)
+                        if len(base_samples) > 200:
+                            base_samples.pop(0)
+                    if el >= t_open and len(base_samples) >= self.MIN_BASE:
+                        # P0-1: 평균 → 중앙값. 배제를 뚫고 남은 소수 오염에도 강건.
+                        _srt = sorted(base_samples)
+                        self.baseline_adc = float(_srt[len(_srt) // 2])
+                if el < t_open:
+                    continue
+
+                # @codesyncer-decision: 창 진입 시 스테일 엣지 배수 — monitor 를 프로브
+                #   시작(주입 시작)부터 걸어두므로 창 이전의 엣지(프라임·세척·기포)가
+                #   드라이버 큐에 쌓인다. 그대로 두면 창 진입 첫 read_event 가 그 과거
+                #   엣지를 반환해 '선단 도달'로 오인한다 — 창 게이트를 무력화하는 경로.
+                #   RoboChem 은 대기 직전에 monitor 를 켜고 if_already_present 로 같은
+                #   상황을 막는다. 여기선 큐를 비우고 '창 진입 이후 신선한 엣지'만 인정.
+                if not drained:
+                    drained = True
+                    try:
+                        for _ in range(100):
+                            if self.sensor.read_event(self.key) is None:
+                                break
+                            self.spurious += 1
+                    except Exception:
+                        pass
+                    if self.spurious:
+                        self.engine._log(f"  [HeadProbe] 창 진입 전 스테일 엣지 "
+                                         f"{self.spurious}건 폐기")
+                    continue
+
+                # ── 진행 중 후보의 지속성 확인 (P0-2/P0-3 공통, 적대검증 수정) ──
+                # 후보 확정 후 confirm_sec 동안 같은 상태가 유지돼야 발화. 기포는
+                # 지나가고 원상 복귀 → 여기서 탈락. 발화 시각은 t_first 로 소급.
+                if pend is not None:
+                    kind, t_first, want_liquid = pend
+                    if kind == "phase":
+                        try:
+                            _sustained = ((self.sensor.read_phase(self.key) != "GAS")
+                                          == want_liquid)
+                        except Exception:
+                            _sustained = False
+                    else:                          # "adc"
+                        _sustained = (adc is not None and not is_gas
+                                      and self.baseline_adc is not None
+                                      and abs(adc - self.baseline_adc) >= self.adc_delta)
+                    if not _sustained:
+                        self.spurious += 1         # 기포/채터 — 후보 기각
+                        pend, hits, hit_t0 = None, 0, None
+                        continue
+                    if el - t_first >= self.confirm_sec:
+                        if kind == "phase":
+                            self._fire(t_first, "phase",
+                                       f"상전이 {'G→L' if want_liquid else 'L→G'} "
+                                       f"(지속 {self.confirm_sec:.1f}s 확인)")
+                        else:
+                            self._fire(t_first, "adc",
+                                       f"ADC {self.baseline_adc:.0f}→{adc:.0f} "
+                                       f"(지속 {self.confirm_sec:.1f}s 확인)")
+                        return
+                    continue
+
+                # ① 상전이 엣지 — 즉시 발화 금지(P0-3), 지속성 후보로 등록
+                try:
+                    ev = self.sensor.read_event(self.key)
+                except Exception as e:
+                    self.engine._log(f"  [HeadProbe] ⚠ 센서 오류 — 프로브 종료"
+                                     f"(런은 타이밍으로 계속): {e}")
+                    return
+                if ev is not None:
+                    pend = ("phase", el, ev != "GAS")
+                    continue
+
+                # ② ADC 스텝 (유색 시약 선단) — GAS 배제(P0-2) + confirm_n 연속
+                #    → 지속성 후보 등록 (첫 히트 시각 소급)
+                if self.adc_delta > 0 and adc is not None and not is_gas \
+                        and self.baseline_adc is not None:
+                    if abs(adc - self.baseline_adc) >= self.adc_delta:
+                        if hits == 0:
+                            hit_t0 = el
+                        hits += 1
+                        if hits >= self.confirm_n:
+                            pend = ("adc", hit_t0, None)
+                    elif hits:
+                        self.spurious += 1
+                        hits, hit_t0 = 0, None
+        finally:
+            try:
+                self.sensor.monitor(self.key, "never")
+            except Exception:
+                pass
+
+    def _fire(self, el, detector, detail):
+        self.detected_sec = el
+        self.detector = detector
+        self.delta_sec = el - self.t_exp
+        msg = (f"  [HeadProbe] 선단 검출 @ {el:.1f}s ({detail}) — "
+               f"예상 {self.t_exp:.1f}s 대비 Δ{self.delta_sec:+.1f}s")
+        if self.mode == "anchor":
+            try:
+                self.timer.shift(self.delta_sec)
+                self.applied_shift = self.delta_sec
+                msg += " → 타이머 재앵커 적용"
+            except Exception as e:
+                msg += f" → 재앵커 실패({e}), 타이밍 폴백"
+        else:
+            msg += " → 관측만(observe), 제어 무영향"
+        self.engine._log(msg)
+        if abs(self.delta_sec) > 5.0:
+            self.engine._log(
+                f"  [HeadProbe] ⓘ 실측 HEAD(밸브 기준) ≈ "
+                f"{el + self.valve_lag:.1f}s — 재현되면 "
+                f"system_params.outlet_switch_delay_sec 에 고정 가능")
+
+    def summary(self):
+        if self.detected_sec is None:
+            return "선단 미검출(타이밍 폴백)" if self.missed else "미실행"
+        return (f"검출 {self.detected_sec:.1f}s / 예상 {self.t_exp:.1f}s / "
+                f"Δ{self.delta_sec:+.1f}s / 검출기={self.detector} / "
+                f"재앵커 {self.applied_shift:+.1f}s / 노이즈기각 {self.spurious}")
+
+
 class StrictSequenceEngine(FlowEngine):
     """Time-driven strict sequence engine for real hardware execution."""
 
@@ -465,6 +745,15 @@ class StrictSequenceEngine(FlowEngine):
         self.mfc = mfc
         # 위상센서(OCB350) — 하이브리드 트리거(선택). None 이면 순수 타이밍.
         self.phase_sensor = phase_sensor
+        # @codesyncer(2026-08-18, 사용자 요청): OPB 상전이(0↔1)를 시스템 로그에
+        #   포함 — 버그 리포트에서 타이머/밸브/분취 사건과 센서 사건을 같은
+        #   타임라인(CSV Time_s·[T+]·Perfetto)으로 대조하기 위함. 드라이버
+        #   debounce 확정(50ms 표본×2) 기준이라 1Hz 대시보드 폴보다 정밀.
+        if phase_sensor is not None:
+            try:
+                phase_sensor.on_transition = self._log_phase_transition
+            except Exception:
+                pass
         # 초음파 레벨센서(HC-SR04) — startup 잔량 실측/퍼지(선택). None 이면 기존 '가정 empty'.
         self.level_sensor = level_sensor
         self._hte_sensor_sync = None
@@ -1145,6 +1434,23 @@ class StrictSequenceEngine(FlowEngine):
                     raise SafetyError(
                         f"Interlock error: push_pump missing required method '{method_name}'"
                     )
+        else:
+            # @codesyncer-decision(2026-08-14, 유령 폴백 차단 — 사용자 확정):
+            #   roles.push_pump 가 구성돼 있는데 연결 실패로 None 강등된 채 시퀀스를
+            #   시작하면 조용히 레거시 시린지 푸시로 폴백해 워크플로(push 병행 세척,
+            #   스텝2+ 시간단축)가 무효화된다 — 2026-08-14 실런에서 사용자가 로그를
+            #   보고서야 인지. 시작 전에 시끄럽게 차단한다. 레거시 푸시를 원하면
+            #   장치설정에서 push_pump 역할을 해제하면 된다.
+            _pp_role = ((self.cfg.config_data.get("roles", {}) or {})
+                        .get("push_pump", {}) or {})
+            if _pp_role.get("driver_id"):
+                raise SafetyError(
+                    "Interlock error: push_pump(HPLC) 역할이 설정돼 있으나 미연결 상태 "
+                    "(초기화 시 강등됨). Reaxus 전원 ON + USB 연결 확인 후 "
+                    "Setting→저장(하드웨어 Hot Reload) 또는 앱 재시작으로 재연결하세요. "
+                    "다른 프로그램이 해당 COM 포트를 점유 중이면 닫아야 합니다. "
+                    "레거시 시린지 푸시로 실행하려면 장치설정에서 push_pump 역할을 "
+                    "해제하세요.")
 
     # ---------------------------------------------------------------------
     # Main run loop
@@ -1833,6 +2139,52 @@ class StrictSequenceEngine(FlowEngine):
                 #   초과 위험)도 함께 제거. 이제 첫 액체 단계 = 시스템 세척(빈 시린지
                 #   가정 성립). 구 동작은 git 이력의 _initial_refill 호출 참조.
 
+                # @codesyncer-decision(2026-08-15, 사용자 확정 — 용어/역할 재정의):
+                #   HPLC(Reaxus)는 '반응 후 push' 전용 — prime 관여/용어 금지.
+                #   본류 용매 충전은 Prime Phase-1(시린지 port1, 프리필 내부, 스텝1
+                #   전용)이 담당한다. 구 'HPLC 다운스트림 프라임'(2026-08-14 하루
+                #   존재)은 이 결정으로 폐지 — git 이력 참조.
+
+                # Step 1.8: Push 라인 프라임 (스텝1 전용 — 2026-08-15 사용자 제안)
+                # @codesyncer-decision: 실기에서 push 시작 후 유체가 20s 넘게 안
+                #   밀리는 증상(= 0.16mL @0.481mL/min)의 원인이 push 라인·헤드의
+                #   공기/미충전으로 지목됨. 스텝1에 미리 라인을 용매로 채우고 기포를
+                #   Outlet(WASTE)로 밀어낸다. 시린지 세척은 12way 경로(3way=SOURCE)라
+                #   본류와 분리 → 병행 스레드로 돌려 추가 시간 0. 프리필(Prime Ph1)이
+                #   같은 본류를 쓰므로 그 직전에 join 한다.
+                _plp_errs: List[str] = []
+                _n2cal_errs: List[str] = []
+                _plp_thread = None
+                _do_plp = (idx == 0 and self.push_pump is not None)
+                # @codesyncer-decision(2026-08-17, 사용자 지시): N2 사전 캘리브 —
+                #   호밍·가열과 병행해 ①N2 로 본류 액체 배기 ②센서 공기 원점
+                #   캡처(RoboChem OCB350 캘리브 계약의 PC측 등가). PushLinePrime 과
+                #   '동시' 실행 금지: 둘 다 본류에 흘리는 작업이라 가스T 에서
+                #   용매/가스가 교대로 지나가 '가스 안정' 판정이 영원히 안 남.
+                #   → 한 스레드에서 순차: 용매 프라임 먼저, N2 배기·원점을 마지막
+                #   (원점 캡처 시점의 관로가 가장 깨끗). 프리필이 본류를 쓰므로
+                #   기존 join 지점(프리필 직전)은 그대로.
+                _do_n2 = (idx == 0 and bool(
+                    (self.cfg.config_data.get("system_params", {})
+                     if hasattr(self, "cfg") else {}).get("n2_precal_enabled", False)))
+                if _do_plp or _do_n2:
+                    def _precal_chain(_pl=_plp_errs, _n2=_n2cal_errs,
+                                      _p=_do_plp, _n=_do_n2):
+                        if _p:
+                            self._push_line_prime(_pl)
+                        if _n:
+                            self._n2_precal_purge(_n2)
+                    _plp_thread = threading.Thread(
+                        target=_precal_chain, daemon=True, name="PrecalChain")
+                    _plp_thread.start()
+
+                # Step 1.9: 소스라인 기포 퍼지 (gas 브랜치 이식 2026-08-17 — 원작 08-14)
+                #   세척·프리필보다 '앞' — 퍼지가 공용 구간(12way→3way→시린지)에
+                #   남기는 시약을 뒤따르는 세척이 헹궈낸다. 프리캘 체인(본류·push)
+                #   과는 경로 분리(시린지·12way)라 병행 안전 — COM7 밸브 동시사용은
+                #   push 병행세척에서 검증된 패턴. bubble_purge_enabled=false 면 무동작.
+                self._source_bubble_purge(inlet_ports, flows)
+
                 # Step 2: wash
                 if self._should_run_mode(self.wash_mode, idx, ports_changed):
                     self._emit_status(f"Step {exp_id}/{total_steps}: washing")
@@ -1840,15 +2192,35 @@ class StrictSequenceEngine(FlowEngine):
                 else:
                     self._log(f"Step {exp_id}: wash skipped (mode={self.wash_mode})")
 
-                # Step 3.5: prefill
-                if self._should_run_mode(self.prefill_mode, idx, ports_changed):
-                    self._smart_prefill_logic(inlet_ports, flows, f_prefill, target_vol, total_flow, line_src,
-                                              inlet_vials=exp.get("inlet_vials", {}))
-                    # 흡입이 실제 수행됨 → 해당 포트의 inlet 라인은 이제 시약으로 충전됨
-                    for _p in flows.keys():
-                        self._primed_ports.setdefault(_p, set()).add(int(inlet_ports.get(_p, 2)))
-                else:
-                    self._log(f"Step {exp_id}: prefill skipped (mode={self.prefill_mode})")
+                # Step 3.5: prefill (Prime Phase-0/1 + 시약 장전)
+                # @codesyncer-decision(2026-08-15, 사용자 확정 — 용어/게이트 재정의):
+                #   Prime = 시린지가 port 1 용매로 채우는 것. 두 종류:
+                #     Phase-0 = 분기 데드볼륨만 — 스텝1·포트변경 시만
+                #       (동일 포트 연속 스텝은 분기가 직전 스텝 상태 그대로라 불필요)
+                #     Phase-1 = 본류(반응기) total 볼륨 충전, 압력 안정성 — 스텝1 전용
+                #   시약 장전은 매 스텝 필수 ('딱 흡입' — 구 prefill 전체 스킵은
+                #   스텝2+ 빈 시린지 주입 지뢰였음). HPLC 는 push 전용 — prime 불관여.
+                # 프리캘 체인 join — Prime Ph1 과 본류가 겹치므로 반드시 선행 완료
+                if _plp_thread is not None:
+                    while _plp_thread.is_alive():
+                        self._check_abort()
+                        _plp_thread.join(timeout=1.0)
+                    if _plp_errs:
+                        self._log(f"  [PushLinePrime] ⚠ 실패: {'; '.join(_plp_errs)} — "
+                                  f"push 시작 지연(기포) 가능성 남음")
+                    if _n2cal_errs:
+                        self._log(f"  [N2Precal] ⚠ 미완: {'; '.join(_n2cal_errs)} — "
+                                  f"원점값 없이 진행 (런 타이밍 무영향)")
+
+                _run_phase0 = (idx == 0) or ports_changed
+                _run_phase1 = (idx == 0)
+                self._smart_prefill_logic(inlet_ports, flows, f_prefill, target_vol, total_flow, line_src,
+                                          inlet_vials=exp.get("inlet_vials", {}),
+                                          run_phase0=_run_phase0,
+                                          run_phase1=_run_phase1)
+                # 흡입이 실제 수행됨 → 해당 포트의 inlet 라인은 이제 시약으로 충전됨
+                for _p in flows.keys():
+                    self._primed_ports.setdefault(_p, set()).add(int(inlet_ports.get(_p, 2)))
 
                 # Step 4: injection (reagent ports)
                 # @codesyncer-decision: Outlet valve + Collector 제어를 별도 Timer thread로 위임.
@@ -2009,10 +2381,38 @@ class StrictSequenceEngine(FlowEngine):
                 _move_meta = {"kind": "move",
                               "guard_waste": _valve_to_waste,
                               "guard_restore": _valve_to_collect}
-                # HEAD 도달 — Outlet 전환(밸브 기준 시각). 니들(웰) 이벤트는
-                # compensated 모드에서 +Δ(_line_delay_sec) 시프트 — 니들 유출이
+                # @codesyncer-decision(2026-08-15, 사용자 확정 — 수집라인 선헹굼):
+                #   Outlet→COLLECT 를 선단 도달(t_head)보다 collect_preflush_vol_ml
+                #   만큼 앞당긴다. 선단 '앞' 신선한 용매가 수집라인을 통과해
+                #   WASH(수집라인 폐기 좌표)로 빠지므로, 제품이 도착하기 전에
+                #   라인이 세정된다. 제품 손실 없음(어차피 니들이 WASH 위).
+                # - WASH 포트가 있는 compensated 모드에서만 유효 — legacy(니들이
+                #   첫 웰에 파킹)에서 앞당기면 선헹굼 용매가 첫 웰로 들어가므로
+                #   적용하지 않고 경고만 남긴다.
+                # - t_head 를 넘어서 앞당길 수 없도록 클램프(음수 시각 방지).
+                # - 니들 이동/수집 종료/WASTE/push 시간은 전부 불변 — 밸브 전환
+                #   시각만 이동한다(수집 창 정의는 t_head 기준 유지).
+                _preflush_vol = float(sp_cfg.get("collect_preflush_vol_ml", 0.0) or 0.0)
+                _preflush_sec = 0.0
+                if _preflush_vol > 0 and total_flow > 0:
+                    if _line_comp and _has_wash_port:
+                        _preflush_sec = min((_preflush_vol / total_flow) * 60.0,
+                                            float(t_head_sec))
+                        self._log(
+                            f"  [CollectLine] 선헹굼 {_preflush_vol:.3f}mL → "
+                            f"Outlet→COLLECT {_preflush_sec:.1f}s 조기 전환 "
+                            f"(@ {t_head_sec - _preflush_sec:.1f}s, 배출=WASH포트)")
+                    else:
+                        self._log(
+                            f"  ⚠ 선헹굼 {_preflush_vol:.3f}mL 미적용 — "
+                            f"collect_line_mode=compensated + WASH 포트 필요 "
+                            f"(legacy 는 선헹굼 용매가 첫 웰로 유입)")
+                _t_collect_sec = max(0.0, float(t_head_sec) - _preflush_sec)
+
+                # HEAD 도달 — Outlet 전환(밸브 기준 시각, 선헹굼만큼 조기). 니들(웰)
+                # 이벤트는 compensated 모드에서 +Δ(_line_delay_sec) 시프트 — 니들 유출이
                 # 수집라인 부피만큼 늦게 시작하는 물리 반영 (legacy 는 Δ=0 동일).
-                timer_events.append((t_head_sec, "Outlet→COLLECT", _valve_to_collect,
+                timer_events.append((_t_collect_sec, "Outlet→COLLECT", _valve_to_collect,
                                      "valve", {"kind": "collect"}))
                 if _collector_enabled:
                     timer_events.append(
@@ -2062,12 +2462,61 @@ class StrictSequenceEngine(FlowEngine):
                 # - 기존: timer.start()가 펌프 start보다 수 초 앞서 기준점을 잡아
                 #   HEAD/well 이동/Outlet→WASTE가 전부 조기 발동 (제품 일부 waste 유실)
                 self._collection_timer.pause()
+
+                # ── HEAD 도달 실측 프로브 (RoboChem 센서구동 이식) ──────────────
+                # @codesyncer-decision(2026-08-15): 표준 경로에 개루프 교차검증을
+                #   붙인다. 반응기 출구~아웃렛 밸브 사이 OPB 센서가 t_head 를 실측
+                #   대조하고, mode="anchor" 면 실측 엣지로 타이머를 재앵커한다.
+                #   기본 "off" — 켜지 않으면 동작·성능 모두 종전과 동일.
+                _probe_prev = getattr(self, "_head_probe", None)
+                if _probe_prev is not None:
+                    try:
+                        _probe_prev.stop()
+                    except Exception:
+                        pass
+                self._head_probe = None
+                _pm = str(sp_cfg.get("head_probe_mode", "off") or "off").lower()
+                # @codesyncer-risk: anchor 는 수집 창 전체를 이동시키므로 '밀어주는 쪽'도
+                #   같이 늘어나야 한다. HPLC push 는 루프에서 applied_shift 를 읽어 창을
+                #   연장하지만, 레거시(시린지) push 는 _execute_smart_dosing 에 고정
+                #   duration 으로 들어가 중간 연장이 불가능하다 → 재앵커 시 수집 꼬리가
+                #   무유량이 된다. 그 조합에서는 anchor 를 observe 로 강등한다(측정은 유지).
+                if _pm == "anchor" and not push_pump_active:
+                    _pm = "observe"
+                    self._log("  [HeadProbe] ⚠ 레거시(시린지) push 경로에서는 push 창을 "
+                              "중간 연장할 수 없어 anchor → observe 로 강등합니다 "
+                              "(측정은 계속, 제어는 기존 타이밍 유지)")
+                if _pm in ("observe", "anchor") and self.phase_sensor is not None and total_flow > 0:
+                    # 센서는 아웃렛 밸브보다 (sensor→outlet 부피)/F 만큼 앞선다
+                    _s2o = float(sp_cfg.get("sensor_to_outlet_vol_ml", 0.0) or 0.0)
+                    _valve_lag = (_s2o / total_flow) * 60.0
+                    _t_exp_sensor = max(0.0, float(t_head_sec) - _valve_lag)
+                    try:
+                        self._head_probe = HeadArrivalProbe(
+                            self, self.phase_sensor,
+                            str(sp_cfg.get("head_probe_sensor_key", "collect") or "collect"),
+                            self._collection_timer, _t_exp_sensor,
+                            window_sec=float(sp_cfg.get("head_probe_window_sec", 150.0) or 150.0),
+                            mode=_pm,
+                            adc_delta=float(sp_cfg.get("head_probe_adc_delta", 0.0) or 0.0),
+                            valve_lag_sec=_valve_lag,
+                            confirm_sec=float(sp_cfg.get("head_probe_confirm_sec", 1.0) or 0.0),
+                        )
+                        self._head_probe.start()
+                    except Exception as _pe:
+                        self._head_probe = None
+                        self._log(f"  [HeadProbe] 기동 실패 — 타이밍 폴백: {_pe}")
+                elif _pm in ("observe", "anchor") and self.phase_sensor is None:
+                    self._log("  [HeadProbe] ⚠ head_probe_mode 설정됐으나 위상센서 없음 — 건너뜀")
+
                 _wash_label = ("WASH포트" if (_line_comp and _has_wash_port and flush_sec > 0)
                                else (_well_name(_wash_tube)
                                      if (flush_sec > 0 and not push_pump_active) else "없음"))
+                _pf_label = (f", Outlet 조기전환 @ {_t_collect_sec:.1f}s "
+                             f"(선헹굼 {_preflush_sec:.1f}s)" if _preflush_sec > 0 else "")
                 if push_pump_active:
                     self._log(
-                        f"  [Timer] scheduled (HPLC push): HEAD @ {t_head_sec:.1f}s, "
+                        f"  [Timer] scheduled (HPLC push): HEAD @ {t_head_sec:.1f}s{_pf_label}, "
                         f"wells {_well_name(_first_tube)}..{_well_name(_first_tube + _num_collect_tubes - 1)}"
                         f"{f' (니들 +{_line_delay_sec:.1f}s)' if _line_delay_sec > 0 else ''}, "
                         f"wash {_wash_label}, end @ {t_head_sec + collect_sec + flush_sec:.1f}s "
@@ -2075,7 +2524,7 @@ class StrictSequenceEngine(FlowEngine):
                     )
                 else:
                     self._log(
-                        f"  [Timer] scheduled: HEAD @ {t_head_sec:.1f}s, "
+                        f"  [Timer] scheduled: HEAD @ {t_head_sec:.1f}s{_pf_label}, "
                         f"wells {_well_name(_first_tube)}..{_well_name(_first_tube + _num_collect_tubes - 1)}"
                         f"{f' (니들 +{_line_delay_sec:.1f}s)' if _line_delay_sec > 0 else ''}, "
                         f"wash {_wash_label}, end @ {t_head_sec + collect_sec + flush_sec:.1f}s"
@@ -2086,6 +2535,26 @@ class StrictSequenceEngine(FlowEngine):
                 # - prefill에서 정확히 계산된 시약을 전량 주입
                 # - 중간 리필하면 시약 희석, 시린지에 남은 시약이 용매와 섞임
                 # - 주입 완료 후 transit에서 용매로 밀어줌
+
+                # 시약 선단 N2 마커 (inj_marker_enabled, 기본 off — 2026-08-18):
+                #   '마커 꼬리~시약 선단 갭 = pre_sec' 결정론은 마커가 도징 개시와
+                #   동시에 출발할 때만 성립 → 타이머 resume 과 같은 콜백(펌프 스타트
+                #   확인 시점)에서 발사. 콜백은 도징 모니터 루프 안에서 불리므로
+                #   블로킹 금지 — 데몬 스레드로 위임 (_inject_front_marker 참조).
+                _mk_errs: List[str] = []
+                _do_marker = (bool(sp_cfg.get("inj_marker_enabled", False))
+                              and self.mfc is not None)
+
+                def _on_inject_started(_resume=self._collection_timer.resume,
+                                       _errs=_mk_errs, _pre=pre_sec,
+                                       _fire=_do_marker):
+                    _resume()
+                    if _fire:
+                        threading.Thread(
+                            target=self._inject_front_marker,
+                            args=(_errs, _pre),
+                            daemon=True, name="InjMarker").start()
+
                 self._execute_smart_dosing(
                     flows,
                     total_vol_ml=None,
@@ -2093,41 +2562,57 @@ class StrictSequenceEngine(FlowEngine):
                     source_port_map=reagent_sources,
                     step_name=f"S{exp_id}-Injection",
                     allow_refill=False,
-                    on_pumps_started=self._collection_timer.resume,
+                    on_pumps_started=_on_inject_started,
                     start_offsets=stagger_offsets,
                 )
+                if _mk_errs:
+                    self._log(f"  [InjMarker] ⚠ 마커 미완({'; '.join(_mk_errs)}) — "
+                              "이 스텝의 '센서2 마커꼬리+pre' 선단 실측은 신뢰 불가")
 
-                # Step 4.5a: injection 후 시약 잔량을 reactor로 밀어냄 (prime)
-                # @codesyncer-decision: 빈 시린지 상태에서 용매를 채워야 시약/용매 혼합 방지
+                # Step 4.5a: 주입 후 처리 — 경로별 분기 (2026-08-14 사용자 확정)
                 # Timer pause — 이 구간 pump 정지로 flow 없음 → Timer 발동 시간 미뤄줌
                 if self._collection_timer is not None:
                     self._collection_timer.pause()
                 self._stop_momentary()
-                prime_names = []
-                for p_name in flows.keys():
-                    pump = self.pumps.get(p_name)
-                    if _is_smart_pump(pump):
-                        if float(getattr(pump, "current_vol", 0.0)) > 0.1 and hasattr(pump, "prime_prepare"):
-                            self._wait_pause_or_abort("post-injection prime")
-                            if pump.prime_prepare():
-                                prime_names.append(p_name)
-                if prime_names:
-                    self._log(f"  Post-injection prime: {', '.join(prime_names)}")
-                    self._sequential_trigger(prime_names, "prime_trigger")
-                    self._run_complete_threads(prime_names, "prime_complete", "post-injection prime")
+                if not push_pump_active:
+                    # legacy(시린지 push) 경로: 잔량을 reactor로 prime (기존 동작).
+                    # line_src 편도 축소(2026-08-14)로 잔량은 ~0.15mL 수준 → 미소 바이어스.
+                    prime_names = []
+                    for p_name in flows.keys():
+                        pump = self.pumps.get(p_name)
+                        if _is_smart_pump(pump):
+                            if float(getattr(pump, "current_vol", 0.0)) > 0.1 and hasattr(pump, "prime_prepare"):
+                                self._wait_pause_or_abort("post-injection prime")
+                                if pump.prime_prepare():
+                                    prime_names.append(p_name)
+                    if prime_names:
+                        self._log(f"  Post-injection prime: {', '.join(prime_names)}")
+                        self._sequential_trigger(prime_names, "prime_trigger")
+                        self._run_complete_threads(prime_names, "prime_complete", "post-injection prime")
 
-                # 게이트③(잔량제거): 주입+prime 후 시약 잔량 실측 — 카운터(>0.1 게이트)가
-                #   못 보는 물리 잔량(=시약 미토출 → 수율 영향 + 용매 리필 오염원) 검출.
-                #   기본 purge(2026-07-29) = 리액터 방향 — 기존 post-inject prime 과 동일
-                #   의미론(미토출 시약을 늦게라도 반응 스트림에 전달)의 센서 폐루프판.
-                #   주의: 타이머 pause 중 소량 전진(유예 후 잔량은 통상 수십 µL)이
-                #   pumping-elapsed 에 미계상 — 기존 prime 과 동일 클래스의 미소 바이어스.
-                _g3 = self._level_gate(list(flows.keys()), "post_inject",
-                                       f"S{exp_id} 주입후", discharge="reactor")
-                _g3_bad = {p: v for p, (ok, v) in _g3.items() if (v is not None and not ok)}
-                if _g3_bad:
-                    exp["level_residual_post_inject_ul"] = {
-                        p: round(v, 1) for p, v in _g3_bad.items()}
+                    # 게이트③(잔량제거): 주입+prime 후 시약 잔량 실측 — 카운터(>0.1 게이트)가
+                    #   못 보는 물리 잔량(=시약 미토출 → 수율 영향 + 용매 리필 오염원) 검출.
+                    #   기본 purge(2026-07-29) = 리액터 방향 — 기존 post-inject prime 과 동일
+                    #   의미론(미토출 시약을 늦게라도 반응 스트림에 전달)의 센서 폐루프판.
+                    #   주의: 타이머 pause 중 소량 전진(유예 후 잔량은 통상 수십 µL)이
+                    #   pumping-elapsed 에 미계상 — 기존 prime 과 동일 클래스의 미소 바이어스.
+                    _g3 = self._level_gate(list(flows.keys()), "post_inject",
+                                           f"S{exp_id} 주입후", discharge="reactor")
+                    _g3_bad = {p: v for p, (ok, v) in _g3.items() if (v is not None and not ok)}
+                    if _g3_bad:
+                        exp["level_residual_post_inject_ul"] = {
+                            p: round(v, 1) for p, v in _g3_bad.items()}
+                else:
+                    # @codesyncer-decision(2026-08-14, 사용자 확정): HPLC push 경로에서
+                    #   구 post-injection prime(잔량→reactor) 폐지 — 타이머 pause 중
+                    #   무계상 전진(2026-08-14 실런: 2.0mL×2펌프=4.0mL, 수송부피 3.5mL
+                    #   초과)으로 제품 전량이 Outlet=WASTE 상태에서 유실되던 원인.
+                    #   잔량(라인 구내용물)은 push 병행 세척의 첫 배출(전량→12way 폐기,
+                    #   _push_parallel_wash)이 처리한다. 게이트③(reactor 방향 purge)도
+                    #   같은 이유로 이 경로에선 생략 — 잔량은 '기대되는' 상태이며
+                    #   폐기 배출이 곧 잔량 제거다.
+                    self._log("  Post-injection prime 생략 (HPLC push) — "
+                              "잔량은 push 병행 세척이 12way 폐기로 배출")
 
                 # @codesyncer-decision: push_pump(HPLC) 활성 시 Step 4.5b(solvent refill) 제거.
                 #   Syringe는 post-inject prime 이후 정지 상태 유지, HPLC가 push 담당.
@@ -2163,13 +2648,38 @@ class StrictSequenceEngine(FlowEngine):
                     if self._collection_timer is not None:
                         self._collection_timer.resume()
 
+                    # @codesyncer-decision(2026-08-14, 사용자 확정 워크플로): push 가
+                    #   반응기를 미는 동안 시린지는 병행 세척(잔량 폐기+내부 세척) —
+                    #   다음 스텝의 시스템 세척/prime 시간이 통째로 제거된다.
+                    #   Chemyx RS-485(COM9)와 Reaxus 는 별도 버스라 동시 통신 안전.
+                    _wash_errs: List[str] = []
+                    _wash_thread = threading.Thread(
+                        target=self._push_parallel_wash, args=(flows, _wash_errs),
+                        daemon=True, name=f"S{exp_id}-PushWash")
+                    _wash_thread.start()
+
                     # pause/abort를 감시하면서 push 지속
                     # @codesyncer-decision: pause 시 Timer도 함께 pause — HPLC가 멈춘 동안
                     #   Timer가 계속 카운트하면 Outlet→WASTE가 잘못된 시점에 발동됨
                     push_start = time.monotonic()
+                    _push_ext_logged = False
                     while True:
                         elapsed = time.monotonic() - push_start
-                        if elapsed >= push_sec_hplc:
+                        # @codesyncer-decision(2026-08-15): HEAD 프로브 재앵커와 push 창의
+                        #   결합. push 는 CollectionTimer 와 다른 시계(wall)로 도는 별개
+                        #   루프다. anchor 가 타이머를 +Δ 뒤로 밀면 수집 종료도 +Δ 밀리는데
+                        #   push 를 연장하지 않으면 마지막 Δ 구간이 '무유량'이 되어 제품이
+                        #   정지한 채 웰 경계만 지나간다(분획 어긋남). 매 루프에서 적용된
+                        #   shift 를 읽어 push 창을 같이 늘린다. Δ<0(조기 도달)은 늘리지
+                        #   않는다 — 수집은 앞당겨져 이미 끝나므로 여분 push 는 무해하다.
+                        _hp = getattr(self, "_head_probe", None)
+                        _ext = max(0.0, float(getattr(_hp, "applied_shift", 0.0) or 0.0)) if _hp else 0.0
+                        if _ext > 0 and not _push_ext_logged:
+                            _push_ext_logged = True
+                            self._log(f"  [Push] HEAD 재앵커 +{_ext:.1f}s 반영 — "
+                                      f"push {push_sec_hplc:.1f}s → {push_sec_hplc + _ext:.1f}s "
+                                      f"(수집 끝까지 유량 유지)")
+                        if elapsed >= push_sec_hplc + _ext:
                             break
                         self._check_abort()
                         if not self.pause_event.is_set():
@@ -2218,6 +2728,20 @@ class StrictSequenceEngine(FlowEngine):
                     except Exception as exc:
                         self._log(f"  [PushPump] stop failed: {exc}")
                     self._emit_phase(f"S{exp_id}-Push", 100.0)
+
+                    # 병행 세척 완료 대기 — 통상 push 창(수 분)보다 훨씬 짧아 즉시 반환.
+                    # 미완이면 abort 감시하며 대기 (다음 스텝 시약 흡입 전 완료 보장).
+                    while _wash_thread.is_alive():
+                        self._check_abort()
+                        _wash_thread.join(timeout=1.0)
+                    if _wash_errs:
+                        self._log(f"  [PushWash] ⚠ 병행 세척 미완/실패: "
+                                  f"{'; '.join(_wash_errs)} — 다음 스텝 전 확인 필요")
+                        try:
+                            self.signals.sig_error.emit(
+                                f"S{exp_id} push 병행 세척 실패: {'; '.join(_wash_errs)}")
+                        except Exception:
+                            pass
 
                 else:
                     # Step 4.5b: 용매 충전 — transit+collection+LineWash 총 볼륨을 균등 분배
@@ -2353,6 +2877,28 @@ class StrictSequenceEngine(FlowEngine):
                         self._collection_timer.stop(timeout=2.0)
                     self._collection_timer = None
 
+                # HEAD 실측 프로브 결산 — 예측 대비 편차를 스텝 로그에 남긴다.
+                # @codesyncer-decision: 여기서만 요약을 찍는다(스텝당 1줄). 이 Δ가
+                #   여러 런에서 재현되면 outlet_switch_delay_sec 실측 override 또는
+                #   system_compliance_vol_ml 로 고정하는 것이 정석 출구.
+                _hp = getattr(self, "_head_probe", None)
+                if _hp is not None:
+                    try:
+                        _hp.stop()
+                        self._log(f"  [HeadProbe] 결산 — {_hp.summary()}")
+                        self.trace.instant("HeadProbe", "summary", args={
+                            "expected_sec": round(_hp.t_exp, 2),
+                            "detected_sec": (round(_hp.detected_sec, 2)
+                                             if _hp.detected_sec is not None else None),
+                            "delta_sec": (round(_hp.delta_sec, 2)
+                                          if _hp.delta_sec is not None else None),
+                            "detector": _hp.detector, "mode": _hp.mode,
+                            "applied_shift_sec": round(_hp.applied_shift, 2),
+                        })
+                    except Exception:
+                        pass
+                    self._head_probe = None
+
                 # @codesyncer(검증 2026-08-12, C1): 게이트④의 'Outlet=WASTE' 전제를 먼저
                 #   강제 — 터미널 WASTE 이벤트가 1회 통신 장애로 조용히 실패(워커가 예외
                 #   삼킴)하거나 타이머 강제종료로 드레인되면 전제가 거짓이 되어 purge 가
@@ -2453,6 +2999,83 @@ class StrictSequenceEngine(FlowEngine):
     #   ★실측 캘리브레이션 항목 — sccm→치환유량은 압력 의존) /
     #   hte_gas_sccm(MFC 설정치, 기본=equiv 값) / hte_wash_solvent_vol_ml(0.5) /
     #   hte_wash_gas_vol_ml(0.3) / hte_wash_port(1=공용매)
+
+    def _log_phase_transition(self, key, old, new, adc):
+        """OPB 상전이(0↔1) 로그 훅 — 드라이버 리더 스레드에서 호출됨.
+
+        @codesyncer(2026-08-18, 사용자 요청): 전이 시각을 시스템 로그(런 중엔
+        CSV Time_s + [T+] prefix 포함)와 Perfetto('PhaseEdge' 트랙)에 남긴다.
+        예외는 전부 삼킨다 — 로그 훅이 센서 리더를 죽이면 안 됨."""
+        try:
+            name = {"reactor_in": "센서1 INLET",
+                    "collect": "센서2 OUTLET"}.get(key, key)
+            desc = "0→1 (기체→액체)" if new == 1 else "1→0 (액체→기체)"
+            self._log(f"  [PhaseEdge] {name} {desc}  ADC={int(adc)}")
+            self.trace.instant("PhaseEdge", f"{key} {int(old)}→{int(new)}",
+                               args={"adc": int(adc), "sensor": key})
+        except Exception:
+            pass
+
+    def _inject_front_marker(self, errors: list, pre_sec: float):
+        """시약 선단 N2 마커 — 도징 시작과 동시에 가스T 주입 (2026-08-18 사용자
+        지시, 5단계 센서제어 비전의 3번 'A단계' = 기록·검증 전용, 제어 무개입).
+
+        @codesyncer-decision: OPB 는 용매/시약(둘 다 맑은 액체)을 구별 못 한다 —
+          보이는 경계는 기/액뿐. 도징 시작과 동시에 N2 펄스를 넣으면 마커는
+          가스T 에서 즉시 출발하고, 시약 선단은 주입경로 통과(pre_sec) 후 가스T
+          도착 → **마커 꼬리와 시약 선단의 갭 = pre_sec (결정론)**. 따라서
+          센서2 로그의 [마커 꼬리 0→1 시각] + pre_sec = 시약 선단 실측.
+          (오늘 실런의 우연 마커는 갭이 모델 추정이었음 — 이걸로 추정 소멸)
+        - Outlet 은 이 시점 WASTE(COLLECT 는 t_head) → 마커는 수집 직전 폐기 경로.
+        - 마커 크기: 10 sccm × 1s ≈ 170 µL(표준환산) — 센서 통과 ~13s@0.8 로
+          디바운스 대비 충분히 크고, 수집·화학엔 무시 가능. gas_equiv 미캘리브라
+          라인 내 실부피는 압력 따라 다르나 마커는 '보이면' 충분.
+        - 실패 = 경고·스킵(측정 보조일 뿐). MFC OFF 는 finally 보장.
+        - 설정: inj_marker_enabled(기본 false) / inj_marker_sec(기본 1.0)
+                / inj_marker_sccm(0 = n2_precal_sccm 폴백). hte_mode 는 제외
+                (자체 스페이서 체계 보유).
+        """
+        sp = (self.cfg.config_data.get("system_params", {})
+              if hasattr(self, "cfg") else {})
+        sccm = (float(sp.get("inj_marker_sccm", 0.0) or 0.0)
+                or float(sp.get("n2_precal_sccm", 10.0) or 10.0))
+        dur = float(sp.get("inj_marker_sec", 1.0) or 0.0)
+        if dur <= 0 or self.mfc is None:
+            return
+        gas_on = False
+        try:
+            self._log(f"  [InjMarker] 시약 선단 마커 — N2 {sccm:.0f} sccm × {dur:.1f}s "
+                      f"(센서2 마커꼬리 + pre {pre_sec:.1f}s = 시약 선단)")
+            self.mfc.set_flow(sccm)
+            gas_on = True
+            t0 = time.monotonic()
+            while time.monotonic() - t0 < dur:
+                self._check_abort()
+                if not self.pause_event.is_set():
+                    self.mfc.set_flow(0.0)
+                    self.pause_event.wait()
+                    self._check_abort()
+                    self.mfc.set_flow(sccm)
+                time.sleep(0.05)
+            self.mfc.set_flow(0.0)
+            gas_on = False
+            self._log("  [InjMarker] 마커 주입 완료")
+            try:
+                self.trace.instant("InjMarker", "front", args={
+                    "sccm": sccm, "sec": dur, "pre_sec": round(pre_sec, 1)})
+            except Exception:
+                pass
+        except SafetyError as e:
+            errors.append(f"abort: {e}")
+        except Exception as e:
+            errors.append(str(e))
+            self._log(f"  [InjMarker] ⚠ 오류: {e}")
+        finally:
+            if gas_on:
+                try:
+                    self.mfc.set_flow(0.0)     # 페일세이프 — 가스 방치 금지
+                except Exception:
+                    pass
 
     def _outlet_set_safe(self, pos, ctx=""):
         """표준 경로 Outlet 전환 — 1회 재시도, 최종 실패 시 sig_error 승격.
@@ -3107,8 +3730,481 @@ class StrictSequenceEngine(FlowEngine):
         self._emit_status("All steps complete" if not self.abort_flag else "Sequence aborted")
 
     # ---------------------------------------------------------------------
+    @staticmethod
+    def compute_bubble_purge_vol(inlet, selector, factor=2.0, refill_floor=0.1):
+        """퍼지 1회 흡입량 [mL] — 순수 함수(테스트 대상).
+
+        @codesyncer-decision(2026-08-14, 사용자 지적으로 정정): 요건은 '기포가
+          12way 로터를 통과하는 것'이지 시린지 배럴까지 갈 필요는 없다. 되밀 때
+          로터 하류(valve_pump·배럴)에 있는 것은 전부 port 12 로 빠지고, 로터
+          상류(=시약 포트 인렛)에 남은 것만 갇힌다. 따라서 최소 흡입량 =
+              inlet(기포 최대 길이) + selector(로터 통로) = 실측 0.0978 mL
+          valve_pump(0.0597)는 불필요 — 초기 구현은 이를 과하게 잡았다.
+
+        factor: 안전 여유. 기본 **2.0** → 0.196mL.
+          @codesyncer-decision(2026-08-14, 사용자 실기 관측): 계산상 최소량(1.0)은
+          물론 1.5 로도 기포가 완전히 빠지지 않았다. 이론 최소량이 부족한 이유:
+            - 기포는 압축성이 있어 흡입 중 팽창 → 되밀 때 수축, 실제 이동거리가
+              명목 부피보다 짧다
+            - 잔재 공기는 깔끔한 슬러그 하나가 아니라 여러 작은 기포로 분산돼
+              이론 길이(=inlet 부피)보다 훨씬 긴 구간에 퍼진다
+            - 배관 벽면에 붙은 기포는 전단이 약하면 슬러그와 같이 안 움직인다
+          2.0 이면 기포 뒷단이 로터에서 0.098mL 떨어져 valve_pump(0.0597)를 넘어
+          배럴 안까지 들어오므로, 되밀기 전 구간에 여유가 생긴다.
+
+        refill_floor: ChemyxSmartPump 의 최소 리필량(기본 0.1mL, system_params
+          refill_min_vol_ml 로 조정). 미만이면 **로그 없이 스킵**되어 '고쳤다고
+          믿는데 무동작'이 되므로 하한까지 올린다.
+        """
+        v = (float(inlet) + float(selector)) * max(1.0, float(factor))
+        if 0 < v < float(refill_floor):
+            v = float(refill_floor)
+        return round(v, 4)
+
+    def _source_bubble_purge(self, inlet_ports: Dict[str, int], flows: Dict[str, float]):
+        """세척·프리필 '앞'에서 시약 소스라인의 초기 잔재 기포를 12way 로 배출.
+
+        @codesyncer-context(2026-08-14, 사용자 관측 / 2026-08-17 gas 브랜치에서
+          활성 폴더로 이식): 바이알↔12way 구간의 초기 공기가 매 런 시약과 함께
+          반응기로 들어가 반응 속도에 영향을 준다. `line_src` 는 타이밍 계산에만
+          쓰이고(커밋 d572719 로 소스퍼지 동작 무효화), 왕복레그 제외로 흡입량에서도
+          빠져 — 이 공기를 실제로 빼주는 주체가 없었다.
+
+        @codesyncer-decision: 순서 = 퍼지 → 시스템 세척 → 프리필.
+          퍼지가 끝나면 valve_pump(12way→3way→시린지) 공용 구간에 시약이 남는데,
+          뒤따르는 세척(port1 흡입 → port12 배출)이 그 구간을 헹궈낸다.
+          퍼지를 세척 뒤에 두면 그 잔류 시약이 그대로 Phase-0 용매와 섞인다.
+
+        @codesyncer-inference: 포트당 1회면 충분하다고 가정 — 배출 후 그 라인은
+          액으로 채워져 공기가 재유입될 경로가 없다(바이알 교체 시는 예외).
+          검증: 실기에서 2스텝 연속 동일 포트 런의 전환 지연/수율 재현성.
+
+        @codesyncer-risk: 퍼지량만큼 바이알 시약이 폐액으로 나간다(현 실측
+          0.158mL/포트). 극소량 시약 실험에선 bubble_purge_enabled=false 로 끌 것.
+        """
+        sp = (self.cfg.config_data.get("system_params", {})
+              if hasattr(self, "cfg") else {})
+        if not bool(sp.get("bubble_purge_enabled", False)):
+            return []
+
+        waste_port = int(sp.get("bubble_purge_waste_port", 12) or 12)
+        factor = max(1.0, min(4.0, float(sp.get("bubble_purge_factor", 2.0) or 2.0)))
+        refill_floor = float(sp.get("refill_min_vol_ml", 0.1) or 0.1)
+
+        if not hasattr(self, "_purged_ports"):
+            self._purged_ports = {}
+        if not hasattr(self, "_primed_ports"):
+            self._primed_ports = {}
+
+        plan = []
+        for p_name in flows.keys():
+            pump = self.pumps.get(p_name)
+            if not _is_smart_pump(pump):
+                continue
+            # 1-소스 라우팅(NRG)은 12way 가 없어 '되밀어 폐기'가 성립하지 않음
+            if self._pump_routing(p_name) != "external_valve":
+                continue
+            port = int(inlet_ports.get(p_name, 0) or 0)
+            if port <= 1 or port == waste_port:
+                continue  # port1=세척용매, 폐액포트는 퍼지 대상이 아님
+            if port in self._purged_ports.setdefault(p_name, set()):
+                continue
+            if port in self._primed_ports.setdefault(p_name, set()):
+                continue  # 이미 시약이 지나간 라인 = 기포 없음
+            v = self.compute_bubble_purge_vol(
+                float((getattr(self.cfg, "line_vol_inlet", {}) or {}).get(p_name, 0.0) or 0.0),
+                float((getattr(self.cfg, "selector_internal_vol", {}) or {}).get(p_name, 0.0) or 0.0),
+                factor, refill_floor)
+            if v <= 0:
+                self._log(f"  [BubblePurge] {p_name} 스킵 — 소스 배관 볼륨 미설정(0). "
+                          f"배관도 칩/원장으로 tube_vol_inlet·tube_vol_selector 입력 필요")
+                continue
+            cur = float(getattr(pump, "current_vol", 0.0) or 0.0)
+            if cur > 0.05:
+                self._log(f"  [BubblePurge] ⚠ {p_name} 시린지 잔량 {cur:.3f}mL — "
+                          f"퍼지 배출이 잔량까지 함께 폐기함(전량 배출 규약)")
+            plan.append((p_name, port, v))
+
+        if not plan:
+            return []
+
+        self._emit_status("Source line bubble purge")
+        self._log("소스라인 기포 퍼지 — 시약 포트에서 데드볼륨 흡입 → 12way 폐기")
+
+        # ── Phase A: 시약 포트에서 소스 경로 전체를 흡입 (기포를 시린지로) ──
+        started = []
+        for p_name, port, v in plan:
+            pump = self.pumps[p_name]
+            self._wait_pause_or_abort("bubble purge withdraw")
+            self._log(f"  [{p_name}] 기포 흡입 {v:.3f}mL (Port {port} — "
+                      f"(inlet+selector)×{factor:.1f}, 12way 로터 통과분)")
+            if pump.refill_prepare(port, volume=v):
+                started.append(p_name)
+        if started:
+            self._sequential_trigger(started, "refill_trigger")
+            self._run_complete_threads(started, "refill_complete",
+                                       "bubble purge withdraw",
+                                       log_prefix="BubblePurge: ")
+
+        # ── Phase B: 12way 폐액 포트로 되밀어 기포 배출 (3way=SOURCE 유지) ──
+        expel = []
+        for p_name, _port, _v in plan:
+            pump = self.pumps[p_name]
+            self._wait_pause_or_abort("bubble purge expel")
+            if pump.wash_infuse_prepare(waste_port):
+                expel.append(p_name)
+        if expel:
+            self._sequential_trigger(expel, "wash_infuse_trigger")
+            self._run_complete_threads(expel, "wash_infuse_complete",
+                                       "bubble purge expel",
+                                       log_prefix="BubblePurge: ")
+
+        done = []
+        for p_name, port, v in plan:
+            self._purged_ports.setdefault(p_name, set()).add(port)
+            done.append((p_name, port, v))
+        self._log(f"  [BubblePurge] 완료 — {len(done)}개 소스라인 액 충전 상태 "
+                  f"(총 {sum(v for _, _, v in done):.3f}mL 폐기)")
+        return done
+
+    # ---------------------------------------------------------------------
     # Wash / dosing / prefill
     # ---------------------------------------------------------------------
+    def _push_line_prime(self, errors: list):
+        """스텝1 전용: push(HPLC) 라인·헤드를 용매로 채우고 기포를 배출.
+
+        @codesyncer-decision(2026-08-15, 사용자 제안): push 시작 직후 유체가 즉시
+          밀리지 않는 실기 증상(20s 이상 = 라인/헤드의 공기)을 스텝1에서 미리
+          해소한다. Outlet=WASTE 상태에서 push 펌프를 '프라임 유속'(실험 유속보다
+          빠르게)으로 설정 부피만큼 돌려 반응기 방향으로 흘려보낸다.
+        - 설정: system_params.push_line_prime_vol_ml (0=끔) /
+                push_line_prime_rate_ml_min (0=priming_rate_ml_min 폴백)
+        - 시스템 세척(시린지·12way 경로)과 병행 스레드 — 추가 시간 대개 0.
+          프리필(Prime Ph1)은 같은 본류를 쓰므로 호출부가 그 전에 join 한다.
+        - 실패는 errors 로만 보고(경고) — 프라임 실패가 런 자체를 막지는 않는다.
+        """
+        try:
+            sp = (self.cfg.config_data.get("system_params", {})
+                  if hasattr(self, "cfg") else {})
+            vol = float(sp.get("push_line_prime_vol_ml", 0.0) or 0.0)
+            if vol <= 0:
+                return
+            rate = float(sp.get("push_line_prime_rate_ml_min", 0.0) or 0.0)
+            if rate <= 0:
+                rate = float(sp.get("priming_rate_ml_min", 5.0) or 5.0)
+            if rate <= 0:
+                errors.append("prime rate 0")
+                return
+            dur = (vol / rate) * 60.0
+            # Outlet=WASTE 강제 — 프라임 배출액/기포가 수집 웰로 가면 안 됨
+            self._outlet_set_safe(1, "push line prime")
+            self._log(f"  [PushLinePrime] 라인 충전·기포 배출 {vol:.2f}mL "
+                      f"@{rate:.2f}mL/min ({dur:.0f}s) — 세척과 병행, Outlet=WASTE")
+            self.push_pump.set_flow(rate)
+            self.push_pump.start()
+            t0 = time.monotonic()
+            while True:
+                elapsed = time.monotonic() - t0
+                if elapsed >= dur:
+                    break
+                self._check_abort()
+                if not self.pause_event.is_set():
+                    try:
+                        self.push_pump.stop()
+                    except Exception:
+                        pass
+                    self.pause_event.wait()
+                    self._check_abort()
+                    self.push_pump.set_flow(rate)
+                    self.push_pump.start()
+                    t0 = time.monotonic() - elapsed
+                time.sleep(min(0.5, max(0.0, dur - elapsed)))
+            self.push_pump.stop()
+            # 프라임 직후 압력 기록 — 라인이 찼는지의 실측 근거(있으면)
+            _p = None
+            try:
+                _p = self.push_pump.get_pressure()
+            except Exception:
+                pass
+            self._log("  [PushLinePrime] 완료 — push 라인 용매 충전 상태"
+                      + (f" (압력 {float(_p):.1f} bar)" if _p not in (None, 0.0) else ""))
+        except SafetyError as e:
+            try:
+                self.push_pump.stop()
+            except Exception:
+                pass
+            errors.append(f"abort: {e}")
+        except Exception as e:
+            try:
+                self.push_pump.stop()
+            except Exception:
+                pass
+            errors.append(str(e))
+            self._log(f"  [PushLinePrime] ⚠ 오류: {e}")
+
+    # ------------------------------------------------------------------
+    def _n2_precal_purge(self, errors: list):
+        """시퀀스 시작(스텝1) N2 사전 캘리브레이션 — RoboChem OCB350 캘리브 계약의
+        소프트웨어 이식 (2026-08-17 사용자 지시).
+
+        RoboChem 원본 계약: 캘리브레이션은 '튜브에 액체가 없을 때'만 유효
+        (OCB350.h:77 "tube should have no liquid" / Phase_Sensor_Array.ino:63 —
+        액체가 있으면 출력 의미가 뒤집힘). OCB350 은 캘리브 핀 펄스로 하드웨어가
+        자체 재영점하지만 OPB ADC 리그엔 그 핀이 없으므로 PC측 등가를 수행한다:
+          ① Outlet=WASTE 확보 후 MFC N2 로 가스T 하류(믹싱→반응기→post)의
+             기존 액체를 배기 — 분취기 호밍·가열·세척과 병행이라 추가 시간 0
+          ② 전 센서가 '가스'를 settle_sec 연속 보고하면 배기 완료로 판정
+             (RoboChem OpenValveUntilPhaseChange 의 wait_for_gas 등가 + 안정창)
+          ③ 채널별 공기 ADC 원점을 표집(mean/σ)하고 벤더 기준과 대조:
+             튜브 미장착(없음값 근접) / 공기 원점 드리프트 / 임계 역전 을
+             시퀀스 시작 시점에 검출 — '튜브 빠짐=액체' fail-unsafe 를 자동으로
+             잡는 유일한 지점이다 (가스 상태에서만 구별 가능).
+        실패는 전부 경고+스킵(런 무영향) — 본류는 프리필 Prime-P1 이 어차피
+        용매로 재충전하므로 배기 실패가 런을 막을 이유가 없다. 단 Outlet=WASTE
+        확보 실패 시에는 즉시 중단한다(배선반전 invert 리그에서 배기물이 웰로
+        갈 수 있음 — 아웃렛_배선반전_주의.md).
+        설정: system_params.n2_precal_enabled(기본 false)/sccm/timeout_sec/
+              settle_sec/sample_sec/auto_cal(기본 false — HW CAL 은 수동 절차,
+              2026-08-18 정책 반전, ② 블록 주석 참조).
+        결과: self._n2_air_baseline + 로그 + 트레이스.
+        """
+        sp = (self.cfg.config_data.get("system_params", {})
+              if hasattr(self, "cfg") else {})
+        if not bool(sp.get("n2_precal_enabled", False)):
+            return
+        if self.mfc is None:
+            self._log("  [N2Precal] ⚠ MFC 미배정 — 건너뜀 (roles.gas 를 실물 MFC 로)")
+            return
+        ps = self.phase_sensor
+        if ps is None:
+            self._log("  [N2Precal] ⚠ 위상센서 미배정 — 건너뜀")
+            return
+        keys = list(getattr(ps, "sensors", {}) or {})
+        if not keys:
+            self._log("  [N2Precal] ⚠ 센서 채널 매핑 없음 — 건너뜀")
+            return
+        sccm = float(sp.get("n2_precal_sccm", 20.0) or 20.0)
+        timeout = float(sp.get("n2_precal_timeout_sec", 120.0) or 120.0)
+        settle = float(sp.get("n2_precal_settle_sec", 3.0) or 3.0)
+        sample = float(sp.get("n2_precal_sample_sec", 2.0) or 2.0)
+
+        gas_on = False
+        try:
+            # ① 배기 — 배출물이 웰로 가면 안 됨 (invert 리그 특히)
+            if not self._outlet_set_safe(1, "N2 precal"):
+                errors.append("Outlet=WASTE 확보 실패")
+                self._log("  [N2Precal] ⚠ Outlet=WASTE 확보 실패 — 배기 중단"
+                          "(방향 미상 상태로 가스 주입 금지)")
+                return
+            self._log(f"  [N2Precal] N2 배기 시작 {sccm:.0f} sccm — 센서 "
+                      f"{'/'.join(keys)} 가스 안정 {settle:.0f}s 대기 (호밍·가열 병행)")
+            self.mfc.set_flow(sccm)
+            gas_on = True
+            t0 = time.monotonic()
+            gas_since = None
+            _last_flow = None
+            _next_flow_log = 5.0               # 실유량 진단 로그 주기(초)
+            while True:
+                self._check_abort()
+                if not self.pause_event.is_set():      # 일시정지 — 가스도 정지
+                    self.mfc.set_flow(0.0)
+                    self.pause_event.wait()
+                    self._check_abort()
+                    self.mfc.set_flow(sccm)
+                    gas_since = None                   # 정지 중 상태는 불신
+                _el_purge = time.monotonic() - t0
+                # @codesyncer(2026-08-18, 실기 — '질소가 약해서 안 밀림'): 실유량을
+                #   주기 로그. MFC 는 유량 제어기라 미는 힘의 상한 = 공급 레귤레이터
+                #   압력. 실측 < setpoint 이면 공급압 부족(굶주림)이 원인 —
+                #   레귤레이터를 올려야지 sccm 설정은 이미 풀스케일이라 무의미.
+                if _el_purge >= _next_flow_log:
+                    _next_flow_log += 5.0
+                    try:
+                        _last_flow = float(self.mfc.get_flow())
+                        _mark = ("✓" if _last_flow >= sccm * 0.9 else
+                                 "⚠ 공급압 부족 의심(레귤레이터 확인)")
+                        self._log(f"  [N2Precal] 실유량 {_last_flow:.2f}/{sccm:.1f} "
+                                  f"sccm @ {_el_purge:.0f}s  {_mark}")
+                    except Exception:
+                        pass
+                if _el_purge > timeout:
+                    errors.append(f"배기 타임아웃 {timeout:.0f}s")
+                    _fl = (f"마지막 실유량 {_last_flow:.2f}/{sccm:.1f} sccm — "
+                           if _last_flow is not None else "")
+                    self._log(f"  [N2Precal] ⚠ {timeout:.0f}s 안에 전 센서 가스 안정 "
+                              f"실패 — 원점 캡처 생략. {_fl}"
+                              f"실유량<설정 이면 N2 레귤레이터 압력 부족, "
+                              f"실유량 정상인데 정체면 하류 막힘/튜브 장착 확인 "
+                              f"(튜브 빠짐은 '액체'로 읽혀 타임아웃으로 나타남)")
+                    return
+                try:
+                    all_gas = all(ps.read_phase(k) == "GAS" for k in keys)
+                except Exception as e:
+                    errors.append(f"센서 오류: {e}")
+                    self._log(f"  [N2Precal] ⚠ 센서 판독 실패 — 중단: {e}")
+                    return
+                if all_gas:
+                    if gas_since is None:
+                        gas_since = time.monotonic()
+                    elif time.monotonic() - gas_since >= settle:
+                        break                          # 배기 완료
+                else:
+                    gas_since = None                   # 액체 재출현 — 안정창 리셋
+                time.sleep(0.1)
+            purge_sec = time.monotonic() - t0
+
+            # ② 하드웨어 캘리브 훅 — 기본 OFF (2026-08-18 사용자 확정, 정책 반전).
+            # @codesyncer-decision: RoboChem 원본을 재확인한 결과 매런 자동 CAL 은
+            #   우리의 확장이었다 — OmniPlatypus 전체에서 위상센서 calibrate 호출은
+            #   수동 대화형 스크립트(platform_calibration.py, "사람이 라인 빈 것
+            #   확인 후 엔터") 단 한 곳뿐, 실험 시퀀스에는 0건. 우리 자동판은
+            #   '비었음'을 캘리브 대상 센서 자신의 판정(GAS 안정)으로 보증하는
+            #   순환 논리라, 유색액이 GAS 로 오판되면 액체 위에서 CAL 이 발사되어
+            #   보드 기준이 오염된다(2026-08-18 센서2 상시-0 사고의 유력 원인 —
+            #   매런 재발사로 오염이 재생산됨). CAL 은 수동 절차로 격하:
+            #   tools/opb_manual_cal.py (육안 확인 → CAL → 재실측).
+            #   n2_precal_auto_cal=true 로만 구버전 자동 CAL 복원 가능.
+            if bool(sp.get("n2_precal_auto_cal", False)):
+                for k in keys:
+                    try:
+                        ps.calibrate(k)
+                    except Exception as e:
+                        self._log(f"  [N2Precal] calibrate({k}) 실패(무시): {e}")
+                time.sleep(0.3)                        # 캘리브 후 기준 안정
+            else:
+                self._log("  [N2Precal] HW 캘리브 스킵 (자동 CAL off — 수동 절차: "
+                          "tools/opb_manual_cal.py)")
+
+            # ③ 공기 원점 표집 (가스 유지 상태에서 — 캘리브 '후' 기준의 원점)
+            acc = {k: [] for k in keys}
+            t1 = time.monotonic()
+            while time.monotonic() - t1 < sample:
+                self._check_abort()
+                for k in keys:
+                    try:
+                        v = ps.analog(k)
+                        if v is not None and int(v) >= 0:
+                            acc[k].append(int(v))
+                    except Exception:
+                        pass
+                time.sleep(0.1)
+            self.mfc.set_flow(0.0)
+            gas_on = False
+
+            # 실측 기준표와 대조 — 🔴2026-08-18 재배선 후 실측으로 갱신 (구 벤더표
+            #   2026-08-05 는 정렬 변경으로 폐기: ch0 공기 80→522). ch0 은
+            #   '튜브 없음'(553)과 공기(522)가 Δ31 로 분리 불가 → 미장착 검사 스킵
+            #   (none=None). CAL 펄스는 디지털 판정만 재영점, 아날로그 무영향(실측).
+            REF = {0: {"air": 522, "none": None, "water": 866},
+                   1: {"air": 519, "none": 960, "water": 980}}
+            baseline = {}
+            for k in keys:
+                vals = acc[k]
+                if not vals:
+                    self._log(f"  [N2Precal] ⚠ {k}: 표본 없음")
+                    continue
+                mean = sum(vals) / len(vals)
+                sd = (sum((v - mean) ** 2 for v in vals) / len(vals)) ** 0.5
+                ch = int((getattr(ps, "sensors", {}) or {}).get(k, -1))
+                # 모드 B(OCB350 어레이)는 PC 임계가 없음(판정=보드 하드웨어) —
+                # thresholds 미보유 드라이버에선 임계 역전 검사를 건너뛴다.
+                thr = (getattr(ps, "thresholds", {}) or {}).get(ch)
+                ref = REF.get(ch)
+                flags = []
+                if ref:
+                    if (ref.get("none") is not None
+                            and abs(mean - ref["none"]) < 60):
+                        flags.append("튜브 미장착 의심")
+                    elif abs(mean - ref["air"]) > 100:
+                        flags.append(f"공기 원점 드리프트(기준 {ref['air']})")
+                if thr is not None and mean > float(thr):
+                    flags.append(f"가스인데 임계({float(thr):.0f}) 초과 — 임계 재설정 필요")
+                baseline[k] = {"air_adc": round(mean, 1), "sd": round(sd, 1),
+                               "n": len(vals), "ch": ch, "flags": flags}
+                mark = ("  ⚠ " + " / ".join(flags)) if flags else "  ✓"
+                _thr_s = f"{float(thr):.0f}" if thr is not None else "—"
+                self._log(f"  [N2Precal] {k}(ch{ch}) 공기 원점 {mean:.0f}±{sd:.0f} "
+                          f"(n={len(vals)}, thr={_thr_s}){mark}")
+            self._n2_air_baseline = baseline
+            self._log(f"  [N2Precal] 완료 — 배기 {purge_sec:.0f}s, 본류=N2 상태 "
+                      f"(Prime-P1 이 용매로 재충전)")
+            try:
+                self.trace.instant("N2Precal", "baseline", args=baseline)
+            except Exception:
+                pass
+        except SafetyError as e:
+            errors.append(f"abort: {e}")
+        except Exception as e:
+            errors.append(str(e))
+            self._log(f"  [N2Precal] ⚠ 오류: {e}")
+        finally:
+            if gas_on:
+                try:
+                    self.mfc.set_flow(0.0)             # 페일세이프 — 가스 방치 금지
+                except Exception:
+                    pass
+
+    def _push_parallel_wash(self, flows: Dict[str, float], errors: list):
+        """HPLC push 병행 시린지 세척 — push 창 동안 백그라운드 스레드로 실행.
+
+        @codesyncer-decision(2026-08-15, 사용자 확정): push(Reaxus)가 반응기를
+          미는 동안 시린지는 세척 사이클(port 1 세척액 흡입 → port 12 배출)
+          ×wash_count 를 병행 수행. 효과: 구 post-injection prime 의 무계상
+          reactor 전진 제거 + 다음 스텝의 시스템 세척 시간 제거.
+        - 별도 '잔량 폐기' 선행 단계 없음(사용자 확정: 주입은 시약 전량 토출
+          가정으로 종료). 미세 잔량(편도 라인보정 ~0.15mL)이 있어도
+          wash_infuse 가 '전량 배출'이라 첫 사이클에 합산 폐기된다.
+        - 경로: 3way POS_SOURCE + 12way — 반응 스트림(체크밸브 하류)과 물리 분리,
+          push 흐름과 충돌 없음.
+        - external_valve 라우팅만 대상 (internal_valve/AS 는 12way 경로 없음).
+        - 레벨게이트·_emit_phase 는 메인 스레드와의 상태 충돌(트레이스 PHASE 트랙,
+          센서 직렬 접근)을 피해 미사용 — 로그만 남긴다. 세척 종료 = 빈 시린지
+          (마지막 동작이 infuse 전량 배출) → 다음 스텝 프리필 전제 성립.
+        - 예외는 errors 리스트에 수집 — 메인 스레드가 push 종료 후 보고.
+        """
+        try:
+            smart = [(p, self.pumps.get(p)) for p in flows.keys()
+                     if _is_smart_pump(self.pumps.get(p))
+                     and self._pump_routing(p) == "external_valve"]
+            if not smart:
+                self._log("  [PushWash] 대상 펌프 없음 — 생략")
+                return
+
+            # 세척 사이클 (시스템 세척과 동일 프리미티브: withdraw→infuse)
+            max_count = max((int(getattr(pu, "wash_count", 0)) for _, pu in smart),
+                            default=0)
+            for cycle in range(max_count):
+                w_names = []
+                for p_name, pump in smart:
+                    if cycle >= int(getattr(pump, "wash_count", 0)):
+                        continue
+                    self._wait_pause_or_abort("push wash")
+                    if pump.wash_withdraw_prepare(solvent_port=1):
+                        w_names.append(p_name)
+                if not w_names:
+                    continue
+                self._sequential_trigger(w_names, "wash_withdraw_trigger")
+                self._run_complete_threads(
+                    w_names, "wash_withdraw_complete", "push wash",
+                    log_prefix=f"PushWash {cycle + 1}/{max_count}: ")
+                i_names = []
+                for p_name, pump in smart:
+                    if p_name not in w_names:
+                        continue
+                    self._wait_pause_or_abort("push wash")
+                    if pump.wash_infuse_prepare(waste_port=12):
+                        i_names.append(p_name)
+                self._sequential_trigger(i_names, "wash_infuse_trigger")
+                self._run_complete_threads(
+                    i_names, "wash_infuse_complete", "push wash",
+                    log_prefix=f"PushWash {cycle + 1}/{max_count}: ")
+            self._log("  [PushWash] 병행 세척 완료 — 시린지 빈 상태")
+        except SafetyError as e:
+            errors.append(f"abort/safety: {e}")
+        except Exception as e:
+            errors.append(str(e))
+            self._log(f"  [PushWash] ⚠ 오류: {e}")
+
     def _execute_system_wash(self, flows: Dict[str, float]):
         # @codesyncer-decision: 순차 명령 + 병렬 대기 — RS-485 버스 경쟁 방지
         # wash_cycle은 infuse+withdraw 2단계 → 각 단계를 순차begin + 병렬complete
@@ -3560,7 +4656,9 @@ class StrictSequenceEngine(FlowEngine):
     def _smart_prefill_logic(self, inlet_ports: Dict[str, int], flows: Dict[str, float], fast_rate: float,
                              target_vol: float = None, total_flow: float = None,
                              line_src: Dict[str, float] = None,
-                             inlet_vials: Dict[str, str] = None):
+                             inlet_vials: Dict[str, str] = None,
+                             run_phase0: bool = True,
+                             run_phase1: bool = True):
         self._stop_momentary()
         self._log("Pre-fill start")
 
@@ -3569,51 +4667,118 @@ class StrictSequenceEngine(FlowEngine):
             self._log("Pre-fill skipped: no syringe pumps")
             return
 
-        # Phase 0: 자기 분기 '딱 데드볼륨' 정량 프라임 (2026-08-13 재설계)
+        # Prime Phase 0: 자기 분기 '딱 데드볼륨' 정량 프라임 — 스텝1·포트변경 시만
+        # (2026-08-15 사용자 확정: "3a도 포트변경시만")
         # @codesyncer-decision(사용자 확정): 포트1 세척액을 자기 분기 데드볼륨
         #   (3way 내부 + pump_merge)만큼 '정확히' 리필한 뒤 전량 push — 용매 선단이
         #   QUAD 진입점에 딱 착지하고 시린지 잔량 0(시약과 혼합 없음). 여유분 금지
-        #   (하류 공용부 침범 = 회계 불일치). 하류(QUAD 이후)는 푸시펌프 전담.
-        #   전제: 직전 시스템 세척이 시린지를 비움(세척 배출=전량 배출). 잔량이
-        #   남아 있으면 부족분만 채우고, 데드볼륨 미설정(0)이면 스킵.
+        #   (하류 공용부 침범 = 회계 불일치).
+        #   전제: 직전 세척(스텝1=시스템 세척, 스텝2+=push 병행 세척)이 시린지를
+        #   비움. 잔량이 남아 있으면 부족분만 채우고, 데드볼륨 미설정(0)이면 스킵.
         # @codesyncer-decision: 1-소스 라우팅은 Phase 0 스킵 — Chemyx 에선 '용매
         #   플러시'지만 1-소스에선 순수 시약을 waste 로 방출하는 동작이 됨.
-        self._emit_status("Pre-fill phase 0: prime own branch (exact dead volume)")
-        prime_started = []
-        for p_name in smart_names:
-            pump = self.pumps[p_name]
-            if self._pump_routing(p_name) != "external_valve":
-                continue
-            line_inj = (float((getattr(self.cfg, "valve_internal_vol", {}) or {})
-                              .get(p_name, 0.0) or 0.0)
-                        + float((getattr(self.cfg, "line_vol_pump_merge", {}) or {})
-                                .get(p_name, 0.0) or 0.0))
-            if line_inj <= 0:
-                self._log(f"  [{p_name}] Phase-0 스킵 — 분기 데드볼륨 미설정(0). "
-                          f"배관도 칩/원장으로 tube_vol_switcher·pump_merge 입력 필요")
-                continue
-            cur = float(getattr(pump, "current_vol", 0.0) or 0.0)
-            need = max(0.0, line_inj - cur)
-            if cur > line_inj + 0.02:
-                self._log(f"  [{p_name}] ⚠ Phase-0: 잔량 {cur:.3f} > 분기 데드볼륨 "
-                          f"{line_inj:.3f} — 전량 push 로 과량 진입(세척 배출 확인 필요)")
-            if need > 0.005 and hasattr(pump, "refill"):
-                self._wait_pause_or_abort("prefill prime refill")
-                self._log(f"  [{p_name}] Phase-0 정량 리필 {need:.3f}mL "
-                          f"(분기 데드볼륨 {line_inj:.3f})")
-                pump.refill(1, volume=need)
-            if (float(getattr(pump, "current_vol", 0.0) or 0.0) > 0.005
-                    and hasattr(pump, "prime_prepare")):
-                self._wait_pause_or_abort("prefill prime")
-                if pump.prime_prepare():
-                    prime_started.append(p_name)
-        self._sequential_trigger(prime_started, "prime_trigger")
+        if run_phase0:
+            self._emit_status("Pre-fill phase 0: prime own branch (exact dead volume)")
+            prime_started = []
+            for p_name in smart_names:
+                pump = self.pumps[p_name]
+                if self._pump_routing(p_name) != "external_valve":
+                    continue
+                line_inj = (float((getattr(self.cfg, "valve_internal_vol", {}) or {})
+                                  .get(p_name, 0.0) or 0.0)
+                            + float((getattr(self.cfg, "line_vol_pump_merge", {}) or {})
+                                    .get(p_name, 0.0) or 0.0))
+                if line_inj <= 0:
+                    self._log(f"  [{p_name}] Phase-0 스킵 — 분기 데드볼륨 미설정(0). "
+                              f"배관도 칩/원장으로 tube_vol_switcher·pump_merge 입력 필요")
+                    continue
+                cur = float(getattr(pump, "current_vol", 0.0) or 0.0)
+                need = max(0.0, line_inj - cur)
+                if cur > line_inj + 0.02:
+                    self._log(f"  [{p_name}] ⚠ Phase-0: 잔량 {cur:.3f} > 분기 데드볼륨 "
+                              f"{line_inj:.3f} — 전량 push 로 과량 진입(세척 배출 확인 필요)")
+                if need > 0.005 and hasattr(pump, "refill"):
+                    self._wait_pause_or_abort("prefill prime refill")
+                    self._log(f"  [{p_name}] Phase-0 정량 리필 {need:.3f}mL "
+                              f"(분기 데드볼륨 {line_inj:.3f})")
+                    pump.refill(1, volume=need)
+                if (float(getattr(pump, "current_vol", 0.0) or 0.0) > 0.005
+                        and hasattr(pump, "prime_prepare")):
+                    self._wait_pause_or_abort("prefill prime")
+                    if pump.prime_prepare():
+                        prime_started.append(p_name)
+            self._sequential_trigger(prime_started, "prime_trigger")
 
-        self._run_complete_threads(
-            prime_started, "prime_complete", "prefill prime",
-            extra_names=smart_names)
+            self._run_complete_threads(
+                prime_started, "prime_complete", "prefill prime",
+                extra_names=smart_names)
+        else:
+            self._log("  Prime Phase-0 생략 (스텝1·포트변경 시에만 수행)")
 
-        # Phase 1: 시약 충전 — inject_vol만 정확히 채움 (데드볼륨 보정 없음)
+        # Prime Phase 1: 본류(반응기) total 볼륨 용매 충전 — 스텝1 전용
+        # @codesyncer-decision(2026-08-15, 사용자 확정): 시린지가 port 1 용매를
+        #   흡입해 반응기로 밀어 본류를 가득 채운다(압력 안정성). HPLC 는 push
+        #   전용 — prime 불관여(용어 포함, 구 [HPLC-Prime] 폐지).
+        #   부피 = system_params.prime_phase1_vol_ml (0=자동 (mixing+reactor+post)×1.1)
+        #   유속 = 펌프의 prime_rate (= priming_rate_ml_min, Prime Rate 단일 설정)
+        #     @codesyncer(2026-08-15, 사용자 지시): Ph1 전용 rate 폐지 — prime 속도
+        #     구분이 실익 없이 UI/설정만 복잡하게 했다. Phase-0/1 동일 속도.
+        #   활성 시린지(external_valve) 균등 분담, 시린지 용량 초과 시 라운드 반복.
+        #   Outlet=WASTE(호밍 상태) 전제 — 충전 배출액은 폐기로 빠진다.
+        if run_phase1:
+            sp_cfg = (self.cfg.config_data.get("system_params", {})
+                      if hasattr(self, "cfg") else {})
+            v1 = float(sp_cfg.get("prime_phase1_vol_ml", 0.0) or 0.0)
+            if v1 <= 0:
+                mixing = float(getattr(self.cfg, "mixing_line_dead_vol", 0.0) or 0.0)
+                v1 = (float(getattr(self, "vol_reactor", 0.0)) + mixing
+                      + float(getattr(self, "vol_post_common", 0.0))) * 1.1
+            ext_names = [p for p in smart_names
+                         if self._pump_routing(p) == "external_valve"]
+            if v1 > 0.005 and ext_names:
+                share = v1 / len(ext_names)
+                self._emit_status("Pre-fill phase 1: reactor solvent prime")
+                self._log(f"  [Prime-P1] 본류 용매 충전 {v1:.2f}mL "
+                          f"(펌프당 {share:.2f}mL, port 1 → Reactor, Outlet=WASTE)")
+                remaining = {p: share for p in ext_names}
+                while any(v > 0.005 for v in remaining.values()):
+                    batch = []
+                    for p in ext_names:
+                        if remaining[p] <= 0.005:
+                            continue
+                        pump = self.pumps[p]
+                        take = min(remaining[p],
+                                   float(getattr(pump, "capacity", share) or share))
+                        self._wait_pause_or_abort("prime phase1 refill")
+                        if pump.refill_prepare(1, volume=take):
+                            batch.append((p, take))
+                    if not batch:
+                        self._log("  [Prime-P1] ⚠ 리필 시작 실패 — 잔여 충전 중단")
+                        break
+                    names = [p for p, _ in batch]
+                    self._sequential_trigger(names, "refill_trigger")
+                    self._run_complete_threads(
+                        names, "refill_complete", "prime phase1 refill",
+                        log_prefix="Prime-P1: ")
+                    infuse_names = []
+                    for p, _take in batch:
+                        pump = self.pumps[p]
+                        self._wait_pause_or_abort("prime phase1 infuse")
+                        if hasattr(pump, "prime_prepare") and pump.prime_prepare():
+                            infuse_names.append(p)
+                    self._sequential_trigger(infuse_names, "prime_trigger")
+                    self._run_complete_threads(
+                        infuse_names, "prime_complete", "prime phase1",
+                        log_prefix="Prime-P1: ")
+                    for p, take in batch:
+                        remaining[p] -= take
+                self._log("  [Prime-P1] 본류 용매 충전 완료 — 압력 안정 상태")
+        else:
+            self._log("  Prime Phase-1 생략 (스텝1 전용 — 본류는 이미 충전 상태)")
+
+        # 시약 장전(reagent charge): inject_vol만 정확히 채움 — 매 스텝
+        # (2026-08-15 명칭 정리: 구 'Phase 1' — 사용자 정의 Prime Phase-1(본류
+        #  용매 충전)과 이름이 겹쳐 개명. 동작 불변.)
         # @codesyncer-decision: flush_vol/Phase 2/Phase 1b 전부 제거 (2026-04-10)
         #   inject_vol = (pump_flow / total_flow) × target_vol
         #   → 3펌프 동시 소진 보장, 잔량 최소화, 로직 단순화

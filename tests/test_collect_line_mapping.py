@@ -183,6 +183,67 @@ def test_compensated_hplc_with_flush_full_recovery():
     assert leftover == [(1.0, "push_solvent")], leftover
 
 
+# ═════════════════════════════════════════════════════════════
+# 4) 수집라인 선헹굼 (collect_preflush_vol_ml, 2026-08-15 사용자 확정)
+# ═════════════════════════════════════════════════════════════
+V_PF = 0.3        # collect_preflush_vol_ml (예: 0.1×reactor 3.0mL)
+
+
+def test_preflush_cleans_line_with_fresh_solvent_before_product():
+    """[수락 기준] Outlet 을 선단 도달보다 V_PF 앞당겨 전환하면:
+    ① 라인의 stale 내용물 + 선헹굼 신선용매가 모두 WASH 로 배출(라인 세정)
+    ② 제품은 여전히 100% 라벨 웰에 (니들 이벤트 시각 불변이므로)
+    밸브 전환 시점 기준 부피 도메인: 유입 = [선헹굼][제품][push용매]"""
+    inflow = [(V_PF, "preflush_solvent"), (TARGET + R01, "product"),
+              (V_LINE, "push_solvent")]
+    out, leftover = line_outflow_segments("stale_prev", inflow, V_LINE)
+    # 니들 이벤트는 t_head 기준 그대로 → 밸브 전환 기준으론 +V_PF 만큼 뒤
+    base = V_PF + V_LINE
+    wins = [("WASH_park", 0.0, base)]
+    wins += [(f"well{i+1}", base + i * VPT, base + (i + 1) * VPT) for i in range(4)]
+    wins.append(("well4_extra", base + 4 * VPT, base + TARGET + R01))
+    wins.append(("WASH_flush", base + TARGET + R01, base + TARGET + R01 + V_LINE))
+    res = map_to_targets(out, wins)
+    # ① WASH 가 stale 전량 + 선헹굼 용매 전량을 받음 = 제품 도착 전 라인 세정 완료
+    park = res["WASH_park"]
+    assert set(park) == {"stale_prev", "preflush_solvent"}, park
+    assert abs(park["stale_prev"] - V_LINE) < 1e-9, park
+    assert abs(park["preflush_solvent"] - V_PF) < 1e-9, park
+    # ② 제품 회수율 100% (선헹굼이 회수를 깎지 않음)
+    got = sum(v.get("product", 0.0) for k, v in res.items() if k.startswith("well"))
+    assert abs(got - (TARGET + R01)) < 1e-9, f"제품 회수 {got} (기대 {TARGET + R01})"
+    # 웰에 용매 혼입 없음 — 라벨은 product 단독, 양은 VPT
+    for i in range(4):
+        w = res[f"well{i+1}"]
+        assert set(w) == {"product"} and abs(w["product"] - VPT) < 1e-9, (i + 1, w)
+    assert leftover == [(1.0, "push_solvent")], leftover
+
+
+def test_preflush_guarded_off_in_legacy_would_contaminate_first_well():
+    """[가드 근거] legacy(니들이 첫 웰에 파킹)에서 선헹굼을 적용하면 그 용매가
+    첫 웰로 들어간다 → 엔진은 compensated + WASH 포트에서만 적용한다."""
+    inflow = [(V_PF, "preflush_solvent"), (TARGET + R01, "product")]
+    out, _ = line_outflow_segments("stale_prev", inflow, V_LINE)
+    # legacy: 니들 창이 밸브 전환 시각부터 (시프트/파킹 없음)
+    wins = [(f"well{i+1}", i * VPT, (i + 1) * VPT) for i in range(4)]
+    res = map_to_targets(out, wins)
+    # 첫 웰들이 stale 을 받고, 선헹굼 용매도 웰로 유입 (제품 아님)
+    assert res["well1"] == {"stale_prev": VPT}, res.get("well1")
+    solvent_in_wells = sum(v.get("preflush_solvent", 0.0) for v in res.values())
+    assert solvent_in_wells > 0, "legacy 에선 선헹굼 용매가 웰로 — 가드 필요"
+
+
+def test_preflush_shifts_only_valve_event():
+    """[불변식] 선헹굼은 밸브 전환 시각만 앞당긴다 — 니들 이동/수집 종료/
+    push 시간은 t_head 기준 그대로 (수집 창 정의 불변)."""
+    t_head, F = 435.5, 0.481
+    pf_sec = (V_PF / F) * 60.0
+    t_collect = max(0.0, t_head - pf_sec)
+    assert t_collect < t_head and abs((t_head - t_collect) - pf_sec) < 1e-9
+    # 클램프: 선헹굼이 t_head 보다 크면 0 으로 (음수 시각 금지)
+    assert max(0.0, t_head - (t_head + 10.0) ) == 0.0
+
+
 def test_delta_scales_inversely_with_flow():
     """[정량 법칙] 시프트 Δt = v_line/F — 유속이 낮을수록 시간 오차 증폭.
     (F=1mL/min→60s, 0.5→120s: '생각보다 심각'의 산술적 근거)"""

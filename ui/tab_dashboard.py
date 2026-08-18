@@ -229,37 +229,47 @@ class DashboardTab(QWidget):
         # @codesyncer: 위상센서 0/1 디지털 트랙 (GAS=0/LIQ=1 스텝, 로직애널라이저 스타일)
         #   — HTE droplet 슬러그 트레인 가시화. x축은 압력 차트와 링크, 좌축 폭 78 로
         #   위 차트들과 좌변 정렬. roles.phase 센서 있을 때만 표시(set_phase_track_visible).
-        self.plot_phase = pg.PlotWidget()
-        self.plot_phase.setMinimumHeight(118)    # GAS/LIQ 눈금 + x축(Time) 소유 여유
-        self.plot_phase.setMaximumHeight(170)
-        _ax_ph = self.plot_phase.getAxis("left")
-        _ax_ph.enableAutoSIPrefix(False)
-        self.plot_phase.getAxis("bottom").enableAutoSIPrefix(False)
-        _ax_ph.setTickFont(QFont("Segoe UI", 9))
-        _ax_ph.setWidth(78)
-        # 슬림 트랙에서 pyqtgraph 가 라벨을 자동 숨기지 않도록 점유율 제한 해제
-        _ax_ph.setStyle(tickTextOffset=6, textFillLimits=[(0, 1.0)])
-        _ax_ph.setTicks([[(0, "GAS"), (1, "LIQ")]])
-        self.plot_phase.getAxis("bottom").setTickFont(QFont("Segoe UI", 9))
-        # 슬림 트랙에서 0/1 눈금 텍스트가 상하 클리핑되지 않도록 여유 범위
-        self.plot_phase.setYRange(-0.35, 1.35, padding=0)
-        self.plot_phase.setMouseEnabled(x=True, y=False)
-        self.plot_phase.setXLink(self.plot_pressure)
-        self.plot_phase.setLabel("bottom", "")
-        self.plot_phase.getAxis("bottom").setStyle(showValues=False)
-        # @codesyncer: 멀티레인(로직애널라이저 채널) — 센서 1~4개를 레인으로 쌓음.
-        #   collect=바닥 레인(수집 진실), reactor_in 등은 위로. 커브는 키 첫 등장 시
-        #   _ensure_phase_lanes 가 생성(레인 오프셋 = lane×PHASE_LANE_PITCH).
-        self.PHASE_LANE_PITCH = 1.4
+        # @codesyncer(2026-08-18, 사용자 요청 — 합산 레인 폐지): 위상센서를 카드
+        #   분리 — "Phase Sensor 1 · INLET" / "Phase Sensor 2 · OUTLET" 독립 슬림
+        #   트랙. 캐노니컬 2키 고정 생성(실물 리그 = 정확히 2센서), 그 외 키는
+        #   미차트. 축은 사용자 요청대로 0(GAS)/1(LIQ) 눈금.
+        self.PHASE_KEYS = ("reactor_in", "collect")     # 센서1, 센서2 순
+        self.PHASE_CARD_TITLE = {"reactor_in": "Phase Sensor 1 · INLET",
+                                 "collect": "Phase Sensor 2 · OUTLET"}
         self.PHASE_LANE_COLORS = {"collect": "ACCENT_CYAN", "reactor_in": "ACCENT_PURPLE"}
-        self.PHASE_LANE_LABEL = {"collect": "COLLECT", "reactor_in": "INLET"}
-        self.crv_phases = {}      # key -> PlotDataItem
-        self._phase_lanes = []    # 레인 순서 (index = lane)
+        self.plot_phases = {}     # key -> PlotWidget
+        self.crv_phases = {}      # key -> PlotDataItem (테마 재도색 루프가 이 이름 소비)
+        _P0 = Dark if getattr(self.app, "is_dark_mode", True) else Light
+        for _pk in self.PHASE_KEYS:
+            _pl = pg.PlotWidget()
+            _pl.setMinimumHeight(96)
+            _pl.setMaximumHeight(150)
+            _axl = _pl.getAxis("left")
+            _axl.enableAutoSIPrefix(False)
+            _pl.getAxis("bottom").enableAutoSIPrefix(False)
+            _axl.setTickFont(QFont("Segoe UI", 9))
+            _axl.setWidth(78)
+            # 슬림 트랙에서 pyqtgraph 가 라벨을 자동 숨기지 않도록 점유율 제한 해제
+            _axl.setStyle(tickTextOffset=6, textFillLimits=[(0, 1.0)])
+            _axl.setTicks([[(0, "0 GAS"), (1, "1 LIQ")]])
+            _pl.getAxis("bottom").setTickFont(QFont("Segoe UI", 9))
+            # 슬림 트랙에서 눈금 텍스트가 상하 클리핑되지 않도록 여유 범위
+            _pl.setYRange(-0.35, 1.35, padding=0)
+            _pl.setMouseEnabled(x=True, y=False)
+            _pl.setXLink(self.plot_pressure)
+            _pl.setLabel("bottom", "")
+            _pl.getAxis("bottom").setStyle(showValues=False)
+            _col0 = self._phase_lane_color(_pk, _P0)
+            _cf = QColor(_col0)
+            _cf.setAlphaF(0.22)
+            self.crv_phases[_pk] = _pl.plot(
+                stepMode=True, pen=pg.mkPen(_col0, width=2.0),
+                fillBrush=pg.mkBrush(_cf), fillLevel=0)
+            self.plot_phases[_pk] = _pl
 
-        # 헤더 현재값 라벨 (시리즈색) — phase 는 채널당 칩 1개(최대 2 노출)
+        # 헤더 현재값 라벨 (시리즈색) — phase 는 카드당 칩 1개
         self.lbl_chart_temp = QLabel("-- °C")
-        self.lbl_chart_phase = QLabel("--")
-        self.lbl_chart_phase2 = QLabel("")
+        self.phase_chips = {k: QLabel("--") for k in self.PHASE_KEYS}
         self.chart_p_labels = {}
         self.chart_cards = []
 
@@ -293,14 +303,18 @@ class DashboardTab(QWidget):
             _chart_card("Reactor Temperature", self.plot_temp, [self.lbl_chart_temp]))
         self.trend_splitter.addWidget(
             _chart_card("Pump Pressure", self.plot_pressure, p_widgets))
-        self.phase_card = _chart_card("Slug Phase", self.plot_phase,
-                                      [self.lbl_chart_phase2, self.lbl_chart_phase])
-        self.trend_splitter.addWidget(self.phase_card)
+        self.phase_cards = {}
+        for _pk in self.PHASE_KEYS:
+            _card = _chart_card(self.PHASE_CARD_TITLE[_pk],
+                                self.plot_phases[_pk], [self.phase_chips[_pk]])
+            self.phase_cards[_pk] = _card
+            self.trend_splitter.addWidget(_card)
+            _card.setVisible(False)                  # 센서(roles.phase) 있을 때만
         self.trend_splitter.setStretchFactor(0, 1)
         self.trend_splitter.setStretchFactor(1, 1)
-        self.trend_splitter.setStretchFactor(2, 0)   # 위상 트랙 = 고정 슬림
+        for _i in range(2, 2 + len(self.PHASE_KEYS)):
+            self.trend_splitter.setStretchFactor(_i, 0)   # 위상 트랙 = 고정 슬림
         self.trend_splitter.setSizes([260, 260])
-        self.phase_card.setVisible(False)            # 센서(roles.phase) 있을 때만
         chart_page.setMinimumHeight(480)
 
         chart_l.addWidget(self.trend_splitter)
@@ -369,7 +383,8 @@ class DashboardTab(QWidget):
         self.scroll.setWidget(self.canvas)
         root.addWidget(self.scroll)
 
-        self.plot_widgets = [self.plot_temp, self.plot_pressure, self.plot_phase]
+        self.plot_widgets = [self.plot_temp, self.plot_pressure,
+                             *self.plot_phases.values()]
         self._update_responsive_layout()
 
     def _update_responsive_layout(self):
@@ -695,16 +710,21 @@ class DashboardTab(QWidget):
         self._set_plot_theme(is_dark, p)
 
     def set_phase_track_visible(self, visible: bool):
-        """위상 트랙 표시 토글 + 'Time (sec)' x축 라벨 소유권 이관 (최하단 플롯이 담당).
-        부팅/핫리로드 시 app_monitoring.start_monitoring 이 센서 유무로 호출."""
-        if not hasattr(self, "phase_card"):
+        """위상 카드(센서1/2) 표시 토글 + 'Time (sec)' x축 라벨 소유권 이관
+        (최하단 표시 플롯이 담당). 부팅/핫리로드 시 app_monitoring 이 호출."""
+        if not hasattr(self, "phase_cards"):
             return
-        self.phase_card.setVisible(bool(visible))
+        visible = bool(visible)
+        for _c in self.phase_cards.values():
+            _c.setVisible(visible)
         if visible:
             self.plot_pressure.setLabel("bottom", "")
             self.plot_pressure.getAxis("bottom").setStyle(showValues=False)
-            self.plot_phase.setLabel("bottom", "Time (sec)")
-            self.plot_phase.getAxis("bottom").setStyle(showValues=True)
+            _last = self.PHASE_KEYS[-1]
+            for _pk, _pl in self.plot_phases.items():
+                _own = (_pk == _last)
+                _pl.setLabel("bottom", "Time (sec)" if _own else "")
+                _pl.getAxis("bottom").setStyle(showValues=_own)
         else:
             self.plot_pressure.setLabel("bottom", "Time (sec)")
             self.plot_pressure.getAxis("bottom").setStyle(showValues=True)
@@ -712,82 +732,37 @@ class DashboardTab(QWidget):
     def _phase_lane_color(self, key, P):
         return getattr(P, self.PHASE_LANE_COLORS.get(key, "ACCENT_GREEN"))
 
-    def _ensure_phase_lanes(self, keys):
-        """키 첫 등장 시 커브 생성 + 레인 배치/눈금/범위/높이 갱신.
-        레인 순서: collect=바닥, 나머지 알파벳순 위로."""
-        order = ([k for k in ("collect",) if k in keys]
-                 + sorted(k for k in keys if k != "collect"))
-        if order == self._phase_lanes and all(k in self.crv_phases for k in order):
-            return
-        self._phase_lanes = order
-        P = Dark if getattr(self.app, "is_dark_mode", True) else Light
-        for k in order:
-            if k not in self.crv_phases:
-                col = self._phase_lane_color(k, P)
-                c = QColor(col)
-                c.setAlphaF(0.22)
-                self.crv_phases[k] = self.plot_phase.plot(
-                    stepMode=True, pen=pg.mkPen(col, width=2.0),
-                    fillBrush=pg.mkBrush(c))
-        pitch, n = self.PHASE_LANE_PITCH, len(order)
-        for lane, k in enumerate(order):
-            try:
-                self.crv_phases[k].setFillLevel(lane * pitch)
-            except Exception:
-                pass
-        ax = self.plot_phase.getAxis("left")
-        if n <= 1:
-            ax.setTicks([[(0, "GAS"), (1, "LIQ")]])
-        else:
-            ax.setTicks([[(lane * pitch + 0.5,
-                           self.PHASE_LANE_LABEL.get(k, k[:4].upper()))
-                          for lane, k in enumerate(order)]])
-        self.plot_phase.setYRange(-0.35, (n - 1) * pitch + 1.35, padding=0)
-        self.plot_phase.setMinimumHeight(118 + 46 * (n - 1))
-        self.plot_phase.setMaximumHeight(170 + 60 * (n - 1))
-
     def update_phase(self, series):
-        """위상센서 0/1 멀티레인 트랙 갱신 (app_monitoring.update_phase_data, 1Hz).
+        """위상센서 독립 카드(센서1/2) 갱신 (app_monitoring.update_phase_data, 1Hz).
 
         series = {채널: {"t": [...], "v": [...]}}. stepMode=True 계약: x=len(y)+1 —
-        마지막 샘플 +1s(폴 주기) 홀드 패딩. 레인 오프셋 = lane×PITCH.
-        헤더 칩: collect(주) + 두 번째 레인(부)."""
-        keys = [k for k, s in (series or {}).items() if s.get("t")]
-        if not hasattr(self, "crv_phases") or not keys:
+        마지막 샘플 +1s(폴 주기) 홀드 패딩. y = 0(GAS)/1(LIQUID) 원값.
+        ⚠ 이 센서는 유량계가 아니라 '관 내용물' 감지기 — 흐름이 있어도 상(相)이
+        같으면 평평한 게 정상이며, 기/액 경계가 통과할 때만 계단이 생긴다."""
+        if not hasattr(self, "crv_phases"):
             return
-        if not self.phase_card.isVisible():
+        keys = [k for k in self.PHASE_KEYS
+                if (series or {}).get(k, {}).get("t")]
+        if not keys:
+            return
+        if not any(c.isVisible() for c in self.phase_cards.values()):
             self.set_phase_track_visible(True)   # 데이터 도착=센서 존재 (핫리로드 안전망)
-        self._ensure_phase_lanes(keys)
         P = Dark if getattr(self.app, "is_dark_mode", True) else Light
-        pitch = self.PHASE_LANE_PITCH
-        for lane, k in enumerate(self._phase_lanes):
-            s = series.get(k)
-            if not s or not s["t"]:
-                continue
+        for k in keys:
+            s = series[k]
             x = list(s["t"]) + [s["t"][-1] + 1.0]
-            y = [v + lane * pitch for v in s["v"]]
-            self.crv_phases[k].setData(x, y)
-
-        def _chip(lbl, k):
-            s = series.get(k)
-            if not s or not s["v"]:
-                lbl.setText("")
-                return
-            name = self.PHASE_LANE_LABEL.get(k, k[:4].upper())
+            self.crv_phases[k].setData(x, list(s["v"]))
+            lbl = self.phase_chips.get(k)
+            if lbl is None or not s["v"]:
+                continue
             if s["v"][-1]:
-                txt, col = f"● {name} LIQUID", self._phase_lane_color(k, P)
+                txt, col = "● 1 LIQUID", self._phase_lane_color(k, P)
             else:
-                txt, col = f"○ {name} GAS", P.TEXT_DISABLED
+                txt, col = "○ 0 GAS", P.TEXT_DISABLED
             lbl.setText(txt)
             lbl.setStyleSheet(
                 f"color: {col}; font-family: Consolas; font-size: {T.FS_SM}; "
                 f"font-weight: {T.FW_SEMI}; border: none;")
-
-        _chip(self.lbl_chart_phase, self._phase_lanes[0])
-        if len(self._phase_lanes) > 1:
-            _chip(self.lbl_chart_phase2, self._phase_lanes[1])
-        else:
-            self.lbl_chart_phase2.setText("")
 
     def update_metrics(self, temp: float, pressures: Dict[str, float], pump_status: Dict[str, bool], outlet_pos):
         # 차트 헤더 현재값 (실시간)

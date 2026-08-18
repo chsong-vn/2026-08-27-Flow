@@ -135,13 +135,18 @@ NRG 펌프·GRBL 샘플러의 백엔드. 원본 무수정(LICENSE/NOTICE 동봉)
 ```
 [시약1-12] → 12way밸브(Runze×4, COM14 데이지체인) → 3way밸브(ESP32-S3-ETH-8DI-8RO, ★USB-C 시리얼 COM7 — 이더넷 미사용 결정 2026-07-31, ch1~4=Group A/B/C/D) → 시린지펌프(Chemyx×4, COM9 RS-485)
                                                                               ↓
-                                                        합류: Solvent+A+B→QUAD-1 → (+C+D)→QUAD-2 → 가스T(MFC) → OPB센서   ← 2026-08-12 재구성, tjunction_entry_map
+                                                        합류: Solvent+A+B→QUAD-1 → (+C+D)→QUAD-2 → 가스T(N2 MFC: MKP VIC/CAF-K, COM15, FS 10 sccm) → 센서1(INLET, OPB ch0)   ← 2026-08-12 재구성, tjunction_entry_map
                                                                               ↓
-                                                        광반응기 코일 (실측 2.4 mL — 암부 앞/뒤 0.15 mL 포함, 조사 2.1 mL / 예비 반응기 2.6 mL)
+                                                        광반응기 코일 — 🔴2026-08-17 정정: 총 2.7 mL = 조사 2.4 + 암부 앞/뒤 0.15×2.
+                                                          유속 산출(반응시간=조사 체류) = reactor_vol_illuminated 2.4 / 수송 t_head = 총 2.7 (역할 분리, calculators·config 참조)
+                                                          예비 반응기 2.6 mL(총부피 기준인지 교체 시 재확인)
                                                                               ↓
                                                         항온조 히터 (COM5, MODBUS)
                                                                               ↓
-                                                        반응기→photo센서→아웃렛 (411 mm = 206.6 µL 실측) → 3way 아웃렛밸브 (ESP32 ch5, ⚠SW 배선반전 invert 중 — docs/아웃렛_배선반전_주의.md) → 분획수집기 (COM15, Plate96)
+                                                        반응기→센서2(OUTLET, OPB ch1)→아웃렛 (411 mm = 206.6 µL 실측) → 3way 아웃렛밸브 (ESP32 ch5, ⚠SW 배선반전 invert 중 — docs/아웃렛_배선반전_주의.md) → 분획수집기 (COM11, Plate96)
+
+★OPB 위상센서 (COM18, 115200): 센서1=INLET=A0(thr 440) / 센서2=OUTLET=A1(thr 717) — 2026-08-17 실측 확정, docs/위상센서_OPB_배선메모.md 확정블록 참조.
+  펌웨어=라벨포맷(`S1:adc,판정 | S2:...`) — 드라이버 양포맷 수용. ⚠튜브빠짐=액체 오판(fail-unsafe) — N2Precal 원점검사가 유일한 자동검출.
 ```
 
 **펌프 그룹**: Group A / B / C / D — 각각 (시린지모터 + 12way셀렉터 + 3way스위처) 세트
@@ -152,15 +157,17 @@ NRG 펌프·GRBL 샘플러의 백엔드. 원본 무수정(LICENSE/NOTICE 동봉)
 ## 실행 시퀀스 (strict_engine.py)
 
 ```
-1. 글로벌 호밍 (모든 밸브 → 1번 포트)
+1. 글로벌 호밍 (모든 밸브 → 1번 포트) + 분취기 호밍(병렬)
+1.8 프리캘 체인 (스텝1, 병행 스레드) = PushLinePrime(push 라인 용매충전)
+    → N2Precal(N2 배기 → calibrate() 훅 → 센서 공기원점 캡처·검증)   ← 2026-08-17
+1.9 소스라인 기포 퍼지 (포트당 1회, (inlet+selector)×factor → 12way 폐기) ← gas 브랜치 이식
 2. 가열 대기 (temp_tolerance 이내, timeout 900초)
-3. 초기 리필 (첫 가열 후 1회)
-4. 시스템 세척 (wash_mode에 따라)
-5. 스마트 프리필 (prefill_mode에 따라)
-6. 시약 주입 (allow_refill=False ← 희석 방지)
-7. 용매 푸시 (세척액 리필)
-8. 수송 딜레이
-9. 분획 수집
+   (구 '초기 리필' 은 2026-08-13 삭제 — git 이력 참조)
+4. 시스템 세척 (wash_mode에 따라) — 퍼지 잔류 시약도 여기서 헹굼
+5. 스마트 프리필 (Phase-0 분기 정량 / Prime-P1 본류 충전(스텝1) / 시약 장전(매 스텝))
+6. 시약 주입 (allow_refill=False ← 희석 방지) + HeadArrivalProbe(observe/anchor, 기본 off)
+7. HPLC push (병행 시린지 세척) — 레거시 경로는 용매 푸시
+8. 수송 딜레이 → 분획 수집 (CollectionTimer, t_head = 총 2.7 기반)
 10. 후처리 대기
 ```
 

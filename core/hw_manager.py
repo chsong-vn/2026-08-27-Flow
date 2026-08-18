@@ -123,11 +123,10 @@ class HardwareManager:
                 o_invert = bool(o_info.get("invert", False))
                 self.valves["Outlet"] = ESP32EthValve(o_info["port"], channel=o_channel,
                                                       invert=o_invert)
-                if o_invert:
-                    print("  ⚠⚠ [Outlet] 배선 반전 모드(invert) — collector/waste 튜브가 "
-                          "반대로 체결된 상태를 SW 로 흡수 중. 무전원 기본 물리 경로가 "
-                          "COLLECT 쪽임에 주의. 재배관 시 config invert 제거 필수 "
-                          "(docs/아웃렛_배선반전_주의.md)")
+                # @codesyncer(2026-08-15, 사용자 지시): 부팅마다 나오던 invert 경고
+                #   블록 제거 — 배선이 확정된 상태의 상시 참이라 경고 가치가 없고
+                #   진짜 이상 신호를 묻는다. 배경/주의사항은 문서에만 유지:
+                #   docs/아웃렛_배선반전_주의.md (재배관 시 config invert 제거 필수).
                 self._safe_connect(self.valves["Outlet"], "Outlet")
             else:
                 self.valves["Outlet"] = MockValve("Outlet_Virtual")
@@ -226,6 +225,9 @@ class HardwareManager:
                     'wash_count': int(settings.get('wash_count', 2)),
                     'wash_volume': float(settings.get('wash_volume', 5.0)),
                     'dead_vol_solvent': float(settings.get('tube_vol_solvent', 0.0)),
+                    # gas 브랜치 이식(2026-08-17): 최소 리필량 — 기포 퍼지의 소량
+                    # 흡입(0.147mL)이 구 하드코딩 하한 0.1 에 삼켜지지 않게 전역 설정화
+                    'refill_min_vol_ml': float(sys_p.get('refill_min_vol_ml', 0.1)),
                 }
                 self.pumps[p_name] = ChemyxSmartPump(p_name, motor_port, sel_obj, sw_obj, spec)
             elif motor_driver == "Vapourtec" and 'VapourtecPump' in globals():

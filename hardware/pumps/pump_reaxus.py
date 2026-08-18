@@ -61,7 +61,9 @@ class ReaxusPump:
 
     def set_flow(self, flow_rate):
         try:
-            flow_int = int(float(flow_rate) * 100)
+            # FI 단위 = 0.01 mL/min. int() 버림은 저유속에서 최대 -0.01mL/min
+            # 편향(예: 0.479→FI47=0.47) — 반올림으로 교정 (2026-08-14)
+            flow_int = int(round(float(flow_rate) * 100))
             self._send_command(f"FI{flow_int}")
         except Exception as e:
             print(f"[{self.name}] Flow Set Error: {e}")

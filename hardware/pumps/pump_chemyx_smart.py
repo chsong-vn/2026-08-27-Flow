@@ -16,6 +16,12 @@ class ChemyxSmartPump:
         self.wash_count = int(config_dict.get('wash_count', 2))
         self.wash_volume = float(config_dict.get('wash_volume', 5.0))
         self.dead_vol_solvent = float(config_dict.get('dead_vol_solvent', 0.0))
+        # @codesyncer-decision(2026-08-14, gas 브랜치 → 2026-08-17 이식): 최소
+        #   리필량을 설정으로 노출. 원래 하드코딩 0.1 은 '거의 찬 시린지에 무의미한
+        #   탑업 금지' 가드였는데(스킵 로그 문구가 그 의도를 드러낸다), 명시적으로
+        #   요청한 소량 리필도 같이 삼켜 조용한 무동작을 만든다.
+        #   system_params.refill_min_vol_ml 로 조정 (기포 퍼지 0.147mL 가 첫 소비자).
+        self.refill_min_vol = float(config_dict.get('refill_min_vol_ml', 0.1))
 
         self.pump_id = int(config_dict.get('pump_id', 0))
 
@@ -133,10 +139,13 @@ class ChemyxSmartPump:
         readback = self.driver.read_rate()
 
         if readback is None:
-            # 펌웨어가 view rate 미지원 → 검증 생략
-            if not getattr(self, '_readback_warn_shown', False):
-                print(f"   [{self.name}] ⚠ view rate 미지원 — read-back 검증 비활성화")
-                self._readback_warn_shown = True
+            # 펌웨어가 view rate 미지원 → 검증 생략 (조용히)
+            # @codesyncer-decision(2026-08-15, 사용자 확정): 이 펌웨어에는 view
+            #   rate/volume 명령이 아예 없다(docs/Chemyx_RS485_핀아웃_배선메모.md).
+            #   '영구적으로 참인 사실'이라 경고로 띄울 가치가 없어 출력 제거 —
+            #   미토출 검출은 Phase 3(_verify_running: dispensed volume 변화)와
+            #   자동정지 유예 감시가 담당한다.
+            self._readback_supported = False
         elif not self._is_close(readback, rate):
             # 첫 시도 불일치 → 재시도
             for attempt in range(1, max_retries):
@@ -158,9 +167,8 @@ class ChemyxSmartPump:
         readback = self.driver.read_volume()
 
         if readback is None:
-            if not getattr(self, '_readback_warn_shown', False):
-                print(f"   [{self.name}] ⚠ view volume 미지원 — read-back 검증 비활성화")
-                self._readback_warn_shown = True
+            # view volume 미지원 — rate 와 동일 사유로 조용히 생략
+            self._readback_supported = False
         elif not self._is_close(abs(readback), abs(volume)):
             for attempt in range(1, max_retries):
                 print(f"   [{self.name}] ⚠ {action_name}: volume 불일치 "
@@ -254,8 +262,16 @@ class ChemyxSmartPump:
         available = max(0, self.capacity - self.current_vol)
         requested = min(volume, self.capacity) if volume is not None else self.capacity
         fill_vol = min(requested, available)
-        if fill_vol < 0.1:
-            print(f"   [{self.name}] Refill skipped (syringe already {self.current_vol:.1f}/{self.capacity:.1f}mL)")
+        if fill_vol < self.refill_min_vol:
+            # 두 원인을 구분해 출력 — '요청 자체가 소량'인 경우는 조용한 무동작이
+            # 아니라 명시적 경고여야 한다(호출부가 그만큼 안 채워진 걸 모른다).
+            if available < self.refill_min_vol:
+                print(f"   [{self.name}] Refill skipped (syringe already "
+                      f"{self.current_vol:.2f}/{self.capacity:.1f}mL)")
+            else:
+                print(f"   [{self.name}] ⚠ Refill skipped — 요청 {fill_vol:.4f}mL < "
+                      f"최소 리필량 {self.refill_min_vol:.3f}mL "
+                      f"(system_params.refill_min_vol_ml 로 조정)")
             self.is_refilling = False
             return False
 

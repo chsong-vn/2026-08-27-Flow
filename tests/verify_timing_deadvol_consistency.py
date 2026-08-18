@@ -134,16 +134,21 @@ else:
 exp_col = sysm["collection_line_vol_ml"]["measured_ml"]
 check("collection_line", abs(sp_json["collection_line_vol_ml"] - exp_col) <= 5e-4,
       f"원장 {exp_col} | config {sp_json['collection_line_vol_ml']}")
-# 파생 합산 정체성: reagent = inlet + selector + valve_pump (원장 구간합 규칙)
+# 파생 합산 정체성: reagent = inlet + selector + valve_pump(편도) + 왕복레그
+# @codesyncer(2026-08-14): 시린지↔3way 왕복 레그(1.83)는 흡입·주입 왕복 자기보상이라
+#   valve_pump(퍼지창 line_src)에서 제외 — 원장 leg_ml_info 로 기록 유지. 세척·리필
+#   부피 키(reagent/solvent 합산)에는 계속 포함되므로 정체성 검사는 레그를 더해 확인.
 for pname in prof["pumps"]:
     if pname not in settings:
         continue
     s = settings.get(pname, {})
+    _vp_entry = (prof["pumps"][pname].get("tube_vol_valve_pump") or {})
+    leg = float(_vp_entry.get("leg_ml_info", 0.0) or 0.0)
     ident = s.get("tube_vol_inlet", 0) + s.get("tube_vol_selector", 0) \
-        + s.get("tube_vol_valve_pump", 0)
-    check(f"{pname} 합산 정체성 reagent=inlet+sel+vp",
+        + s.get("tube_vol_valve_pump", 0) + leg
+    check(f"{pname} 합산 정체성 reagent=inlet+sel+vp+leg",
           abs(ident - s.get("tube_vol_reagent", 0)) <= 2e-4,
-          f"{ident:.4f} vs {s.get('tube_vol_reagent')}")
+          f"{ident:.4f} (leg {leg:.2f}) vs {s.get('tube_vol_reagent')}")
 
 # ══ PART B: 엔진 ↔ 독립 물리모델 (실측값 + 실 entry_map) ══════════════
 print("=== PART B: _compute_plug_timing ↔ 독립 재구현 (실측 시나리오) ===")

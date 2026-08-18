@@ -42,7 +42,15 @@ class FlowCalculator:
                 ratio = eqs[i] / concs[i]
             raw_flows.append(ratio)
 
-        target_total_flow = self.cfg.reactor_vol / residence_time
+        # @codesyncer-decision(2026-08-14, 사용자 확정): 광화학의 '반응시간' = 빛 받은
+        #   시간이므로 유속은 '조사부피' 기준이다. 반응기 총부피(암부 포함)를 쓰면
+        #   같은 설정에서 조사 체류시간이 짧아진다(2.7 vs 2.4 = 11% 단축).
+        #   수송 타이밍(t_head)은 반대로 총부피를 써야 하며 그쪽은 엔진이 담당.
+        #   암부 미설정 config 는 조사=총 이라 기존 동작과 동일.
+        _r_vol = float(getattr(self.cfg, "reactor_vol_illuminated", 0.0) or 0.0)
+        if _r_vol <= 0:
+            _r_vol = float(self.cfg.reactor_vol)
+        target_total_flow = _r_vol / residence_time
         current_total_ratio = sum(raw_flows)
         
         if current_total_ratio <= 0: 

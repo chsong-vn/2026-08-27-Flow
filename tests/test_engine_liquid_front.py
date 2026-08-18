@@ -566,7 +566,9 @@ check("순서 COLLECT<WASTE", order_ok)
 if SCEN.startswith("deadvol"):
     # prefill 충전 = inject + src 보정 (펌프별 첫 refill 기록)
     refill_evs = [(t, n, d) for t, k, n, d in EVENTS if k == "refill"]
-    t_inj0 = min(t for t, n, d in pump_starts)  # injection 시작
+    # injection 시작 = 시린지 dosing 첫 start — PUSH(HPLC)는 제외
+    # (2026-08-14: 스텝1 다운스트림 프라임이 시약 충전보다 이른 PUSH start 를 만듦)
+    t_inj0 = min(t for t, n, d in pump_starts if n != "PUSH")
     for pn, fl in FLOWS.items():
         # injection 직전의 마지막 refill = 시약 충전 (initial wash refill 제외)
         fills = [d for t, n, d in refill_evs if n == pn and t < t_inj0]

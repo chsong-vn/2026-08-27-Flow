@@ -1031,9 +1031,22 @@ class HardwareConfigDialog(QDialog):
         @codesyncer: 기존엔 우측 하단에 항상 노출돼 '모듈별 선택 ↔ 전역값'이
           한 화면에 섞여 혼란 → 모듈 리스트의 'System' 항목에서 선택하는 페이지로 이동.
         """
+        # @codesyncer(2026-08-15): 펌프 페이지와 동일하게 스크롤 적용 — 파라미터가
+        #   늘면서(Collect Pre-flush·Prime Ph1 Vol./Rate) 창 높이가 작은 환경에서
+        #   하단 항목이 잘려 '설정이 없다'로 보이던 문제 방지.
         self.page_system = QWidget()
-        parent_layout = QVBoxLayout(self.page_system)
-        parent_layout.setContentsMargins(0, 0, 0, 0)
+        _outer = QVBoxLayout(self.page_system)
+        _outer.setContentsMargins(0, 0, 0, 0)
+        _outer.setSpacing(0)
+        _scroll = QScrollArea()
+        _scroll.setWidgetResizable(True)
+        _scroll.setFrameShape(QFrame.NoFrame)
+        _content = QWidget()
+        _outer.addWidget(_scroll)
+        _scroll.setWidget(_content)
+
+        parent_layout = QVBoxLayout(_content)
+        parent_layout.setContentsMargins(0, 0, T.SP_XS, 0)
         parent_layout.setSpacing(T.SP_SM)
         _hint = QLabel("전역 설정  ·  모든 모듈에 공통 적용됩니다.")
         _hint.setObjectName("DialogHintLabel")
@@ -1068,7 +1081,9 @@ class HardwareConfigDialog(QDialog):
         self.sp_r_len = QDoubleSpinBox()
         self.sp_r_len.setRange(0, 1000)
         self.sp_r_len.setSuffix(" m")
-        self.sp_r_len.setDecimals(2)
+        # 소수 4자리 — 2자리면 원장 등가길이(예: 3.056 m)가 저장 때마다 3.06 으로
+        # 반올림돼 reactor_vol 이 2.4003→2.4033 으로 드리프트한다 (post_reactor 와 동일 사유)
+        self.sp_r_len.setDecimals(4)
         self.sp_r_len.setToolTip("반응기 튜빙의 전체 길이\n튜빙 포장에 표기된 길이를 입력하세요.")
 
         self.sp_r_id = QDoubleSpinBox()
@@ -1102,24 +1117,50 @@ class HardwareConfigDialog(QDialog):
         self.sp_post_r = QDoubleSpinBox()
         self.sp_post_r.setRange(0, 100)
         self.sp_post_r.setSuffix(" mL")
-        self.sp_post_r.setDecimals(2)
+        # 소수 4자리 — 2자리였을 때 저장 시 실측 0.2066→0.21 반올림돼 원장과
+        # 어긋나는 드리프트 발생 (2026-08-15 verify_timing FAIL 원인)
+        self.sp_post_r.setDecimals(4)
         self.sp_post_r.setToolTip("반응기 출구에서 outlet 밸브까지의 배관 부피\n이 구간을 용매로 밀어내야 반응물이 수집기에 도달합니다.\n측정: 주사기로 물을 채워서 부피 확인")
 
         self.sp_cl = QDoubleSpinBox()
         self.sp_cl.setRange(0, 100)
         self.sp_cl.setSuffix(" mL")
-        self.sp_cl.setDecimals(2)
+        self.sp_cl.setDecimals(4)   # post_reactor 와 동일 — 실측 반올림 드리프트 방지
         self.sp_cl.setToolTip("outlet 밸브에서 수집 튜브까지의 배관 부피\n수집 완료 후 이 부피만큼 추가로 밀어서\n배관에 남은 반응물을 세척 튜브로 회수합니다.")
 
-        self.sp_pf = QDoubleSpinBox()
-        self.sp_pf.setRange(0, 100)
-        self.sp_pf.setSuffix(" mL/min")
-        self.sp_pf.setDecimals(2)
-        self.sp_pf.setToolTip("시린지 내용물을 반응기 쪽으로 밀어내는 속도\n• 권장: 6~10 mL/min\n• 너무 빠르면 압력 상승 주의")
+        # @codesyncer(2026-08-15, 사용자 요청): 시린지 prime 속도(Ph0/Ph1)는
+        #   Syringe Parameters(펌프 그룹 페이지)로 이동 — Refill Rate 와 같은 자리.
+        #   위젯 생성은 setup_pump_ui 로 옮겼고(그 함수가 먼저 실행됨),
+        #   여기서는 부피성 파라미터만 남긴다. 저장 키는 그대로 system_params.
+        # Prime Phase-1 (스텝1 전용, 2026-08-15) — 시린지가 port 1 용매를 흡입해
+        # 본류(반응기)를 가득 채움 (압력 안정성). HPLC 는 push 전용 — prime 불관여.
+        self.sp_pp_vol = QDoubleSpinBox()
+        self.sp_pp_vol.setRange(0, 100)
+        self.sp_pp_vol.setSuffix(" mL")
+        self.sp_pp_vol.setDecimals(2)
+        self.sp_pp_vol.setToolTip(
+            "스텝1에서 시린지가 port 1 용매로 본류(반응기)를 가득 채우는 부피\n"
+            "(Prime Phase-1, Outlet=WASTE, 활성 시린지들이 균등 분담).\n"
+            "• 0 = 자동: (mixing + reactor + post-reactor) × 1.1\n"
+            "• 스텝2+는 본류가 이미 충전 상태라 미실행")
+        # 수집라인 선헹굼 (2026-08-15) — 선단 도달 전에 Outlet 을 미리 COLLECT 로
+        # 돌려 신선한 용매로 수집라인을 세정하고 WASH(수집라인 폐기)로 배출.
+        self.sp_preflush = QDoubleSpinBox()
+        self.sp_preflush.setRange(0, 100)
+        self.sp_preflush.setSuffix(" mL")
+        self.sp_preflush.setDecimals(3)
+        self.sp_preflush.setToolTip(
+            "제품 선단이 아웃렛에 도달하기 전에 Outlet 을 미리 COLLECT 로 전환해\n"
+            "선단 앞 용매로 수집라인을 세정하는 부피 (배출은 WASH 포트).\n"
+            "• 0 = 끔 (선단 도달 정각에 전환)\n"
+            "• 권장 시작값: 반응기 부피의 10% 안팎\n"
+            "• collect_line_mode=compensated + WASH 좌표 필요 (legacy 는 미적용)\n"
+            "• 니들 이동/수집 종료/push 시간은 불변 — 밸브 전환만 앞당김")
 
         col2.addRow("Post-reactor Vol.:", self.sp_post_r)
         col2.addRow("Collection Line Vol.:", self.sp_cl)
-        col2.addRow("Priming Rate:", self.sp_pf)
+        col2.addRow("Collect Pre-flush:", self.sp_preflush)
+        col2.addRow("Prime Ph1 Vol. (Step1):", self.sp_pp_vol)
 
         # 시퀀스 자동 세척 타이밍 (2026-08-05 사용자 요청: JSON 전용이던
         # system_params.wash_mode 를 콤보로 노출. 볼륨/속도는 펌프 그룹 설정)
@@ -1158,6 +1199,7 @@ class HardwareConfigDialog(QDialog):
         self.sp_mixing_len = QDoubleSpinBox()
         self.sp_mixing_len.setRange(0, 1000)
         self.sp_mixing_len.setSuffix(" cm")
+        self.sp_mixing_len.setDecimals(4)   # 등가길이 반올림 드리프트 방지 (reactor 와 동일)
         self.sp_mixing_len.setDecimals(1)
         self.sp_mixing_len.setToolTip("Total tubing length through all mixing sections\n(e.g. T-mixer → reactor inlet)")
 
@@ -1192,6 +1234,10 @@ class HardwareConfigDialog(QDialog):
         self.sp_post_r.setValue(sp.get("post_reactor_vol_ml", 2.0))
         self.sp_cl.setValue(sp.get("collection_line_vol_ml", 1.0))
         self.sp_pf.setValue(sp.get("priming_rate_ml_min", 5.0))
+        self.sp_pp_vol.setValue(sp.get("prime_phase1_vol_ml", 0.0))
+        self.sp_preflush.setValue(sp.get("collect_preflush_vol_ml", 0.0))
+        self.sp_plp_vol.setValue(sp.get("push_line_prime_vol_ml", 0.0))
+        self.sp_plp_rate.setValue(sp.get("push_line_prime_rate_ml_min", 0.0))
         self.sp_syr_refill.setValue(sp.get("syringe_refill_rate", 20.0))
         self.sp_mixing_id.setValue(sp.get("mixing_line_id_mm", 1.5))
         self.sp_mixing_len.setValue(sp.get("mixing_line_len_cm", 150.0))
@@ -1339,9 +1385,23 @@ class HardwareConfigDialog(QDialog):
         self.sp_syr_refill.setDecimals(1)
         self.sp_syr_refill.setToolTip("시약/용매를 시린지로 충전하는 속도\n• 권장: 8~15 mL/min\n• 점도가 높은 시약은 낮게 설정 (기포 방지)")
 
+        # @codesyncer(2026-08-15, 사용자 요청): 시린지 prime 속도 = 시린지 동작
+        #   파라미터이므로 Refill Rate 바로 옆에 배치 (구: Reactor & Fluidic 페이지).
+        #   Refill Rate 와 동일하게 값 자체는 전역(system_params)에 저장된다.
+        self.sp_pf = QDoubleSpinBox()
+        self.sp_pf.setRange(0, 100)
+        self.sp_pf.setSuffix(" mL/min")
+        self.sp_pf.setDecimals(2)
+        self.sp_pf.setToolTip(
+            "시린지 내용물을 반응기 쪽으로 밀어내는 속도 (prime 공통).\n"
+            "적용: Prime Phase-0(분기 데드볼륨 충전) ·\n"
+            "      Prime Phase-1(스텝1 반응기 용매 충전) · 잔량 배출\n"
+            "• 권장: 6~10 mL/min\n• 너무 빠르면 압력 상승 주의")
+
         lay_syr.addRow("Syringe Model:", self.cb_syringe)
         lay_syr.addRow("Specifications:", self.lbl_syringe_info)
         lay_syr.addRow("Refill Rate:", self.sp_syr_refill)
+        lay_syr.addRow("Prime Rate:", self.sp_pf)
         lay_syr.addRow("Wash Flow Rate:", self.p_wash_speed)
         lay_syr.addRow("Wash Cycles:", self.p_wash_count)
         lay_syr.addRow("Wash Volume:", self.p_wash_volume)
@@ -1482,7 +1542,7 @@ class HardwareConfigDialog(QDialog):
         max_rate = float(data["max_rate"])
         self.lbl_syringe_info.setText(
             f"ID: {data['dia']} mm / Vol: {data['vol']} mL / Max: {max_rate} mL/min")
-        # 시린지 최대 유속으로 rate 스핀박스 상한 제한
+        # 시린지 최대 유속으로 rate 스핀박스 상한 제한 (Ph1 rate 포함 — 0=기본값 유지)
         for sp in (self.sp_syr_refill, self.p_wash_speed, self.sp_pf):
             sp.setMaximum(max_rate)
             if sp.value() > max_rate:
@@ -1575,7 +1635,7 @@ class HardwareConfigDialog(QDialog):
             "Injection 후 반응기를 통과시키는 용매를 공급하는 독립 펌프.\n"
             "• 선택 시: Syringe pump는 injection만 담당, 이후 push는 이 펌프가 수행\n"
             "• None: 기존 방식 (Syringe에 용매 refill 후 push)\n"
-            "• Push volume = 1.1 × reactor volume (라인 세척 10% 여유 포함)"
+            "• Push 유속 = 그 스텝의 총유속 (주입과 동일)"
         )
         lbl_desc.setObjectName("DialogHintLabel")
         lbl_desc.setWordWrap(True)
@@ -1583,6 +1643,44 @@ class HardwareConfigDialog(QDialog):
 
         g.setLayout(f)
         layout.addWidget(g)
+
+        # ── 라인 프라임 (스텝1 전용, 2026-08-15) ──────────────────
+        # 실기 증상: push 시작 후 유체가 20s 넘게 안 밀림 = 라인/헤드의 공기를
+        #   밀어내는 시간. 스텝1 세척과 병행해 미리 채워두면 지연이 사라진다.
+        g2 = QGroupBox("Push Line Prime (Step 1, 기포 제거)")
+        f2 = QFormLayout()
+        f2.setSpacing(T.SP_SM)
+        f2.setContentsMargins(T.SP_LG, 20, T.SP_LG, T.SP_MD)
+        f2.setLabelAlignment(Qt.AlignRight)
+
+        self.sp_plp_vol = QDoubleSpinBox()
+        self.sp_plp_vol.setRange(0, 100)
+        self.sp_plp_vol.setSuffix(" mL")
+        self.sp_plp_vol.setDecimals(2)
+        self.sp_plp_vol.setToolTip(
+            "스텝1 시작 시 push 펌프가 자기 라인·헤드를 용매로 채우며\n"
+            "기포를 반응기 방향 → Outlet(WASTE) 로 밀어내는 부피.\n"
+            "• 0 = 끔\n• 권장: push 라인 부피의 2~3배 (예: 2~3 mL)\n"
+            "• 시스템 세척과 병행 실행 → 대개 추가 시간 0")
+        self.sp_plp_rate = QDoubleSpinBox()
+        self.sp_plp_rate.setRange(0, 100)
+        self.sp_plp_rate.setSuffix(" mL/min")
+        self.sp_plp_rate.setDecimals(2)
+        self.sp_plp_rate.setToolTip(
+            "라인 프라임 유속. 기포를 밀어내려면 실험 유속보다 빨라야 한다.\n"
+            "• 0 = Priming Rate 값을 따름\n• 권장: 5~10 mL/min\n"
+            "• 반응기 내압 한계를 넘지 않는 범위에서")
+
+        f2.addRow("Line Prime Vol.:", self.sp_plp_vol)
+        f2.addRow("Line Prime Rate:", self.sp_plp_rate)
+        lbl_desc2 = QLabel(
+            "Outlet=WASTE 상태에서 시스템 세척과 동시에 수행하고, "
+            "프리필(Prime Ph1) 시작 전에 반드시 완료됩니다.")
+        lbl_desc2.setObjectName("DialogHintLabel")
+        lbl_desc2.setWordWrap(True)
+        f2.addRow(lbl_desc2)
+        g2.setLayout(f2)
+        layout.addWidget(g2)
         layout.addStretch()
 
     def setup_gas_ui(self):
@@ -1630,14 +1728,53 @@ class HardwareConfigDialog(QDialog):
 
         self.ps_driver = QComboBox()
         self.ps_driver.currentIndexChanged.connect(self.save_phase)
+        self.ps_driver.currentIndexChanged.connect(self._load_phase_pos_ui)
         f.addRow("Sensor Array:", self.ps_driver)
 
+        # ── 채널 ↔ 위치 분담 (2026-08-17, 사용자 요청) ─────────────────
+        # @codesyncer-decision: 물리 센서 2개(INLET=반응기 입구 앞 / OUTLET=아웃렛
+        #   직전)의 채널 배정을 JSON 손편집 대신 여기서. 저장처는 '장치' inventory
+        #   settings(sensors/thresholds) — hw_manager 가 그걸 읽는다(roles 아님).
+        #   케이블이 반대로 물려 있으면 여기서 CH0↔CH1 만 바꾸면 된다.
+        self._phase_pos_loading = False
+        self.ps_ch_out = QComboBox()
+        self.ps_ch_in = QComboBox()
+        for cb in (self.ps_ch_out, self.ps_ch_in):
+            cb.addItems(["사용 안 함", "CH0 (A0)", "CH1 (A1)"])
+            cb.currentIndexChanged.connect(self.save_phase)
+        self.ps_thr_out = QSpinBox()
+        self.ps_thr_out.setRange(0, 1023)
+        self.ps_thr_out.setValue(440)
+        self.ps_thr_in = QSpinBox()
+        self.ps_thr_in.setRange(0, 1023)
+        self.ps_thr_in.setValue(717)
+        for sp in (self.ps_thr_out, self.ps_thr_in):
+            sp.valueChanged.connect(self.save_phase)
+        _row_o = QHBoxLayout()
+        _row_o.addWidget(self.ps_ch_out, 1)
+        _row_o.addWidget(QLabel("임계"))
+        _row_o.addWidget(self.ps_thr_out)
+        # @codesyncer(2026-08-17, 사용자 명명): 센서1 = INLET(reactor_in) /
+        #   센서2 = OUTLET(collect). 번호는 '위치'에 붙는 이름 — 물리 채널(A0/A1)은
+        #   아래 콤보로 배정하며 케이블 스왑 시 채널만 바꾼다.
+        f.addRow("센서2 · OUTLET (collect):", _row_o)
+        _row_i = QHBoxLayout()
+        _row_i.addWidget(self.ps_ch_in, 1)
+        _row_i.addWidget(QLabel("임계"))
+        _row_i.addWidget(self.ps_thr_in)
+        f.addRow("센서1 · INLET (reactor_in):", _row_i)
+        self.lbl_ps_warn = QLabel("")
+        self.lbl_ps_warn.setStyleSheet("color:#e5484d;")
+        self.lbl_ps_warn.setVisible(False)
+        f.addRow(self.lbl_ps_warn)
+
         lbl_desc = QLabel(
-            "아웃렛 3-way 직전 튜브의 기체/액체 경계 검출 (OCB350, UNO 1대=4센서).\n"
-            "• 배정 시: 대시보드 'Slug Phase' 0/1 트랙 표시 + HTE 하이브리드 트리거 가능\n"
-            "• 하이브리드 트리거는 system_params.hte_sensor_trigger 로 활성화\n"
-            "• 캘리브레이션은 빈 튜브(기체만) 상태에서 — 액체가 있으면 분류가 뒤집힘\n"
-            "• 센서 채널 매핑(settings.sensors)은 기본 {collect: 0} — 인벤토리 settings"
+            "튜브의 기체/액체 경계 검출 — OPB 2ch(ADC 스트림) 또는 OCB350 어레이.\n"
+            "• 센서1 = INLET(reactor_in, 반응기 입구 앞)  |  센서2 = OUTLET(collect, 아웃렛 직전)\n"
+            "• 위 분담은 장치 settings(sensors/thresholds)로 저장 — 케이블 반대면 CH만 스왑\n"
+            "• 판정 = ADC > 임계 → 액체 (PC 측이 진실원, 펌웨어 자체판정은 무시)\n"
+            "• ⚠ '튜브 빠짐'도 액체로 읽힐 수 있음 — 장착 상태에서 wet/dry 실측으로 임계 재조정\n"
+            "• 벤더 초기값: ch0 공기80/물800 (thr 440) · ch1 공기457/물977 (thr 717)"
         )
         lbl_desc.setObjectName("DialogHintLabel")
         lbl_desc.setWordWrap(True)
@@ -1775,6 +1912,7 @@ class HardwareConfigDialog(QDialog):
             self.ps_driver.blockSignals(True)
             self.set_combo(self.ps_driver, self.temp_roles.get('phase', {}).get('driver_id'))
             self.ps_driver.blockSignals(False)
+            self._load_phase_pos_ui()
             self.stack.setCurrentIndex(7)
 
         elif row == n_pumps + 9:   # System ─ Reactor & Fluidic (전역)
@@ -1942,6 +2080,59 @@ class HardwareConfigDialog(QDialog):
         if 'phase' not in self.temp_roles:
             self.temp_roles['phase'] = {}
         self.temp_roles['phase']['driver_id'] = self.get_selected_id(self.ps_driver)
+        # ── 채널↔위치 분담 저장 — '장치' inventory settings 로 (hw_manager 소비처) ──
+        if getattr(self, "_phase_pos_loading", False):
+            return                        # UI 로드 중 자동저장 재진입 방지
+        if not hasattr(self, "ps_ch_out"):
+            return
+        dev_id = self.temp_roles['phase']['driver_id']
+        dev = next((d for d in self.temp_inventory
+                    if d.get('id') == dev_id), None)
+        if dev is None:
+            return
+        sensors, thr = {}, {}
+        for name, cb, sp in (("collect", self.ps_ch_out, self.ps_thr_out),
+                             ("reactor_in", self.ps_ch_in, self.ps_thr_in)):
+            idx = cb.currentIndex()
+            if idx in (1, 2):
+                sensors[name] = idx - 1
+            thr[name] = int(sp.value())
+        # 같은 채널을 두 위치에 배정 = 물리적으로 불가능 — 저장 거부 + 경고 표시
+        if len(sensors) == 2 and sensors["collect"] == sensors["reactor_in"]:
+            self.lbl_ps_warn.setText("⚠ INLET/OUTLET 이 같은 채널 — 저장되지 않음")
+            self.lbl_ps_warn.setVisible(True)
+            return
+        self.lbl_ps_warn.setVisible(False)
+        st = dev.setdefault('settings', {})
+        if sensors:
+            st['sensors'] = sensors
+        st['thresholds'] = thr
+
+    def _load_phase_pos_ui(self):
+        """선택 장치의 settings.sensors/thresholds → 위치 분담 UI 로드."""
+        if not hasattr(self, "ps_ch_out"):
+            return
+        dev_id = self.get_selected_id(self.ps_driver)
+        dev = next((d for d in self.temp_inventory
+                    if d.get('id') == dev_id), None)
+        st = (dev or {}).get('settings', {}) or {}
+        sensors = st.get('sensors') or {}
+        thr = st.get('thresholds') or {}
+        self._phase_pos_loading = True
+        try:
+            for name, cb, sp, dflt in (
+                    ("collect", self.ps_ch_out, self.ps_thr_out, 440),
+                    ("reactor_in", self.ps_ch_in, self.ps_thr_in, 717)):
+                ch = sensors.get(name)
+                cb.setCurrentIndex(int(ch) + 1 if ch in (0, 1) else 0)
+                t = thr.get(name, thr.get(str(sensors.get(name, ""))))
+                sp.setValue(int(t) if t is not None else dflt)
+            for w in (self.ps_ch_out, self.ps_thr_out,
+                      self.ps_ch_in, self.ps_thr_in):
+                w.setEnabled(dev is not None)
+            self.lbl_ps_warn.setVisible(False)
+        finally:
+            self._phase_pos_loading = False
 
     def autofill_usb_info(self):
         """선택된 COM Port의 VID/PID/Serial을 자동으로 읽어 채운다."""
@@ -2024,6 +2215,14 @@ class HardwareConfigDialog(QDialog):
         self.temp_sys_params["post_reactor_vol_ml"] = self.sp_post_r.value()
         self.temp_sys_params["collection_line_vol_ml"] = self.sp_cl.value()
         self.temp_sys_params["priming_rate_ml_min"] = self.sp_pf.value()
+        self.temp_sys_params["prime_phase1_vol_ml"] = self.sp_pp_vol.value()
+        # @codesyncer(2026-08-15, 사용자 지시): prime_phase1_rate_ml_min 폐지 —
+        #   prime 속도는 Prime Rate(priming_rate_ml_min) 하나로 통일. 남은 레거시
+        #   키가 있으면 제거해 '설정에 있는데 안 먹는' 유령 파라미터를 막는다.
+        self.temp_sys_params.pop("prime_phase1_rate_ml_min", None)
+        self.temp_sys_params["collect_preflush_vol_ml"] = self.sp_preflush.value()
+        self.temp_sys_params["push_line_prime_vol_ml"] = self.sp_plp_vol.value()
+        self.temp_sys_params["push_line_prime_rate_ml_min"] = self.sp_plp_rate.value()
         self.temp_sys_params["syringe_refill_rate"] = self.sp_syr_refill.value()
         self.temp_sys_params["mixing_line_id_mm"] = self.sp_mixing_id.value()
         self.temp_sys_params["mixing_line_len_cm"] = self.sp_mixing_len.value()

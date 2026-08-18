@@ -125,13 +125,16 @@
             "id": "dev_plate96_1",
             "name": "96well 분취기",
             "driver": "96-well 분취기 (Plate96)",
-            "port": "COM11"
+            "port": "COM11",
+            "settings": {
+                "rack_type": "plate96"
+            }
         },
         {
             "id": "dev_reaxus_1",
             "name": "Reaxus 펌프",
             "driver": "연동 펌프 (Reaxus)",
-            "port": "COM21",
+            "port": "COM16",
             "vid": "067B",
             "pid": "2303",
             "probe": "reaxus"
@@ -196,6 +199,34 @@
             "settings": {
                 "baudrate": 9600
             }
+        },
+        {
+            "id": "dev_mfc_mkp_1",
+            "name": "N2 MFC (MKP VIC/CAF-K)",
+            "driver": "질소 MFC (MKP RS485)",
+            "port": "COM15",
+            "settings": {
+                "slave_addr": 0,
+                "baudrate": 9600,
+                "max_sccm": 10.0
+            }
+        },
+        {
+            "id": "dev_opb_1",
+            "name": "OPB 위상센서 2ch",
+            "driver": "위상센서 (OPB ADC 2ch)",
+            "port": "COM19",
+            "settings": {
+                "baudrate": 115200,
+                "sensors": {
+                    "reactor_in": 0,
+                    "collect": 1
+                },
+                "thresholds": {
+                    "reactor_in": 690,
+                    "collect": 750
+                }
+            }
         }
     ],
     "roles": {
@@ -218,8 +249,8 @@
                     "wash_speed": 5.0,
                     "wash_count": 1,
                     "wash_volume": 3.0,
-                    "tube_vol_solvent": 2.3394,
-                    "tube_vol_reagent": 1.9875,
+                    "tube_vol_solvent": 0.9362,
+                    "tube_vol_reagent": 0.5843,
                     "level_policy": "reagent",
                     "level_cal_slope": 1.06776,
                     "level_cal_intercept": -9.2382,
@@ -229,7 +260,7 @@
                     "tube_vol_selector": 0.0224,
                     "tube_vol_switcher": 0.0507,
                     "tube_vol_inlet": 0.0754,
-                    "tube_vol_valve_pump": 1.8897,
+                    "tube_vol_valve_pump": 0.0597,
                     "tube_vol_pump_merge": 0.2262
                 },
                 "position": "inlet"
@@ -246,15 +277,15 @@
                     "pump_id": 4,
                     "diameter": 12.45,
                     "capacity": 6.0,
-                    "tube_vol_solvent": 2.3394,
-                    "tube_vol_reagent": 1.9875,
+                    "tube_vol_solvent": 0.9362,
+                    "tube_vol_reagent": 0.5843,
                     "wash_speed": 5.0,
                     "wash_count": 1,
                     "wash_volume": 3.0,
                     "tube_vol_selector": 0.0224,
                     "tube_vol_switcher": 0.0507,
                     "tube_vol_inlet": 0.0754,
-                    "tube_vol_valve_pump": 1.8897,
+                    "tube_vol_valve_pump": 0.0597,
                     "tube_vol_pump_merge": 0.2262
                 },
                 "position": "inlet"
@@ -279,18 +310,21 @@
             "dev_grbl_sampler_1"
         ],
         "gas": {
-            "driver_id": "dev_6bc9c51a"
+            "driver_id": "dev_mfc_mkp_1"
+        },
+        "phase": {
+            "driver_id": "dev_opb_1"
         }
     },
     "system_params": {
-        "reactor_len_m": 3.056,
+        "reactor_len_m": 3.438,
         "reactor_id_mm": 1.0,
         "post_reactor_vol_ml": 0.2066,
         "collection_line_vol_ml": 0.25,
         "mixing_line_id_mm": 1.5,
         "mixing_line_len_cm": 5.4,
-        "priming_rate_ml_min": 1.7,
-        "syringe_refill_rate": 1.7,
+        "priming_rate_ml_min": 2.0,
+        "syringe_refill_rate": 4.0,
         "temp_tolerance_c": 0.3,
         "heater_reach_timeout_sec": 900.0,
         "max_temp_c": 120.0,
@@ -330,6 +364,23 @@
             "Group_B": 1,
             "Group_C": 2,
             "Group_D": 2
-        }
+        },
+        "prime_phase1_vol_ml": 0.0,
+        "collect_preflush_vol_ml": 0.0,
+        "push_line_prime_vol_ml": 0.5,
+        "push_line_prime_rate_ml_min": 2.0,
+        "n2_precal_enabled": true,
+        "n2_precal_sccm": 10.0,
+        "n2_precal_auto_cal": false,
+        "inj_marker_enabled": false,
+        "inj_marker_sec": 1.0,
+        "inj_marker_sccm": 0.0,
+        "bubble_purge_enabled": true,
+        "bubble_purge_waste_port": 12,
+        "bubble_purge_factor": 2.0,
+        "refill_min_vol_ml": 0.05,
+        "reactor_dark_inlet_ml": 0.15,
+        "reactor_dark_outlet_ml": 0.15,
+        "sensor_to_outlet_vol_ml": 0.0382
     }
 }

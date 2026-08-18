@@ -33,6 +33,27 @@ class SystemConfig:
                 "reactor_id_mm": 1.0,
                 "post_reactor_vol_ml": 2.0,
                 "collection_line_vol_ml": 1.0,
+                # HEAD 실측 프로브 (RoboChem 센서구동 이식) — 기본 off = 종전 동작
+                #   off / observe(관측·로깅만) / anchor(실측 엣지로 타이머 재앵커)
+                "head_probe_mode": "off",
+                "head_probe_window_sec": 150.0,
+                "head_probe_adc_delta": 0.0,      # >0 이면 유색 시약 ADC 스텝 검출 활성
+                "head_probe_sensor_key": "collect",
+                "head_probe_confirm_sec": 1.0,    # 후보 지속성 확인 창 (P0 — 기포 기각)
+                "sensor_to_outlet_vol_ml": 0.0,   # photo센서→아웃렛 밸브 (원장 파생)
+                # 시퀀스 시작 N2 사전 캘리브 (RoboChem OCB350 캘리브 계약 이식) —
+                #   호밍/가열과 병행: N2 로 본류 배기 → 센서 공기 원점 캡처·검증
+                "n2_precal_enabled": False,
+                "n2_precal_sccm": 20.0,
+                "n2_precal_timeout_sec": 120.0,
+                "n2_precal_settle_sec": 3.0,      # 전 센서 '가스' 연속 유지 판정 창
+                "n2_precal_sample_sec": 2.0,      # 원점 표집 시간
+                # 소스라인 기포 퍼지 (gas 브랜치 이식 2026-08-17) — 시약 포트
+                #   잔재 공기를 세척 전에 12way 폐기. (inlet+selector)×factor 흡입
+                "bubble_purge_enabled": False,
+                "bubble_purge_waste_port": 12,
+                "bubble_purge_factor": 2.0,
+                "refill_min_vol_ml": 0.1,         # ChemyxSmartPump 최소 리필량
                 "mixing_line_id_mm": 1.5,
                 "mixing_line_len_cm": 150.0,
                 "priming_rate_ml_min": 5.0,
@@ -354,6 +375,27 @@ class SystemConfig:
         id_mm = self._safe_float(sp.get("reactor_id_mm", 1.0), 1.0)
         self.reactor_vol = math.pi * ((id_mm / 20.0) ** 2) * (l_m * 100.0)
 
+        # @codesyncer-decision(2026-08-14, 사용자 확정): 광반응기는 코일 앞/뒤 일부가
+        #   무조사(암부)라 '총부피'와 '조사부피'를 구분해야 한다. 두 소비처가 서로
+        #   다른 값을 요구한다:
+        #     - 수송 타이밍(t_head)·push 부피 → self.reactor_vol (총부피).
+        #       액체는 암부도 통과하므로 전량이 수송 시간에 들어간다.
+        #     - 유속 산출(반응시간 기준, calculators) → self.reactor_vol_illuminated.
+        #       광화학 '반응시간'은 빛 받은 시간이므로 조사부피/유속 이 진실.
+        #   한 값으로 겸용하던 종전 구현은 둘 중 하나를 반드시 틀리게 했다:
+        #   총부피를 쓰면 조사시간이 짧아지고, 조사부피를 쓰면 t_head 가 암부만큼
+        #   조기 발동(실측 2026-08-14: 0.3 mL = 37.5s @0.48 mL/min → 제품이 waste 로).
+        #   암부 키 미설정(0)이면 조사=총 이라 구버전 config 와 동작 동일.
+        _dark_in = self._safe_float(sp.get("reactor_dark_inlet_ml", 0.0), 0.0)
+        _dark_out = self._safe_float(sp.get("reactor_dark_outlet_ml", 0.0), 0.0)
+        self.reactor_dark_vol = max(0.0, _dark_in) + max(0.0, _dark_out)
+        if self.reactor_dark_vol >= self.reactor_vol > 0:
+            print(f"[Config] ⚠ 암부 합계 {self.reactor_dark_vol:.4f} mL 가 반응기 총부피 "
+                  f"{self.reactor_vol:.4f} mL 이상 — 설정 오류로 보고 암부를 무시합니다 "
+                  f"(조사=총). reactor_dark_inlet_ml/outlet_ml 확인 필요.")
+            self.reactor_dark_vol = 0.0
+        self.reactor_vol_illuminated = self.reactor_vol - self.reactor_dark_vol
+
         # @codesyncer-decision: T-junction 캐스케이드 구간 볼륨
         # 실제 합류는 단일점이 아니라 T1(P1+P2) → T2(+P3) ... 순차 합류.
         # tjunction_line_vols[j] = T_j → T_{j+1} 구간 부피 (j는 1부터,
@@ -397,7 +439,12 @@ class SystemConfig:
         r_cm = (mixing_id / 10.0) / 2.0
         self.mixing_line_dead_vol = math.pi * (r_cm ** 2) * mixing_len
 
-        print(f"[Config] Reactor volume: {self.reactor_vol:.4f} mL")
+        if self.reactor_dark_vol > 0:
+            print(f"[Config] Reactor volume: {self.reactor_vol:.4f} mL (총, 수송 타이밍) / "
+                  f"조사 {self.reactor_vol_illuminated:.4f} mL (유속·반응시간) / "
+                  f"암부 {self.reactor_dark_vol:.4f} mL")
+        else:
+            print(f"[Config] Reactor volume: {self.reactor_vol:.4f} mL")
         print("[Config] Dead volumes (pump lines):")
         for p_name in self.ACTIVE_PUMPS:
             sv = self.dead_vol_solvent.get(p_name, 0.0)
