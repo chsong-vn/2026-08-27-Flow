@@ -199,7 +199,21 @@ check("원점 캡처(양 채널)", bl is not None and set(bl) == {"reactor_in", 
 check("깨끗한 공기 = 플래그 없음",
       bl and not bl["reactor_in"]["flags"] and not bl["collect"]["flags"],
       bl and {k: v["flags"] for k, v in bl.items()})
-check("하드웨어 캘리브 훅 — 배기 후 양 채널 호출 (RoboChem Cal 핀 계약)",
+# @codesyncer(2026-08-18 정책 반전): 자동 CAL 은 기본 off — RoboChem 원본은
+#   수동 캘리브(platform_calibration.py)뿐이고, 자동판은 '비었음'을 캘리브 대상
+#   센서 자신의 판정으로 보증하는 순환 논리라 액체 위 CAL 오발사 사고를 냈다.
+check("하드웨어 캘리브 훅 — 기본 off (수동 절차 격하, 2026-08-18)",
+      s.cal_calls == [], s.cal_calls)
+
+print("=" * 72)
+print("[4b] n2_precal_auto_cal=true — 구버전 자동 CAL 복원 (양 채널)")
+print("=" * 72)
+mfc = FakeMFC()
+s = FakeSensor(gas_after=0.1)
+eng = make_engine(mfc, s, _Valve(), n2_precal_auto_cal=True)
+errs = []
+eng._n2_precal_purge(errs)
+check("auto_cal=true 시 배기 후 양 채널 호출",
       sorted(s.cal_calls) == ["collect", "reactor_in"], s.cal_calls)
 
 print("=" * 72)

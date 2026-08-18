@@ -102,6 +102,30 @@
 >   펄스 폭 1.01s, 종료 후 0 sccm, 기존 회귀(liquid_front·collect_mapping·deadvol) 전 통과.
 > - 실기 절차: `inj_marker_enabled: true` → 런 후 로그의 `[PhaseEdge] 센서2` 1→0(마커
 >   머리)·0→1(마커 꼬리) 시각 확인 → 꼬리+pre_sec 를 `[Timer] HEAD` 와 대조.
+>
+> **🟢 2026-08-18 밤 — 브래킷 마커 + MarkerCollectGate (센서 트리거 분취) 구현**
+>
+> - **사용자 확정 로직(RoboChem)**: `[용매][N2전단마커][화합물][N2후단마커][push용매]` —
+>   센서2가 ①전단마커 꼬리(G→L=화합물 선두)→수집 시작 ②후단마커 머리(L→G=꼬리 통과)
+>   →WASTE 절단 + ①~② 간격=슬러그 통과시간 실측.
+> - **`inj_marker_mode`**: `off` / `t0`(구 방식, 도징 개시 발사·기록 전용, 갭=pre_sec 판독,
+>   `inj_marker_enabled:true` 하위호환) / **`bracket`**(전단=펌핑경과 pre_sec, 후단=도징종료
+>   +pre_sec — 슬러그 양끝 밀착, 타이머 lane "marker" 이벤트로 pause 안전).
+> - **`marker_gate_mode`**: `off` / `observe`(검출·기록만) / **`gate`**(제어): ①검출 시
+>   `CollectionTimer.shift()` 재앵커 — 밸브 직접 조작 없이 기존 집행 기계(HEAD·preflush·
+>   웰 이동·waste_guard) 재사용. 조기 도달=HEAD 즉시 발화(완전 센서 트리거), 지연 도달=
+>   HEAD 는 이미 열림(선용매 희석, Δ 재현 시 t_head 모델 재보정) + 잔여 이벤트 지연 보정.
+>   ②검출 시 valve_lag 후 WASTE 직접 절단 — terminal WASTE 는 시간제 폴백으로 유지.
+> - 안전 계약: 검출 실패=전부 시간제 폴백 / 조기 재앵커 `marker_gate_max_early_sec`(10s)
+>   클램프(분취기 이동 보호) / 후단 절단은 front+0.5×슬러그 이전 무장 금지(반토막 방지) /
+>   게이트 무장 시 HeadProbe 자동 강등(read_event 소비형 큐 소유권 단일화) / push 창은
+>   게이트 shift 도 연장 반영.
+> - ⚠ shift 클록 결합: 후단 앵커는 `front_el − applied_shift`(신클록 환산) — 모의 E2E 에서
+>   놓친 꼬리로 발견·수정. `tests/test_marker_bracket_gate.py` 18항목 ALL PASS
+>   (fallback/late+6/early−11 클램프/t0 호환) + 회귀 5종 통과.
+> - **도입 순서(실기)**: `inj_marker_mode:"bracket"`+`marker_gate_mode:"observe"` 수 런
+>   → Δ 재현 확인 → `"gate"`. 유색 크루드가 임계(750) 아래로 읽히면 G→L 에지가 안 보임
+>   — 그 경우 p(3상) 전환+D5 수리 선행 (전단마커 '진입만 감지' 로그가 그 신호).
 
 같은 센서 하드웨어(OPB 포토인터럽트 + TT 캘리브레이션 보드)로 **두 가지 운용 모드**를
 오갈 수 있다. 앱 계약(read_phase/monitor/wait_edge)이 동일해서 하드웨어 다이얼로그의

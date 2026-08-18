@@ -727,6 +727,308 @@ class HeadArrivalProbe(threading.Thread):
                 f"재앵커 {self.applied_shift:+.1f}s / 노이즈기각 {self.spurious}")
 
 
+class MarkerCollectGate(threading.Thread):
+    """N2 브래킷 마커 기반 분취 게이트 — RoboChem 슬러그-트리거 로직의 표준경로판.
+
+    @codesyncer-decision(2026-08-18 사용자 확정): 흐름
+        [용매][N2 전단마커][화합물 슬러그][N2 후단마커][push 용매]
+      ① 전단마커 '꼬리'(G→L 복귀 = 화합물 선두)를 예상창에서 검출 →
+         CollectionTimer.shift() 재앵커. 밸브를 직접 만지지 않고 클록만 옮긴다 —
+         기존 검증된 집행 경로(HEAD 이벤트의 Outlet→COLLECT·preflush·웰 이동·
+         waste_guard 전 기계) 재사용.
+         · 조기 도달(Δ<0): HEAD 미발화 상태 → shift 로 클록이 점프해 HEAD 가
+           즉시 발화 = 검출 순간 COLLECT (완전 센서 트리거).
+         · 지연 도달(Δ>0): HEAD 는 이미 t_exp 에 발화(밸브 COLLECT 선개방 —
+           선단 도착까지 Δ×F 만큼 선용매가 첫 웰에 들어감 = 희석, 유실 아님).
+           shift 는 웰 경계·terminal WASTE 등 잔여 이벤트만 지연 보정.
+           Δ>0 이 재현되면 t_head 모델(반응기 부피/컴플라이언스)을 재보정할 것.
+      ② 후단마커 '머리'(L→G = 화합물 꼬리 통과)를 검출 → valve_lag 경과 후
+         Outlet→WASTE 직접 전환 + 슬러그 통과시간(①~②) 실측 기록.
+         타이머의 terminal WASTE 는 폴백/이중 안전으로 그대로 두어 뒤에 재발화
+         (idempotent — 같은 위치 재설정).
+    - 검출 실패(마커 미시인/유색 크루드 무대비)는 언제나 시간제 폴백: 아무 것도
+      옮기지 않고 기존 타이머가 그대로 동작한다.
+    - mode: "observe"=검출·기록만(제어 무영향) / "gate"=재앵커+후단 절단
+    - P1 반영: ①조기(음수) 재앵커는 max_early_sec 클램프(분취기 이동 8.3s 보호)
+      ②본 게이트 무장 시 호출부가 HeadArrivalProbe 를 강등한다 — read_event 는
+      소비형 큐라 두 소비자가 서로의 엣지를 훔친다(소유권 단일화).
+    - 후단 절단은 t_open2 = front + 0.5×slug_sec 이전엔 무장하지 않는다 —
+      슬러그 초반의 잡기포가 수집을 반토막 내는 사고 방지.
+
+    @param t_exp_front_sec: 화합물 선두의 센서 도달 예상(펌핑경과) —
+        호출부가 t_head(밸브 기준)에서 (sensor→valve)/F 를 뺀 값.
+    @param slug_sec: 슬러그 통과 예상시간 = 도징 시간 (부피 보존: 일정 유량에서
+        꼬리는 머리보다 정확히 도징 시간만큼 늦게 같은 지점을 지난다).
+    """
+
+    MODES = ("off", "observe", "gate")
+
+    def __init__(self, engine, sensor, key, timer, t_exp_front_sec, slug_sec,
+                 window_sec, mode="observe", valve_lag_sec=0.0,
+                 confirm_sec=1.0, max_early_sec=10.0, poll=0.1):
+        super().__init__(daemon=True, name="MarkerCollectGate")
+        self.engine = engine
+        self.sensor = sensor
+        self.key = key
+        self.timer = timer
+        self.t_exp = float(t_exp_front_sec)
+        self.slug_sec = max(0.0, float(slug_sec))
+        self.w = float(window_sec)
+        self.mode = str(mode or "observe").lower()
+        self.valve_lag = max(0.0, float(valve_lag_sec or 0.0))
+        self.confirm_sec = max(0.0, float(confirm_sec))
+        self.max_early = max(0.0, float(max_early_sec))
+        self.poll = float(poll)
+        # 결과 (결산/트레이스)
+        self.front_el = None          # 화합물 선두 실측 (펌핑경과)
+        self.rear_el = None           # 화합물 꼬리 실측
+        self.slug_transit_sec = None  # ①~② 실측 간격
+        self.applied_shift = 0.0
+        self.marker_head_el = None    # 전단마커 진입(L→G) 관측 시각
+        self.missed_front = False
+        self.missed_rear = False
+        self.rear_cut = False         # 후단 절단(WASTE) 실제 수행 여부
+        self.spurious = 0
+        self._stop_evt = threading.Event()
+
+    def stop(self):
+        self._stop_evt.set()
+        if self.is_alive():
+            self.join(timeout=2.0)
+
+    def _elapsed(self):
+        try:
+            return (self.timer._pumping_elapsed()
+                    if self.timer is not None and self.timer.start_time is not None
+                    else 0.0)
+        except Exception:
+            return 0.0
+
+    def _paused(self):
+        try:
+            with self.timer._pause_lock:
+                return self.timer._pause_start is not None
+        except Exception:
+            return False
+
+    def _is_liquid(self):
+        try:
+            return self.sensor.read_phase(self.key) != "GAS"
+        except Exception:
+            return False
+
+    def run(self):
+        if self.mode not in ("observe", "gate"):
+            return
+        try:
+            self.sensor.monitor(self.key, "always")
+        except Exception as e:
+            self.engine._log(f"  [MarkerGate] 모니터 무장 실패 — 시간제 폴백: {e}")
+            return
+        self.engine._log(
+            f"  [MarkerGate] {self.mode} 무장 — 센서 '{self.key}' "
+            f"선두 예상 {self.t_exp:.1f}s (창 ±{self.w:.0f}s), "
+            f"슬러그 {self.slug_sec:.1f}s, 조기클램프 {self.max_early:.0f}s")
+        try:
+            if not self._front_stage():
+                return
+            self._rear_stage()
+        finally:
+            try:
+                self.sensor.monitor(self.key, "never")
+            except Exception:
+                pass
+
+    # ── ① 전단: 마커 꼬리(G→L) = 화합물 선두 → 재앵커 ──────────────
+    def _front_stage(self):
+        t_open, t_close = self.t_exp - self.w, self.t_exp + self.w
+        drained = False
+        pend = None                    # 후보 첫 시각 (G→L 지속성 확인 중)
+        while not self._stop_evt.is_set():
+            if getattr(self.engine, "abort_flag", False):
+                return False
+            if self._stop_evt.wait(self.poll):
+                return False
+            el = self._elapsed()
+            if el > t_close and pend is None:
+                self.missed_front = True
+                extra = (f" (전단마커 진입은 {self.marker_head_el:.1f}s 에 보임 — "
+                         f"크루드 광학 대비 부족 의심)"
+                         if self.marker_head_el is not None else "")
+                self.engine._log(
+                    f"  [MarkerGate] ⚠ 선두 미검출 (창 {self.t_exp:.1f}±{self.w:.0f}s)"
+                    f"{extra} — 시간제 폴백")
+                return False
+            if self._paused():
+                if pend is not None:
+                    self.spurious += 1
+                pend = None
+                continue
+            if el < t_open:
+                continue
+            if not drained:
+                drained = True
+                try:
+                    for _ in range(100):
+                        if self.sensor.read_event(self.key) is None:
+                            break
+                        self.spurious += 1
+                except Exception:
+                    pass
+                continue
+            if pend is not None:
+                if not self._is_liquid():
+                    self.spurious += 1       # 마커 내부 채터/기포 — 기각
+                    pend = None
+                    continue
+                if el - pend >= self.confirm_sec:
+                    self._fire_front(pend)
+                    return True
+                continue
+            try:
+                ev = self.sensor.read_event(self.key)
+            except Exception as e:
+                self.engine._log(f"  [MarkerGate] ⚠ 센서 오류 — 시간제 폴백: {e}")
+                return False
+            if ev is None:
+                continue
+            if ev == "GAS":
+                if self.marker_head_el is None:
+                    self.marker_head_el = el
+                    self.engine._log(
+                        f"  [MarkerGate] 전단마커 진입(L→G) @ {el:.1f}s — 꼬리 대기")
+            else:
+                pend = el                    # G→L = 화합물 선두 후보
+        return False
+
+    def _fire_front(self, el):
+        self.front_el = el
+        delta = el - self.t_exp
+        clamped = max(delta, -self.max_early)
+        note = ""
+        if clamped != delta:
+            note = f" (조기 {delta:+.1f}s → 클램프 {clamped:+.1f}s — 분취기 이동 보호)"
+        if self.mode == "gate":
+            try:
+                self.timer.shift(clamped)
+                self.applied_shift = clamped
+                act = f"→ 타이머 재앵커 {clamped:+.1f}s{note}"
+            except Exception as e:
+                act = f"→ 재앵커 실패({e}), 시간제 폴백"
+        else:
+            act = f"→ 관측만(observe), Δ{delta:+.1f}s 기록"
+        self.engine._log(
+            f"  [MarkerGate] ① 화합물 선두 실측 @ {el:.1f}s "
+            f"(예상 {self.t_exp:.1f}s, Δ{delta:+.1f}s) {act}")
+        try:
+            self.engine.trace.instant("MarkerGate", "front", args={
+                "el": round(el, 1), "delta": round(delta, 1),
+                "shift": round(self.applied_shift, 1)})
+        except Exception:
+            pass
+
+    # ── ② 후단: 마커 머리(L→G) = 화합물 꼬리 → WASTE 절단 ──────────
+    def _rear_stage(self):
+        # @codesyncer(검증 2026-08-18, 모의 E2E 에서 발견): front_el 은 shift '이전'
+        #   클록의 값 — gate 모드에서 shift(Δ) 적용 후 _elapsed() 는 Δ만큼 이동한
+        #   클록을 읽으므로, 후단 앵커는 신클록으로 환산해야 한다:
+        #   front(신클록) = front_el − applied_shift. 이걸 빼먹으면 후단 창이
+        #   재앵커량만큼 늦게 열려 꼬리를 놓친다(관측된 결함).
+        _anchor = self.front_el - self.applied_shift
+        t_exp2 = _anchor + self.slug_sec
+        t_open2 = _anchor + 0.5 * self.slug_sec         # 반토막 절단 금지 가드
+        t_close2 = t_exp2 + self.w
+        pend = None
+        while not self._stop_evt.is_set():
+            if getattr(self.engine, "abort_flag", False):
+                return
+            if self._stop_evt.wait(self.poll):
+                return
+            el = self._elapsed()
+            if el > t_close2 and pend is None:
+                self.missed_rear = True
+                self.engine._log(
+                    f"  [MarkerGate] ⚠ 꼬리 미검출 (예상 {t_exp2:.1f}±{self.w:.0f}s) "
+                    f"— terminal WASTE 시간제 폴백")
+                return
+            if self._paused():
+                if pend is not None:
+                    self.spurious += 1
+                pend = None
+                continue
+            if el < t_open2:
+                # 이 구간의 엣지는 소비만 하고 버린다 (스테일 방지)
+                try:
+                    if self.sensor.read_event(self.key) is not None:
+                        self.spurious += 1
+                except Exception:
+                    pass
+                continue
+            if pend is not None:
+                if self._is_liquid():
+                    self.spurious += 1       # 슬러그 내 기포 통과 — 기각
+                    pend = None
+                    continue
+                if el - pend >= self.confirm_sec:
+                    self._fire_rear(pend)
+                    return
+                continue
+            try:
+                ev = self.sensor.read_event(self.key)
+            except Exception as e:
+                self.engine._log(f"  [MarkerGate] ⚠ 센서 오류 — terminal 폴백: {e}")
+                return
+            if ev == "GAS":
+                pend = el                    # L→G = 화합물 꼬리 후보
+        return
+
+    def _fire_rear(self, el):
+        self.rear_el = el
+        # 통과시간은 동일 클록끼리: front(신클록) = front_el − applied_shift
+        self.slug_transit_sec = el - (self.front_el - self.applied_shift)
+        self.engine._log(
+            f"  [MarkerGate] ② 화합물 꼬리 실측 @ {el:.1f}s — 슬러그 통과 "
+            f"{self.slug_transit_sec:.1f}s (도징 {self.slug_sec:.1f}s 대비 "
+            f"Δ{self.slug_transit_sec - self.slug_sec:+.1f}s)")
+        try:
+            self.engine.trace.instant("MarkerGate", "rear", args={
+                "el": round(el, 1),
+                "transit": round(self.slug_transit_sec, 1)})
+        except Exception:
+            pass
+        if self.mode != "gate":
+            return
+        # 꼬리가 '밸브'에 닿는 시각까지 대기 (sensor→valve 이송) 후 절단
+        while not self._stop_evt.is_set():
+            if getattr(self.engine, "abort_flag", False):
+                return
+            if self._elapsed() >= el + self.valve_lag:
+                break
+            if self._stop_evt.wait(self.poll):
+                return
+        try:
+            if self.engine._outlet_set_safe(1, "MarkerGate rear cut"):
+                self.rear_cut = True
+                self.engine._log(
+                    f"  [MarkerGate] Outlet→WASTE (후단 절단, 밸브지연 "
+                    f"{self.valve_lag:.1f}s 반영) — terminal WASTE 는 폴백 유지")
+        except Exception as e:
+            self.engine._log(f"  [MarkerGate] ⚠ 후단 절단 실패 — terminal 폴백: {e}")
+
+    def summary(self):
+        if self.front_el is None:
+            return ("선두 미검출(시간제 폴백)" if self.missed_front else "미실행")
+        s = (f"선두 {self.front_el:.1f}s(Δ{self.front_el - self.t_exp:+.1f}s, "
+             f"재앵커 {self.applied_shift:+.1f}s)")
+        if self.rear_el is not None:
+            s += (f" / 꼬리 {self.rear_el:.1f}s / 슬러그 {self.slug_transit_sec:.1f}s"
+                  f" / 절단 {'수행' if self.rear_cut else '관측만'}")
+        elif self.missed_rear:
+            s += " / 꼬리 미검출(terminal 폴백)"
+        s += f" / 노이즈기각 {self.spurious}"
+        return s
+
+
 class StrictSequenceEngine(FlowEngine):
     """Time-driven strict sequence engine for real hardware execution."""
 
@@ -2448,6 +2750,42 @@ class StrictSequenceEngine(FlowEngine):
                      "valve", {"kind": "waste", "terminal": True})
                 )
 
+                # ── N2 마커 스케줄 (inj_marker_mode) ──────────────────────
+                # @codesyncer-decision(2026-08-18 사용자 확정 — 브래킷):
+                #   "bracket" = 전단마커를 펌핑경과 pre_sec(화합물 선두가 가스T 도달),
+                #   후단마커를 dosing_sec+pre_sec(꼬리 도달)에 발사 — 마커가 슬러그
+                #   양끝에 밀착해 센서2가 경계를 직접 본다(RoboChem 브래킷 등가).
+                #   타이머 이벤트(lane "marker")로 스케줄 → pause 중 발사 금지가
+                #   공짜로 성립(펌핑경과 클록). 레인 워커가 발사 동안(≈inj_marker_sec)
+                #   블로킹되지만 marker 전용 레인이라 다른 레인 무영향.
+                #   "t0" = 구 방식(도징 개시 동시 발사, 기록 전용) — 갭=pre_sec 를
+                #   분석에서 더해 판독. inj_marker_enabled=true 하위호환 매핑.
+                _mk_errs: List[str] = []
+                _mk_mode = str(sp_cfg.get("inj_marker_mode", "") or "").lower()
+                if not _mk_mode:
+                    _mk_mode = ("t0" if bool(sp_cfg.get("inj_marker_enabled", False))
+                                else "off")
+                if _mk_mode not in ("off", "t0", "bracket"):
+                    self._log(f"  [InjMarker] ⚠ 알 수 없는 inj_marker_mode "
+                              f"'{_mk_mode}' — off 처리")
+                    _mk_mode = "off"
+                if _mk_mode != "off" and self.mfc is None:
+                    self._log("  [InjMarker] ⚠ MFC 미배정 — 마커 비활성")
+                    _mk_mode = "off"
+                if _mk_mode == "bracket":
+                    timer_events.append(
+                        (pre_sec, "N2 marker FRONT",
+                         lambda _e=_mk_errs: self._fire_n2_marker(
+                             _e, "front(선단 밀착)"),
+                         "marker", {"kind": "marker"}))
+                    timer_events.append(
+                        (dosing_sec + pre_sec, "N2 marker REAR",
+                         lambda _e=_mk_errs: self._fire_n2_marker(
+                             _e, "rear(꼬리 밀착)"),
+                         "marker", {"kind": "marker"}))
+                    self._log(f"  [InjMarker] bracket 스케줄 — front @ {pre_sec:.1f}s, "
+                              f"rear @ {dosing_sec + pre_sec:.1f}s (펌핑경과)")
+
                 # 이전 step의 타이머가 남아있다면 정리
                 if self._collection_timer is not None:
                     self._collection_timer.stop(timeout=0.5)
@@ -2475,7 +2813,60 @@ class StrictSequenceEngine(FlowEngine):
                     except Exception:
                         pass
                 self._head_probe = None
+
+                # ── 마커 브래킷 분취 게이트 (marker_gate_mode, 2026-08-18) ──
+                # 전단마커 꼬리(G→L)=화합물 선두 → 타이머 재앵커(클램프),
+                # 후단마커 머리(L→G)=꼬리 → WASTE 절단. 실패는 전부 시간제 폴백.
+                _gate_prev = getattr(self, "_marker_gate", None)
+                if _gate_prev is not None:
+                    try:
+                        _gate_prev.stop()
+                    except Exception:
+                        pass
+                self._marker_gate = None
+                _gm = str(sp_cfg.get("marker_gate_mode", "off") or "off").lower()
+                if _gm in ("observe", "gate"):
+                    if _mk_mode != "bracket":
+                        self._log("  [MarkerGate] ⚠ inj_marker_mode='bracket' 아님 — "
+                                  "게이트 비활성 (마커 없이는 경계를 볼 수 없음)")
+                        _gm = "off"
+                    elif self.phase_sensor is None:
+                        self._log("  [MarkerGate] ⚠ 위상센서 없음 — 게이트 비활성")
+                        _gm = "off"
+                    elif total_flow <= 0:
+                        _gm = "off"
+                if _gm in ("observe", "gate"):
+                    _g_s2o = float(sp_cfg.get("sensor_to_outlet_vol_ml", 0.0) or 0.0)
+                    _g_vlag = (_g_s2o / total_flow) * 60.0
+                    _g_texp = max(0.0, float(t_head_sec) - _g_vlag)
+                    try:
+                        self._marker_gate = MarkerCollectGate(
+                            self, self.phase_sensor,
+                            str(sp_cfg.get("head_probe_sensor_key", "collect")
+                                or "collect"),
+                            self._collection_timer, _g_texp, dosing_sec,
+                            window_sec=float(
+                                sp_cfg.get("marker_gate_window_sec", 0.0)
+                                or sp_cfg.get("head_probe_window_sec", 0.0) or 60.0),
+                            mode=_gm,
+                            valve_lag_sec=_g_vlag,
+                            confirm_sec=float(
+                                sp_cfg.get("head_probe_confirm_sec", 1.0) or 0.0),
+                            max_early_sec=float(
+                                sp_cfg.get("marker_gate_max_early_sec", 10.0) or 0.0),
+                        )
+                        self._marker_gate.start()
+                    except Exception as _ge:
+                        self._marker_gate = None
+                        self._log(f"  [MarkerGate] 기동 실패 — 시간제 폴백: {_ge}")
+
                 _pm = str(sp_cfg.get("head_probe_mode", "off") or "off").lower()
+                # P1(센서 소유권): read_event 는 소비형 큐 — 게이트와 프로브가 동시에
+                # 읽으면 서로의 엣지를 훔친다. 게이트 무장 시 프로브는 강등.
+                if self._marker_gate is not None and _pm in ("observe", "anchor"):
+                    self._log("  [HeadProbe] MarkerGate 무장 중 — read_event 이중 소비 "
+                              "방지를 위해 이 스텝에서는 비활성")
+                    _pm = "off"
                 # @codesyncer-risk: anchor 는 수집 창 전체를 이동시키므로 '밀어주는 쪽'도
                 #   같이 늘어나야 한다. HPLC push 는 루프에서 applied_shift 를 읽어 창을
                 #   연장하지만, 레거시(시린지) push 는 _execute_smart_dosing 에 고정
@@ -2536,23 +2927,19 @@ class StrictSequenceEngine(FlowEngine):
                 # - 중간 리필하면 시약 희석, 시린지에 남은 시약이 용매와 섞임
                 # - 주입 완료 후 transit에서 용매로 밀어줌
 
-                # 시약 선단 N2 마커 (inj_marker_enabled, 기본 off — 2026-08-18):
-                #   '마커 꼬리~시약 선단 갭 = pre_sec' 결정론은 마커가 도징 개시와
-                #   동시에 출발할 때만 성립 → 타이머 resume 과 같은 콜백(펌프 스타트
-                #   확인 시점)에서 발사. 콜백은 도징 모니터 루프 안에서 불리므로
-                #   블로킹 금지 — 데몬 스레드로 위임 (_inject_front_marker 참조).
-                _mk_errs: List[str] = []
-                _do_marker = (bool(sp_cfg.get("inj_marker_enabled", False))
-                              and self.mfc is not None)
-
+                # N2 마커 t0 모드 발사 — 도징 개시(펌프 스타트 확인)와 동시.
+                #   '마커 꼬리~선단 갭 = pre_sec' 판독은 t0 모드 전용. bracket 모드는
+                #   위 타이머 이벤트(lane "marker")가 발사를 전담하므로 여기선 무동작.
+                #   콜백은 도징 모니터 루프 안 — 블로킹 금지, 데몬 스레드 위임.
                 def _on_inject_started(_resume=self._collection_timer.resume,
                                        _errs=_mk_errs, _pre=pre_sec,
-                                       _fire=_do_marker):
+                                       _fire=(_mk_mode == "t0")):
                     _resume()
                     if _fire:
                         threading.Thread(
-                            target=self._inject_front_marker,
-                            args=(_errs, _pre),
+                            target=self._fire_n2_marker,
+                            args=(_errs, "front(t0)",
+                                  f"센서2 마커꼬리 + pre {_pre:.1f}s = 시약 선단"),
                             daemon=True, name="InjMarker").start()
 
                 self._execute_smart_dosing(
@@ -2567,7 +2954,7 @@ class StrictSequenceEngine(FlowEngine):
                 )
                 if _mk_errs:
                     self._log(f"  [InjMarker] ⚠ 마커 미완({'; '.join(_mk_errs)}) — "
-                              "이 스텝의 '센서2 마커꼬리+pre' 선단 실측은 신뢰 불가")
+                              "이 스텝의 마커 기반 경계 실측은 신뢰 불가")
 
                 # Step 4.5a: 주입 후 처리 — 경로별 분기 (2026-08-14 사용자 확정)
                 # Timer pause — 이 구간 pump 정지로 flow 없음 → Timer 발동 시간 미뤄줌
@@ -2673,7 +3060,13 @@ class StrictSequenceEngine(FlowEngine):
                         #   shift 를 읽어 push 창을 같이 늘린다. Δ<0(조기 도달)은 늘리지
                         #   않는다 — 수집은 앞당겨져 이미 끝나므로 여분 push 는 무해하다.
                         _hp = getattr(self, "_head_probe", None)
-                        _ext = max(0.0, float(getattr(_hp, "applied_shift", 0.0) or 0.0)) if _hp else 0.0
+                        _mg = getattr(self, "_marker_gate", None)
+                        # MarkerGate 재앵커도 push 연장에 반영 (probe 와 동일 결합)
+                        _ext = max(
+                            (max(0.0, float(getattr(_hp, "applied_shift", 0.0) or 0.0))
+                             if _hp else 0.0),
+                            (max(0.0, float(getattr(_mg, "applied_shift", 0.0) or 0.0))
+                             if _mg else 0.0))
                         if _ext > 0 and not _push_ext_logged:
                             _push_ext_logged = True
                             self._log(f"  [Push] HEAD 재앵커 +{_ext:.1f}s 반영 — "
@@ -2899,6 +3292,29 @@ class StrictSequenceEngine(FlowEngine):
                         pass
                     self._head_probe = None
 
+                # 마커 게이트 결산 — 슬러그 경계 실측(선두/꼬리/통과시간) 스텝당 1줄
+                _mg = getattr(self, "_marker_gate", None)
+                if _mg is not None:
+                    try:
+                        _mg.stop()
+                        self._log(f"  [MarkerGate] 결산 — {_mg.summary()}")
+                        self.trace.instant("MarkerGate", "summary", args={
+                            "expected_sec": round(_mg.t_exp, 2),
+                            "front_el": (round(_mg.front_el, 2)
+                                         if _mg.front_el is not None else None),
+                            "rear_el": (round(_mg.rear_el, 2)
+                                        if _mg.rear_el is not None else None),
+                            "slug_transit_sec": (round(_mg.slug_transit_sec, 2)
+                                                 if _mg.slug_transit_sec is not None
+                                                 else None),
+                            "applied_shift_sec": round(_mg.applied_shift, 2),
+                            "rear_cut": _mg.rear_cut, "mode": _mg.mode,
+                        })
+                        exp["marker_gate"] = _mg.summary()
+                    except Exception:
+                        pass
+                    self._marker_gate = None
+
                 # @codesyncer(검증 2026-08-12, C1): 게이트④의 'Outlet=WASTE' 전제를 먼저
                 #   강제 — 터미널 WASTE 이벤트가 1회 통신 장애로 조용히 실패(워커가 예외
                 #   삼킴)하거나 타이머 강제종료로 드레인되면 전제가 거짓이 되어 purge 가
@@ -3016,24 +3432,23 @@ class StrictSequenceEngine(FlowEngine):
         except Exception:
             pass
 
-    def _inject_front_marker(self, errors: list, pre_sec: float):
-        """시약 선단 N2 마커 — 도징 시작과 동시에 가스T 주입 (2026-08-18 사용자
-        지시, 5단계 센서제어 비전의 3번 'A단계' = 기록·검증 전용, 제어 무개입).
+    def _fire_n2_marker(self, errors: list, label: str, note: str = ""):
+        """N2 마커 1펄스 — 가스T 주입 (2026-08-18, 5단계 센서제어 비전 3번).
 
         @codesyncer-decision: OPB 는 용매/시약(둘 다 맑은 액체)을 구별 못 한다 —
-          보이는 경계는 기/액뿐. 도징 시작과 동시에 N2 펄스를 넣으면 마커는
-          가스T 에서 즉시 출발하고, 시약 선단은 주입경로 통과(pre_sec) 후 가스T
-          도착 → **마커 꼬리와 시약 선단의 갭 = pre_sec (결정론)**. 따라서
-          센서2 로그의 [마커 꼬리 0→1 시각] + pre_sec = 시약 선단 실측.
-          (오늘 실런의 우연 마커는 갭이 모델 추정이었음 — 이걸로 추정 소멸)
-        - Outlet 은 이 시점 WASTE(COLLECT 는 t_head) → 마커는 수집 직전 폐기 경로.
-        - 마커 크기: 10 sccm × 1s ≈ 170 µL(표준환산) — 센서 통과 ~13s@0.8 로
-          디바운스 대비 충분히 크고, 수집·화학엔 무시 가능. gas_equiv 미캘리브라
-          라인 내 실부피는 압력 따라 다르나 마커는 '보이면' 충분.
+          보이는 경계는 기/액뿐. N2 펄스가 그 경계를 만든다. 발사 시점은 호출부가
+          결정하는 두 모드:
+          · bracket(사용자 확정): 타이머 이벤트가 펌핑경과 pre_sec(전단)/
+            dosing+pre_sec(후단)에 호출 — 마커가 슬러그 양끝에 밀착, 센서2가
+            경계를 직접 봄 → MarkerCollectGate 가 분취 트리거로 소비.
+          · t0(구 방식, 기록 전용): 도징 개시 동시 발사 — 갭=pre_sec 를 분석에서
+            더해 판독 (마커는 선단보다 pre_sec 앞서 폐기 경로로 지나감).
+        - 마커 크기: 10 sccm × 1s ≈ 170 µL(표준환산), 0.3s ≈ 50 µL(RoboChem
+          bubble_volume 등가) — 센서 통과폭은 압력 의존이나 '보이면' 충분.
         - 실패 = 경고·스킵(측정 보조일 뿐). MFC OFF 는 finally 보장.
-        - 설정: inj_marker_enabled(기본 false) / inj_marker_sec(기본 1.0)
-                / inj_marker_sccm(0 = n2_precal_sccm 폴백). hte_mode 는 제외
-                (자체 스페이서 체계 보유).
+        - 설정: inj_marker_mode(off/t0/bracket, 구 inj_marker_enabled=true→t0)
+                / inj_marker_sec(기본 1.0) / inj_marker_sccm(0 = n2_precal 폴백).
+          hte_mode 는 제외 (자체 스페이서 체계 보유).
         """
         sp = (self.cfg.config_data.get("system_params", {})
               if hasattr(self, "cfg") else {})
@@ -3044,8 +3459,8 @@ class StrictSequenceEngine(FlowEngine):
             return
         gas_on = False
         try:
-            self._log(f"  [InjMarker] 시약 선단 마커 — N2 {sccm:.0f} sccm × {dur:.1f}s "
-                      f"(센서2 마커꼬리 + pre {pre_sec:.1f}s = 시약 선단)")
+            self._log(f"  [InjMarker] N2 마커 {label} — {sccm:.0f} sccm × {dur:.1f}s"
+                      + (f" | {note}" if note else ""))
             self.mfc.set_flow(sccm)
             gas_on = True
             t0 = time.monotonic()
@@ -3059,17 +3474,17 @@ class StrictSequenceEngine(FlowEngine):
                 time.sleep(0.05)
             self.mfc.set_flow(0.0)
             gas_on = False
-            self._log("  [InjMarker] 마커 주입 완료")
+            self._log(f"  [InjMarker] 마커 {label} 주입 완료")
             try:
-                self.trace.instant("InjMarker", "front", args={
-                    "sccm": sccm, "sec": dur, "pre_sec": round(pre_sec, 1)})
+                self.trace.instant("InjMarker", label, args={
+                    "sccm": sccm, "sec": dur})
             except Exception:
                 pass
         except SafetyError as e:
             errors.append(f"abort: {e}")
         except Exception as e:
             errors.append(str(e))
-            self._log(f"  [InjMarker] ⚠ 오류: {e}")
+            self._log(f"  [InjMarker] ⚠ 마커 {label} 오류: {e}")
         finally:
             if gas_on:
                 try:
