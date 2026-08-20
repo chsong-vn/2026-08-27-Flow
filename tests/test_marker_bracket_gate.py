@@ -40,18 +40,28 @@ def check(name, ok, detail=""):
 
 
 class ScriptedPhase:
-    """타임라인 기반 위상센서 모의 — read_event 는 상태 변화를 1회 에지로 합성."""
+    """타임라인 기반 위상센서 모의 — 키별 독립 타임라인, read_event 는 에지 합성."""
     sensors = {"reactor_in": 0, "collect": 1}
     thresholds = {"reactor_in": 690, "collect": 750}
 
     def __init__(self, get_el):
         self.get_el = get_el
-        self.timeline = [(0.0, "LIQ")]     # [(펌핑경과, "LIQ"|"GAS")], 컨트롤러가 교체
-        self._last = None
+        # 키별 [(펌핑경과, "LIQ"|"GAS")] — 컨트롤러가 교체
+        self.timelines = {"collect": [(0.0, "LIQ")], "reactor_in": [(0.0, "LIQ")]}
+        self._last = {}
 
-    def _phase_at(self, el):
+    # 하위호환: 기존 시나리오는 phase.timeline(=collect) 만 세팅
+    @property
+    def timeline(self):
+        return self.timelines["collect"]
+
+    @timeline.setter
+    def timeline(self, v):
+        self.timelines["collect"] = v
+
+    def _phase_at(self, key, el):
         ph = "LIQ"
-        for t, p in self.timeline:
+        for t, p in self.timelines.get(key, [(0.0, "LIQ")]):
             if el >= t:
                 ph = p
         return ph
@@ -60,20 +70,21 @@ class ScriptedPhase:
         pass
 
     def read_phase(self, key):
-        return "CLEAR_LIQUID" if self._phase_at(self.get_el()) == "LIQ" else "GAS"
+        return ("CLEAR_LIQUID"
+                if self._phase_at(key, self.get_el()) == "LIQ" else "GAS")
 
     def read_event(self, key):
-        cur = self._phase_at(self.get_el())
-        if self._last is None:
-            self._last = cur
+        cur = self._phase_at(key, self.get_el())
+        if key not in self._last:
+            self._last[key] = cur
             return None
-        if cur != self._last:
-            self._last = cur
+        if cur != self._last[key]:
+            self._last[key] = cur
             return "GAS" if cur == "GAS" else "CLEAR_LIQUID"
         return None
 
     def analog(self, key):
-        return 500 if self._phase_at(self.get_el()) == "GAS" else 980
+        return 500 if self._phase_at(key, self.get_el()) == "GAS" else 980
 
 
 class MockMFC:
@@ -133,27 +144,49 @@ def run_scenario(scen, sp_extra, delta=None, script=True):
     if script and delta is not None:
         def controller():
             t_exp = slug = None
+            off, parked = 0.0, False
             while t_exp is None or slug is None:
                 time.sleep(0.1)
                 for _, m in list(LOGS):
                     mm = re.search(r"\[MarkerGate\].*선두 예상 ([0-9.]+)s", m)
                     if mm:
                         t_exp = float(mm.group(1))
+                        parked = "/parked 무장" in m
+                        mo = re.search(r"오프셋 ([0-9.]+)s", m)
+                        if mo:
+                            off = float(mo.group(1))
                     mm = re.search(
                         r"bracket 스케줄 — front @ ([0-9.]+)s, rear @ ([0-9.]+)s", m)
                     if mm:
                         slug = float(mm.group(2)) - float(mm.group(1))
+                    if "parked 스케줄" in m:
+                        slug = 13.5        # deadvol_hplc lifo inject_sec (0.45mL@2)
                 if any("Step 1 Complete" in m for _, m in LOGS):
                     return
-            parsed["t_exp"], parsed["slug"] = t_exp, slug
-            f = t_exp + delta
-            phase.timeline = [
-                (0.0, "LIQ"),
-                (f - 4.0, "GAS"),          # 전단마커 진입
-                (f, "LIQ"),                # 마커 꼬리 = 화합물 선두
-                (f + slug, "GAS"),         # 후단마커 진입 = 꼬리 통과
-                (f + slug + 5.0, "LIQ"),   # push 용매 복귀
-            ]
+            parsed.update(t_exp=t_exp, slug=slug, off=off)
+            if parked:
+                f_tail = t_exp + delta - off       # 검출 에지(전단마커 꼬리)
+                phase.timelines["collect"] = [
+                    (0.0, "LIQ"),
+                    (f_tail - 8.0, "GAS"), (f_tail - 7.2, "LIQ"),   # 잡기포 0.8s
+                    (f_tail - 3.0, "GAS"), (f_tail, "LIQ"),          # 전단마커 3s
+                    (f_tail + slug - 3.0, "GAS"),                    # 후단마커(크로스체크)
+                    (f_tail + slug, "LIQ"),                          # push 용매
+                ]
+                # 센서1: 후단마커가 발사(≈slug) 직후 통과 — d1≈1s + 폭 3s
+                phase.timelines["reactor_in"] = [
+                    (0.0, "LIQ"),
+                    (slug + 1.0, "GAS"), (slug + 4.0, "LIQ"),
+                ]
+            else:
+                f = t_exp + delta
+                phase.timeline = [
+                    (0.0, "LIQ"),
+                    (f - 4.0, "GAS"),          # 전단마커 진입
+                    (f, "LIQ"),                # 마커 꼬리 = 화합물 선두
+                    (f + slug, "GAS"),         # 후단마커 진입 = 꼬리 통과
+                    (f + slug + 5.0, "LIQ"),   # push 용매 복귀
+                ]
         threading.Thread(target=controller, daemon=True).start()
 
     eng.run_sequence(plan, None)
@@ -252,6 +285,45 @@ r4 = run_scenario("balanced", {"inj_marker_enabled": True, "inj_marker_sec": 0.3
 l4 = [m for _, m in r4["logs"]]
 check("T4 front(t0) 발사", any("front(t0)" in m for m in l4))
 check("T4 게이트 미무장", not any("[MarkerGate]" in m and "무장" in m for m in l4))
+
+print("=== P5: parked +4s (gate) — 정지선 마커·잡기포 기각·오프셋 절단 ===")
+sp_p = {
+    "inj_marker_mode": "parked", "marker_gate_mode": "gate",
+    "inj_marker_sec": 0.3, "marker_gate_window_sec": 12.0,
+    "marker_gate_max_early_sec": 10.0, "head_probe_confirm_sec": 0.3,
+    "marker_gate_min_gas_sec": 2.0, "purge_order": "lifo",
+}
+r5 = run_scenario("deadvol_hplc", dict(sp_p), delta=+4.0)
+l5 = [m for _, m in r5["logs"]]
+check("P5 parked 무장 로그", any("/parked 무장" in m for m in l5))
+check("P5 parked 발사 2발 (front/rear)",
+      any("front(parked)" in m for m in l5) and any("rear(parked)" in m for m in l5))
+check("P5 잡기포 기각 (기체 0.8s < 2.0s)", any("잡기포 기각" in m for m in l5))
+_s5 = next((re.search(r"재앵커 \+([0-9.]+)s", m) for m in l5 if "재앵커 +" in m), None)
+check("P5 재앵커 ≈ +4s", _s5 is not None and abs(float(_s5.group(1)) - 4.0) <= 1.5,
+      _s5.group(0) if _s5 else "없음")
+# 센서1 1차 후단 (2026-08-19): 반응기 진입 전 실측 → 절단 = S1+pre+전단실측수송
+check("P5 센서1 후단마커 실측", any("후단마커 센서1 실측" in m for m in l5))
+check("P5 절단 예약(S1 기반)", any("후단 절단 예약" in m for m in l5))
+_xc = next((re.search(r"크로스체크 @ [0-9.]+s — S1 계산 대비 Δ([+-][0-9.]+)s", m)
+            for m in l5 if "크로스체크" in m), None)
+check("P5 센서2 크로스체크 |Δ|≤6s",
+      _xc is not None and abs(float(_xc.group(1))) <= 6.0,
+      _xc.group(0)[-25:] if _xc else "없음")
+# 절단 실행 또는 terminal 선행(모의 지오메트리: 수집여유 1.8s < 절단바이어스 ~4s)
+# — 어느 쪽이든 밸브는 안전하게 WASTE 로 종료되고 실측은 기록됨
+check("P5 절단 수행 or terminal 선행(우아한 종료)",
+      any(("후단 절단, S1 기반" in m) or ("terminal WASTE 가 선행" in m)
+          for m in l5))
+_on5 = [s for _, s in r5["mfc"] if s > 0]
+check("P5 MFC 펄스 2회", len(_on5) == 2, f"{len(_on5)}회")
+
+print("=== P6: parked fallback (에지 없음) ===")
+r6 = run_scenario("deadvol_hplc", dict(sp_p), delta=None, script=False)
+l6 = [m for _, m in r6["logs"]]
+check("P6 선두 미검출 → 시간제 폴백", any("선두 미검출" in m for m in l6))
+check("P6 재앵커 없음", not any("타이머 재앵커" in m for m in l6))
+check("P6 후단 절단 없음", not any("후단 절단" in m for m in l6))
 
 n_ok = sum(1 for _, ok in RESULTS if ok)
 print(f"\n{n_ok}/{len(RESULTS)} passed")

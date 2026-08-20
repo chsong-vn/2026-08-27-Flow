@@ -48,7 +48,13 @@ class FlowEngine:
             filename = f"LOG_{stamp}_{name_prefix}.csv"
             filepath = os.path.join(self.log_dir, filename)
 
-            self.csv_file = open(filepath, 'w', newline='')
+            # @codesyncer(2026-08-19, 실기 발견): encoding 미지정 = Windows cp949 —
+            #   —·✓ 등 cp949 밖 문자가 든 줄은 writerow 가 UnicodeEncodeError 를
+            #   던지고 except:pass 에 삼켜져 '그 줄만' 증발했다 (PushLinePrime/
+            #   N2Precal 로그가 CSV 에서만 사라지던 진짜 원인 — 어제의 락 진단은
+            #   동시성 유실만 막은 부분 수정). utf-8-sig = 엑셀 한글 호환 + 전 문자.
+            self.csv_file = open(filepath, 'w', newline='',
+                                 encoding='utf-8-sig', errors='replace')
             self.writer = csv.writer(self.csv_file)
 
             # 헤더 작성
