@@ -123,6 +123,7 @@ class Plate96Collector:
     def connect(self, port):
         """Marlin 보드 연결 (250000 baud)"""
         try:
+            self._port = port          # USB 순단 자동 재연결용 (2026-08-25)
             self.ser = serial.Serial(
                 port=port,
                 baudrate=250000,
@@ -345,26 +346,90 @@ class Plate96Collector:
             return False
         return any(l.strip().lower().startswith("ok") for l in resp.splitlines())
 
+    def _io(self, cmd, wait=4.0):
+        """저수준 G-code 왕복 (락 없음 — _send_wait/_reconnect 내부 전용).
+        시리얼 예외는 호출자에게 그대로 전파한다."""
+        self.ser.reset_input_buffer()
+        self.ser.write((cmd + '\n').encode())
+        self.ser.flush()
+        deadline = time.monotonic() + wait
+        data = b''
+        while time.monotonic() < deadline:
+            if self.ser.in_waiting:
+                data += self.ser.read(self.ser.in_waiting)
+                text = data.decode('utf-8', errors='replace')
+                lines = [l for l in text.strip().splitlines() if l.strip()]
+                if lines and lines[-1].strip().lower().startswith('ok'):
+                    deadline = min(deadline, time.monotonic() + 0.15)
+            else:
+                time.sleep(0.03)
+        return data.decode('utf-8', errors='replace').strip()
+
+    def _reconnect_locked(self):
+        """USB 순단(핸들 무효) 복구 — _serial_lock 보유 상태에서만 호출.
+
+        @codesyncer-decision(2026-08-25, EXP_008 전량 유실 사고): 분취기는 이동
+        때만 통신해 유휴가 길고, USB 절전/순단으로 핸들이 죽으면 이후 모든
+        이동이 WriteFile PermissionError 로 실패 — 니들이 폐기 좌표에 방치된 채
+        수집 전량이 폐기로 유실됐음. 복구 절차: 재오픈 → 핸드셰이크 →
+        상대 Z+5(위치 미상 상태의 안전 상승) → G28 재호밍 → 절대모드.
+        보드가 재오픈 DTR 로 리셋되어 좌표 기준을 잃으므로 재호밍 없이
+        이동을 재시도하면 니들 충돌 위험 — 반드시 이 순서를 지킬 것."""
+        port = getattr(self, '_port', None)
+        if not port:
+            return False
+        try:
+            if self.ser:
+                try:
+                    self.ser.close()
+                except Exception:
+                    pass
+            self.ser = serial.Serial(
+                port=port, baudrate=250000, parity=serial.PARITY_NONE,
+                stopbits=serial.STOPBITS_ONE, bytesize=serial.EIGHTBITS,
+                timeout=3.0)
+            self.ser.dtr = False
+            time.sleep(0.2)
+            self.ser.dtr = True
+            time.sleep(4.0)
+            self.ser.reset_input_buffer()
+            resp = self._io('M115', 3.0)
+            if 'FIRMWARE_NAME' not in resp:
+                print(f"[Plate96] 재연결 핸드셰이크 실패: {resp[:60]!r}")
+                return False
+            self._io('G91', 1.0)                    # 상대모드
+            self._io('G1 Z5 F600', 3.0)             # 위치 미상 — 일단 5mm 상승
+            self._io('G90', 1.0)                    # 절대모드 복귀
+            self._io('G28', 40.0)                   # 재호밍 (좌표 기준 복원)
+            self._io('M400', 10.0)
+            self.is_connected = True
+            print("[Plate96] USB 순단 복구 완료 — 재연결 + 재호밍")
+            return True
+        except Exception as e:
+            print(f"[Plate96] 재연결 실패: {e}")
+            self.is_connected = False
+            return False
+
     def _send_wait(self, cmd, wait=4.0):
-        """G-code 전송 후 ok 응답 기다림 (thread-safe)"""
+        """G-code 전송 후 ok 응답 기다림 (thread-safe).
+
+        시리얼 I/O 실패(USB 순단 등) 시 1회 자동 재연결(재호밍 포함) 후
+        같은 명령을 재시도한다 — 실패하면 기존처럼 빈 응답(호출자가 시끄럽게
+        처리)."""
         if not self.ser or not self.ser.is_open:
             return ""
         with self._serial_lock:
-            self.ser.reset_input_buffer()
-            self.ser.write((cmd + '\n').encode())
-            self.ser.flush()
-            deadline = time.monotonic() + wait
-            data = b''
-            while time.monotonic() < deadline:
-                if self.ser.in_waiting:
-                    data += self.ser.read(self.ser.in_waiting)
-                    text = data.decode('utf-8', errors='replace')
-                    lines = [l for l in text.strip().splitlines() if l.strip()]
-                    if lines and lines[-1].strip().lower().startswith('ok'):
-                        deadline = min(deadline, time.monotonic() + 0.15)
-                else:
-                    time.sleep(0.03)
-            return data.decode('utf-8', errors='replace').strip()
+            try:
+                return self._io(cmd, wait)
+            except (serial.SerialException, OSError) as e:
+                print(f"[Plate96] 시리얼 I/O 실패({e}) — 자동 재연결 시도")
+                if self._reconnect_locked():
+                    try:
+                        return self._io(cmd, wait)
+                    except Exception as e2:
+                        print(f"[Plate96] 재연결 후 재시도 실패: {e2}")
+                self.is_connected = False
+                return ""
 
 
 # 단독 테스트용

@@ -90,6 +90,7 @@ class ChemyxPump:
         if not ser or not ser.is_open or not lock:
             return None
 
+        _io_error = False
         for attempt in range(retries + 1):
             with lock:
                 try:
@@ -125,8 +126,13 @@ class ChemyxPump:
                             decoded = f"[HEX] {response.hex()}"
                         if any(k in command_str for k in ("set rate", "set volume")):
                             print(f"   [RS485 RX] ID:{self.pump_id} ← '{decoded}'")
+                        self.is_connected = True   # 통신 성공 = 연결 상태 자가 회복
                         return decoded
 
+                except (serial.SerialException, OSError) as e:
+                    # 핸들 무효류(USB 순단 등) — 재시도 후에도 남으면 OFFLINE 자백
+                    _io_error = True
+                    print(f"   [Chemyx ID:{self.pump_id}] Send Error(IO): {e}")
                 except Exception as e:
                     print(f"   [Chemyx ID:{self.pump_id}] Send Error: {e}")
 
@@ -135,6 +141,12 @@ class ChemyxPump:
                 print(f"   [Chemyx ID:{self.pump_id}] No response for '{command_str}', retry {attempt+1}/{retries}")
                 time.sleep(0.5)
 
+        # @codesyncer-decision(2026-08-25, 끊김 가시화): I/O 예외(핸들 무효)로 최종
+        #   실패한 경우에만 is_connected=False — 단순 무응답(RS-485 경합)은 일시적일
+        #   수 있어 플래그를 건드리지 않는다. 대시보드 상태 패널이 1초 주기로 이
+        #   플래그를 읽어 OFFLINE(적색)을 표시한다.
+        if _io_error:
+            self.is_connected = False
         print(f"   [Chemyx ID:{self.pump_id}] FAILED after {retries+1} attempts: '{command_str}'")
         return None
 

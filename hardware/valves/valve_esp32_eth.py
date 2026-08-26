@@ -312,12 +312,21 @@ class ESP32EthValve:
                     if attempt < 2:
                         print(f"   [ESP32EthValve ch{self.channel}] Retry {attempt+1}/2...")
                         time.sleep(0.3)
+                except (OSError, serial.SerialException) as e:
+                    # 핸들 무효류(USB 순단 등) — 최종 실패 시 OFFLINE 자백 (2026-08-25)
+                    _io_error = True
+                    last_resp = f"(exception: {e})"
+                    print(f"   [ESP32EthValve ch{self.channel}] IO Error: {e}")
+                    if attempt < 2:
+                        time.sleep(0.3)
                 except Exception as e:
                     last_resp = f"(exception: {e})"
                     print(f"   [ESP32EthValve ch{self.channel}] Error: {e}")
                     if attempt < 2:
                         time.sleep(0.3)
 
+        if locals().get('_io_error'):
+            self.is_connected = False   # 대시보드 상태 패널이 OFFLINE 표시
         raise RuntimeError(
             f"[ESP32EthValve ch{self.channel}] set_position({cmd}) ACK 실패 (3회 재시도) — "
             f"마지막 응답: '{last_resp[:80]}'. 밸브가 이전 위치({self.position})에 남아있을 수 있음."

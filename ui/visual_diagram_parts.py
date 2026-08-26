@@ -1250,18 +1250,28 @@ class FlowDiagramWidget(QGraphicsView):
         if has_n2:
             if not quad:
                 merge_pts.append((X_N2, y_run))
-            tee_n2 = PartTee(used=("L", "R", "T"))
-            tee_n2.setPos(X_N2, y_run); add(tee_n2)
             # @codesyncer-decision: N2 어셈블리를 합류부에서 바깥쪽(우상단)으로 —
             #   실린더가 커진(S 6.2) 뒤 티/리액터 사이에 끼어 답답(사용자 지적).
             #   MFC 는 티 위 96px, 실린더는 +96/위 190px 로 여유 확보(위 공간은
             #   채널 관이 X_MAN 왼쪽에만 있어 비어 있음).
-            mfc = PartMfc(tag="MFC-01"); mfc.setPos(X_N2, y_run - 96); add(mfc)
-            cyl = PartCylinder(tag="GC-N2"); cyl.setPos(X_N2 + 96, y_run - 190); add(cyl)
-            g1 = pipe([cyl.port("out"), (cyl.port("out").x(), y_run - 96), mfc.port("in")],
-                      weight=3.5)
-            g2 = pipe([mfc.port("out"), (X_N2 - 30, y_run - 96), (X_N2 - 30, y_run - 30),
-                       (X_N2, y_run - 30), (X_N2, y_run - 13)], weight=3.5)
+            # @codesyncer-decision(2026-08-20, 겹침 수정 — 사용자 지적): K2+push
+            #   조합은 push 어셈블리가 우상단 코리도어(ys[0]-62 레인)를 점유 —
+            #   2그룹(그룹당 1행)이면 실린더(x 631~681, y 8~144)가 HPLC 박스
+            #   (x 643~757, y 48~88)·리턴 파이프(y 34 수평)와 정면 충돌.
+            #   이 조합은 push 티 폐지로 런 '아래'(X_N2 하단)가 비므로 N2 를
+            #   하단 미러 배치(티 B 포트 유입). 그 외 구성은 기존 상단 유지.
+            _n2dn = quad and has_push and len(vals) == 2
+            _sg = 1 if _n2dn else -1
+            tee_n2 = PartTee(used=("L", "R", "B" if _n2dn else "T"))
+            tee_n2.setPos(X_N2, y_run); add(tee_n2)
+            mfc = PartMfc(tag="MFC-01"); mfc.setPos(X_N2, y_run + _sg * 96); add(mfc)
+            cyl = PartCylinder(tag="GC-N2")
+            cyl.setPos(X_N2 + 96, y_run + _sg * 190); add(cyl)
+            g1 = pipe([cyl.port("out"), (cyl.port("out").x(), y_run + _sg * 96),
+                       mfc.port("in")], weight=3.5)
+            g2 = pipe([mfc.port("out"), (X_N2 - 30, y_run + _sg * 96),
+                       (X_N2 - 30, y_run + _sg * 30),
+                       (X_N2, y_run + _sg * 30), (X_N2, y_run + _sg * 13)], weight=3.5)
             for g in (g1, g2):
                 g.set_state(color="gas")
             self.n2_parts = (cyl, mfc, [g1, g2])

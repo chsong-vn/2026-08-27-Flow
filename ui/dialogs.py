@@ -1009,6 +1009,12 @@ class HardwareConfigDialog(QDialog):
         self.setup_system_params_section()
         self.stack.addWidget(self.page_system)
 
+        # Manual 전용 장비 페이지 — index 9 (2026-08-24 사용자 요청:
+        # JSON 전용이던 roles.manual_pumps/samplers 를 다른 역할처럼 지정/해제)
+        self.page_manual = QWidget()
+        self.setup_manual_devices_ui()
+        self.stack.addWidget(self.page_manual)
+
         right_layout.addWidget(self.stack, 1)
 
         layout.addLayout(left_panel)
@@ -1379,6 +1385,38 @@ class HardwareConfigDialog(QDialog):
         self.p_wash_volume.setValue(5.0)
         self.p_wash_volume.setToolTip("Aspirate/dispense volume per wash cycle")
 
+        # @codesyncer-decision(2026-08-20 사용자 요청 — 세척 분리): 초기(시퀀스
+        #   시작=스텝1) 세척과 스텝간 세척(스텝2+ 포트변경 세척, push 병행 세척)의
+        #   횟수/용량을 별도 설정. specialValueText '공통' = 미설정 → 위의 공통
+        #   Wash Cycles/Volume 사용 (저장 시 키 자체를 제거해 하위호환 유지).
+        def _mk_wash_count_override(tip):
+            w = QSpinBox()
+            w.setRange(-1, 10)
+            w.setSuffix(" 회")
+            w.setSpecialValueText("공통")
+            w.setValue(-1)
+            w.setToolTip(tip + "\n'공통' = 위의 Wash Cycles 값 사용")
+            return w
+
+        def _mk_wash_vol_override(tip):
+            w = QDoubleSpinBox()
+            w.setRange(0.0, 50.0)
+            w.setSuffix(" mL")
+            w.setDecimals(1)
+            w.setSpecialValueText("공통")
+            w.setValue(0.0)
+            w.setToolTip(tip + "\n'공통' = 위의 Wash Volume 값 사용")
+            return w
+
+        self.p_wash_count_init = _mk_wash_count_override(
+            "초기 세척 횟수 — 시퀀스 시작(스텝1) 시스템 세척에만 적용")
+        self.p_wash_vol_init = _mk_wash_vol_override(
+            "초기 세척 사이클당 용량 — 시퀀스 시작(스텝1) 시스템 세척에만 적용")
+        self.p_wash_count_inter = _mk_wash_count_override(
+            "스텝간 세척 횟수 — 스텝2+ 포트변경 세척과 push 병행 세척에 적용")
+        self.p_wash_vol_inter = _mk_wash_vol_override(
+            "스텝간 세척 사이클당 용량 — 스텝2+ 포트변경 세척과 push 병행 세척에 적용")
+
         self.sp_syr_refill = QDoubleSpinBox()
         self.sp_syr_refill.setRange(1.0, 60.0)
         self.sp_syr_refill.setSuffix(" mL/min")
@@ -1405,6 +1443,23 @@ class HardwareConfigDialog(QDialog):
         lay_syr.addRow("Wash Flow Rate:", self.p_wash_speed)
         lay_syr.addRow("Wash Cycles:", self.p_wash_count)
         lay_syr.addRow("Wash Volume:", self.p_wash_volume)
+        lay_syr.addRow("초기 세척 Cycles (스텝1):", self.p_wash_count_init)
+        lay_syr.addRow("초기 세척 Volume (스텝1):", self.p_wash_vol_init)
+        lay_syr.addRow("스텝간 세척 Cycles:", self.p_wash_count_inter)
+        lay_syr.addRow("스텝간 세척 Volume:", self.p_wash_vol_inter)
+
+        # @codesyncer-decision(2026-08-24 사용자 요청 — 세척 일괄 적용): 자동 동기화
+        #   대신 명시적 '복사 버튼' — 누를 때만 현재 그룹의 세척 7종을 나머지 전
+        #   그룹에 복사. 그룹별 개별 설정 능력은 유지하면서 실수 덮어쓰기를 방지.
+        #   '공통' 센티널(키 제거)도 그대로 전파해 대상 그룹의 낡은 override 잔존 방지.
+        #   확정은 다이얼로그 '저장' 시점 (temp_roles에만 반영 → 취소 가능).
+        self.btn_wash_copy_all = QPushButton("세척 설정 → 전 그룹 복사")
+        self.btn_wash_copy_all.setToolTip(
+            "현재 그룹의 세척 설정(Wash Flow Rate/Cycles/Volume + 초기/스텝간)을\n"
+            "다른 모든 펌프 그룹에 복사합니다.\n"
+            "다이얼로그 '저장'을 눌러야 확정됩니다 (취소 시 되돌아감).")
+        self.btn_wash_copy_all.clicked.connect(self.copy_wash_to_all_groups)
+        lay_syr.addRow("", self.btn_wash_copy_all)
 
         # 3. 튜빙 설정
         # @codesyncer-decision: 세척용매/시약 포트 데드볼륨 분리 입력
@@ -1456,7 +1511,8 @@ class HardwareConfigDialog(QDialog):
         # 데이터 저장 시그널 연결
         self.pump_widgets = [self.p_name, self.p_position, self.p_motor, self.p_selector, self.p_switcher,
                             self.p_sampler,
-                            self.p_tube_vol_solvent, self.p_tube_vol_reagent, self.p_wash_speed, self.p_wash_count, self.p_wash_volume]
+                            self.p_tube_vol_solvent, self.p_tube_vol_reagent, self.p_wash_speed, self.p_wash_count, self.p_wash_volume,
+                            self.p_wash_count_init, self.p_wash_vol_init, self.p_wash_count_inter, self.p_wash_vol_inter]
         for w in self.pump_widgets:
             if hasattr(w, 'editingFinished'):
                 w.editingFinished.connect(self.save_curr_role)
@@ -1757,12 +1813,12 @@ class HardwareConfigDialog(QDialog):
         # @codesyncer(2026-08-17, 사용자 명명): 센서1 = INLET(reactor_in) /
         #   센서2 = OUTLET(collect). 번호는 '위치'에 붙는 이름 — 물리 채널(A0/A1)은
         #   아래 콤보로 배정하며 케이블 스왑 시 채널만 바꾼다.
-        f.addRow("센서2 · OUTLET (collect):", _row_o)
+        f.addRow("후단센서 · OUTLET (collect):", _row_o)
         _row_i = QHBoxLayout()
         _row_i.addWidget(self.ps_ch_in, 1)
         _row_i.addWidget(QLabel("임계"))
         _row_i.addWidget(self.ps_thr_in)
-        f.addRow("센서1 · INLET (reactor_in):", _row_i)
+        f.addRow("전단센서 · INLET (reactor_in):", _row_i)
         self.lbl_ps_warn = QLabel("")
         self.lbl_ps_warn.setStyleSheet("color:#e5484d;")
         self.lbl_ps_warn.setVisible(False)
@@ -1770,11 +1826,55 @@ class HardwareConfigDialog(QDialog):
 
         lbl_desc = QLabel(
             "튜브의 기체/액체 경계 검출 — OPB 2ch(ADC 스트림) 또는 OCB350 어레이.\n"
-            "• 센서1 = INLET(reactor_in, 반응기 입구 앞)  |  센서2 = OUTLET(collect, 아웃렛 직전)\n"
+            "• 전단센서 = INLET(reactor_in, 반응기 입구 앞)  |  후단센서 = OUTLET(collect, 아웃렛 직전)\n"
             "• 위 분담은 장치 settings(sensors/thresholds)로 저장 — 케이블 반대면 CH만 스왑\n"
             "• 판정 = ADC > 임계 → 액체 (PC 측이 진실원, 펌웨어 자체판정은 무시)\n"
             "• ⚠ '튜브 빠짐'도 액체로 읽힐 수 있음 — 장착 상태에서 wet/dry 실측으로 임계 재조정\n"
             "• 벤더 초기값: ch0 공기80/물800 (thr 440) · ch1 공기457/물977 (thr 717)"
+        )
+        lbl_desc.setObjectName("DialogHintLabel")
+        lbl_desc.setWordWrap(True)
+        f.addRow(lbl_desc)
+
+        g.setLayout(f)
+        layout.addWidget(g)
+        layout.addStretch()
+
+    def setup_manual_devices_ui(self):
+        """Manual 탭 전용 장비(roles.manual_pumps/samplers) 지정/해제 UI.
+
+        @codesyncer-decision(2026-08-24 사용자 요청): 이 두 역할은 JSON 전용이라
+          UI 에서 해제할 방법이 없어 Manual 탭에 카드가 '계속 뜨는' 원인이었다 —
+          다른 역할(heater/gas 등)과 같은 콤보 패턴으로 노출. None = 역할 해제
+          = Manual 탭 카드 제거 (시퀀스 엔진 무관).
+        @codesyncer-risk: config 스키마는 list 지만 UI 는 슬롯 1개만 관리 —
+          JSON 에 여러 개를 손으로 넣은 경우 첫 항목만 표시되고 저장 시 선택
+          1개(또는 빈 목록)로 대체된다. 현 운용(각 1대)에서는 영향 없음.
+        """
+        layout = QVBoxLayout(self.page_manual)
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.setSpacing(10)
+
+        g = QGroupBox("Manual Devices (수동 조작 전용)")
+        f = QFormLayout()
+        f.setSpacing(T.SP_SM)
+        f.setContentsMargins(T.SP_LG, 20, T.SP_LG, T.SP_MD)
+        f.setLabelAlignment(Qt.AlignRight)
+
+        self.mp_driver = QComboBox()
+        self.mp_driver.currentIndexChanged.connect(self.save_manual_devices)
+        f.addRow("Manual Pump:", self.mp_driver)
+
+        self.ms_driver = QComboBox()
+        self.ms_driver.currentIndexChanged.connect(self.save_manual_devices)
+        f.addRow("Cartesian Sampler:", self.ms_driver)
+
+        lbl_desc = QLabel(
+            "시퀀스 그룹(Group A~D)에 속하지 않는 수동 조작 전용 장비.\n"
+            "• 배정 시: Manual 탭에 조작 카드가 생성됩니다 (미연결이면 OFFLINE 표시)\n"
+            "• None: 역할 해제 — Manual 탭에서 카드가 사라집니다\n"
+            "• 시퀀스 실행과는 무관 (엔진은 이 역할을 사용하지 않음)\n"
+            "• 그룹에 통합된 오토샘플러는 펌프 그룹의 Sampler 슬롯에 배정 — 여기 중복 등록 불필요"
         )
         lbl_desc.setObjectName("DialogHintLabel")
         lbl_desc.setWordWrap(True)
@@ -1815,6 +1915,7 @@ class HardwareConfigDialog(QDialog):
         self.role_list.addItem(QListWidgetItem("  Push Pump"))
         self.role_list.addItem(QListWidgetItem("  N2 MFC (Gas)"))
         self.role_list.addItem(QListWidgetItem("  Phase Sensor"))
+        self.role_list.addItem(QListWidgetItem("  Manual Devices"))
 
         self.role_list.addItem(self._section_item("System"))
         self.role_list.addItem(QListWidgetItem("  Reactor & Fluidic"))
@@ -1863,6 +1964,15 @@ class HardwareConfigDialog(QDialog):
             self.p_wash_speed.setValue(float(p['settings'].get('wash_speed', 15.0)))
             self.p_wash_count.setValue(int(p['settings'].get('wash_count', 2)))
             self.p_wash_volume.setValue(float(p['settings'].get('wash_volume', 5.0)))
+            # 세척 분리(2026-08-20): 키 없음 = 센티널('공통' = count -1 / volume 0.0)
+            _iwc = p['settings'].get('initial_wash_count')
+            self.p_wash_count_init.setValue(int(_iwc) if _iwc is not None else -1)
+            _iwv = p['settings'].get('initial_wash_volume')
+            self.p_wash_vol_init.setValue(float(_iwv) if _iwv is not None else 0.0)
+            _swc = p['settings'].get('interstep_wash_count')
+            self.p_wash_count_inter.setValue(int(_swc) if _swc is not None else -1)
+            _swv = p['settings'].get('interstep_wash_volume')
+            self.p_wash_vol_inter.setValue(float(_swv) if _swv is not None else 0.0)
 
             # 시린지 프리셋 (이제 save_curr_role이 올바른 값을 저장함)
             dia = float(p['settings'].get('diameter', 14.5))
@@ -1915,7 +2025,15 @@ class HardwareConfigDialog(QDialog):
             self._load_phase_pos_ui()
             self.stack.setCurrentIndex(7)
 
-        elif row == n_pumps + 9:   # System ─ Reactor & Fluidic (전역)
+        elif row == n_pumps + 8:   # Manual Devices (manual_pumps/samplers)
+            for cb, ids in ((self.mp_driver, self.temp_roles.get('manual_pumps')),
+                            (self.ms_driver, self.temp_roles.get('samplers'))):
+                cb.blockSignals(True)
+                self.set_combo(cb, (ids or [None])[0])
+                cb.blockSignals(False)
+            self.stack.setCurrentIndex(9)
+
+        elif row == n_pumps + 10:   # System ─ Reactor & Fluidic (전역)
             self.stack.setCurrentIndex(8)
 
     def update_role_combos(self):
@@ -1933,6 +2051,8 @@ class HardwareConfigDialog(QDialog):
             self.pp_driver: self.temp_roles.get('push_pump', {}).get('driver_id'),
             self.g_driver: self.temp_roles.get('gas', {}).get('driver_id'),
             self.ps_driver: self.temp_roles.get('phase', {}).get('driver_id'),
+            self.mp_driver: (self.temp_roles.get('manual_pumps') or [None])[0],
+            self.ms_driver: (self.temp_roles.get('samplers') or [None])[0],
         }
         # 현재 선택된 펌프 그룹의 motor/selector/switcher도 보존
         curr_p_idx = getattr(self, 'curr_p_idx', -1)
@@ -1946,7 +2066,7 @@ class HardwareConfigDialog(QDialog):
 
         for cb in [self.p_motor, self.p_selector, self.p_switcher, self.p_sampler,
                    self.h_driver, self.o_driver, self.c_driver, self.pp_driver,
-                   self.g_driver, self.ps_driver]:
+                   self.g_driver, self.ps_driver, self.mp_driver, self.ms_driver]:
             curr_id = cb.currentData()
             keep_id = keep_map.get(cb)
             cb.blockSignals(True)
@@ -2000,6 +2120,10 @@ class HardwareConfigDialog(QDialog):
             return "MFC" in drv
         if combo is getattr(self, 'ps_driver', None):
             return "위상센서" in drv
+        if combo is getattr(self, 'mp_driver', None):
+            return "펌프" in drv
+        if combo is getattr(self, 'ms_driver', None):
+            return "샘플러" in drv
         return True
 
     def set_combo(self, cb, dev_id):
@@ -2057,7 +2181,53 @@ class HardwareConfigDialog(QDialog):
             p['settings']['wash_speed'] = self.p_wash_speed.value()
             p['settings']['wash_count'] = self.p_wash_count.value()
             p['settings']['wash_volume'] = self.p_wash_volume.value()
+            # 세척 분리(2026-08-20): '공통' 센티널이면 키 자체를 제거(하위호환) —
+            # count 는 0(세척 끔)이 유효값이므로 -1 만 센티널, volume 은 0.0 센티널
+            for _w, _key, _is_cnt in (
+                    (self.p_wash_count_init, 'initial_wash_count', True),
+                    (self.p_wash_vol_init, 'initial_wash_volume', False),
+                    (self.p_wash_count_inter, 'interstep_wash_count', True),
+                    (self.p_wash_vol_inter, 'interstep_wash_volume', False)):
+                _val = _w.value()
+                if (_is_cnt and _val >= 0) or ((not _is_cnt) and _val > 0.0):
+                    p['settings'][_key] = int(_val) if _is_cnt else float(_val)
+                else:
+                    p['settings'].pop(_key, None)
             self.role_list.item(self.curr_p_idx + 1).setText(f"  {p['name']}")
+
+    def copy_wash_to_all_groups(self):
+        """현재 그룹의 세척 설정을 나머지 모든 펌프 그룹에 복사 (temp_roles만 변경).
+
+        wash_speed/count/volume 은 값 복사, 초기/스텝간 override 4종은 '공통'
+        센티널(키 없음)까지 동일하게 전파 — 대상 그룹에 낡은 override 가 남아
+        '일괄 적용했는데 다르게 동작'하는 함정을 막는다.
+        """
+        if not hasattr(self, 'curr_p_idx'):
+            return
+        self.save_curr_role()   # 위젯 현재값 → 현재 그룹 settings 반영
+        pumps = self.temp_roles['pumps']
+        src = pumps[self.curr_p_idx]['settings']
+        keys = ('wash_speed', 'wash_count', 'wash_volume',
+                'initial_wash_count', 'initial_wash_volume',
+                'interstep_wash_count', 'interstep_wash_volume')
+        targets = []
+        for i, p in enumerate(pumps):
+            if i == self.curr_p_idx:
+                continue
+            for k in keys:
+                if k in src:
+                    p['settings'][k] = src[k]
+                else:
+                    p['settings'].pop(k, None)
+            targets.append(p.get('name', f'#{i + 1}'))
+        if targets:
+            QMessageBox.information(
+                self, "세척 설정 복사",
+                f"{pumps[self.curr_p_idx].get('name', '현재 그룹')} 의 세척 설정을 "
+                f"{len(targets)}개 그룹에 복사했습니다:\n  → {', '.join(targets)}\n\n"
+                "다이얼로그 '저장'을 눌러야 확정됩니다.")
+        else:
+            QMessageBox.information(self, "세척 설정 복사", "복사할 다른 그룹이 없습니다.")
 
     def save_heater(self): self.temp_roles['heater']['driver_id'] = self.get_selected_id(self.h_driver)
     def save_outlet(self): self.temp_roles['outlet']['driver_id'] = self.get_selected_id(self.o_driver)
@@ -2070,6 +2240,13 @@ class HardwareConfigDialog(QDialog):
         if 'push_pump' not in self.temp_roles:
             self.temp_roles['push_pump'] = {}
         self.temp_roles['push_pump']['driver_id'] = self.get_selected_id(self.pp_driver)
+
+    def save_manual_devices(self):
+        """Manual 전용 장비 저장 — None 선택 = 빈 목록(역할 해제)."""
+        mp = self.get_selected_id(self.mp_driver)
+        sp = self.get_selected_id(self.ms_driver)
+        self.temp_roles['manual_pumps'] = [mp] if mp else []
+        self.temp_roles['samplers'] = [sp] if sp else []
 
     def save_gas(self):
         if 'gas' not in self.temp_roles:

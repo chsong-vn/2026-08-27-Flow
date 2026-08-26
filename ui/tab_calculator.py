@@ -17,7 +17,7 @@ from PyQt5.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QTableWidget, QTableWidgetItem,
     QPushButton, QLabel, QHeaderView, QLineEdit, QApplication,
     QDialog, QGridLayout, QMessageBox, QFrame, QTabWidget,
-    QDoubleSpinBox, QComboBox, QSplitter, QScrollArea
+    QDoubleSpinBox, QComboBox, QSplitter, QScrollArea, QFileDialog
 )
 from PyQt5.QtCore import Qt, QThread, pyqtSignal, QEvent, QTimer, QFileSystemWatcher
 from PyQt5.QtGui import QColor
@@ -760,9 +760,20 @@ class CalculatorTab(QWidget):
         self._grid = WebGrid(self._grid_rows(), theme=self._grid_theme())
         self._grid.cellChanged.connect(self._on_grid_cell)
         root.addWidget(self._grid, 1)
+        # 앱 재시작 후에도 기존 temp Excel 의 저장→반영 고리 유지 (2026-08-25)
+        self._arm_calc_excel_watcher()
 
         bar = QHBoxLayout()
         bar.setSpacing(T.SP_SM)
+        btn_load = QPushButton("Excel 가져오기")
+        btn_load.setMinimumHeight(T.H_BTN)
+        btn_load.setToolTip(
+            "미리 작성해 둔 Excel 파일을 선택해 표로 불러옵니다.\n"
+            "· Group 열이 없으면 포트 번호가 리셋될 때마다 다음 그룹으로 자동 배정\n"
+            "· 같은 포트가 반복되면 자동으로 다성분(성분 2, 3…)으로 인식\n"
+            "· 반영/무시된 행 수를 결과로 보고합니다")
+        btn_load.clicked.connect(self._import_calc_excel)
+        bar.addWidget(btn_load)
         btn_excel = QPushButton("Excel에서 편집")
         btn_excel.setMinimumHeight(T.H_BTN)
         btn_excel.setToolTip("계산기 표 전체를 Excel 파일로 열어 편집합니다.\n"
@@ -792,7 +803,7 @@ class CalculatorTab(QWidget):
         btn_copy.setToolTip("모든 행의 데이터를 클립보드에 복사합니다 (엑셀에 그대로 붙여넣기)")
         btn_copy.clicked.connect(self._grid_copy_all)
         bar.addWidget(btn_copy)
-        self._conc_btns_secondary = [btn_excel, btn_calc, btn_clr, btn_bulk, btn_copy]
+        self._conc_btns_secondary = [btn_load, btn_excel, btn_calc, btn_clr, btn_bulk, btn_copy]
         _sec = get_secondary_button_style(self._P)
         for b in self._conc_btns_secondary:
             b.setStyleSheet(_sec)
@@ -999,6 +1010,190 @@ class CalculatorTab(QWidget):
         os.makedirs(temp_dir, exist_ok=True)
         return os.path.join(temp_dir, "calc_reagents.xlsx")
 
+    def _import_calc_excel(self):
+        """임의 Excel 파일 선택 → 표로 가져오기 (2026-08-25 워크플로 통일 ②③).
+
+        @codesyncer-decision(사용자 승인): 조용한 실패 제거가 목적 —
+          ① 열 이름 키워드 매칭 (열 순서·부가 열 자유)
+          ② Group 열 없으면 '포트 번호 리셋' 마다 다음 그룹으로 자동 배정
+          ③ 같은 (그룹, 포트) 반복 행 = 다성분 자동 승격 (성분 2..N)
+          ④ 자식 부피 비면 부모(스톡) 부피 상속
+          ⑤ 반영/승격/무시(사유) 건수를 다이얼로그로 보고
+        """
+        try:
+            import openpyxl
+        except ImportError:
+            QMessageBox.warning(self, "경고", "openpyxl 패키지가 설치되지 않았습니다.")
+            return
+        if self._grid is None:
+            return
+        path, _ = QFileDialog.getOpenFileName(
+            self, "Excel 가져오기", "", "Excel 파일 (*.xlsx *.xlsm)")
+        if not path:
+            return
+        try:
+            wb = openpyxl.load_workbook(path, data_only=True)
+        except Exception as e:
+            QMessageBox.warning(self, "가져오기 실패", f"파일을 열 수 없습니다:\n{e}")
+            return
+        ws = wb.active
+        hdr = [str(c.value or "").strip() for c in ws[1]]
+
+        def col(*keys):
+            for i, h in enumerate(hdr):
+                hl = h.lower()
+                for k in keys:
+                    if k.lower() in hl:
+                        return i
+            return None
+
+        c_grp = col("group", "그룹")
+        c_port = col("port", "포트")
+        c_comp = col("성분")
+        c_name = col("시약명", "name")
+        c_cas = col("cas")
+        c_mw = col("mw", "분자량")
+        c_smiles = col("smiles")
+        c_den = col("밀도", "density")
+        c_vol = col("부피", "vol")
+        c_mass = col("질량", "mass")
+        c_conc = col("농도", "conc")
+        if c_port is None or c_name is None:
+            QMessageBox.warning(self, "가져오기 실패",
+                "필수 열(Port/포트, 시약명)을 1행 헤더에서 찾지 못했습니다.")
+            return
+
+        letters = [l for l, _p in self._group_info]
+        n_groups = len(letters)
+
+        def cell(row, ci):
+            return row[ci] if (ci is not None and ci < len(row)) else None
+
+        parents, children = {}, {}
+        skipped = []          # (사유, 행요약)
+        promoted = 0
+        gi = 0                # Group 열 없을 때의 자동 그룹 인덱스
+        prev_port = None
+        for row in ws.iter_rows(min_row=2, values_only=True):
+            pv = cell(row, c_port)
+            if pv in (None, ""):
+                continue
+            try:
+                port = int(pv)
+            except (TypeError, ValueError):
+                skipped.append(("포트 형식 오류", str(pv)))
+                continue
+            # 그룹 결정 — 명시 열 우선, 없으면 포트 리셋 감지로 자동 배정
+            if c_grp is not None:
+                g = str(cell(row, c_grp) or "").strip().upper()
+                if g not in letters:
+                    if str(cell(row, c_name) or "").strip():
+                        skipped.append(("Group 미매칭", f"{g}/{port}"))
+                    prev_port = port
+                    continue
+                gcur = letters.index(g)
+            else:
+                if prev_port is not None and port < prev_port:
+                    gi += 1
+                gcur = gi
+            prev_port = port
+            name = str(cell(row, c_name) or "").strip()
+            if not name:
+                continue
+            if gcur >= n_groups:
+                skipped.append(("그룹 수 초과", f"블록{gcur + 1}/{port} {name[:20]}"))
+                continue
+            if not (2 <= port < 2 + ROWS_PER_GROUP):
+                skipped.append(("포트 범위 밖(2~11)", f"{letters[gcur]}/{port} {name[:20]}"))
+                continue
+            dr = gcur * ROWS_PER_GROUP + (port - 2)
+            vals = {"name": name,
+                    "cas": str(cell(row, c_cas) or "").strip(),
+                    "mw": self._gf(cell(row, c_mw)),
+                    "smiles": str(cell(row, c_smiles) or "").strip(),
+                    "density": self._gf(cell(row, c_den)),
+                    "vol": self._gf(cell(row, c_vol)),
+                    "mass": self._gf(cell(row, c_mass)),
+                    "conc": self._gf(cell(row, c_conc))}
+            try:
+                comp = int(cell(row, c_comp) or 1) if c_comp is not None else 1
+            except (TypeError, ValueError):
+                comp = 1
+            if comp > 1 or dr in parents:
+                if comp <= 1:
+                    promoted += 1          # 같은 포트 반복 → 다성분 자동 승격
+                children.setdefault(dr, []).append(vals)
+            else:
+                parents[dr] = vals
+        if not parents and not children:
+            QMessageBox.information(
+                self, "가져오기", "반영할 행이 없습니다."
+                + (f"\n무시 {len(skipped)}건: " + ", ".join(
+                    f"{r}({v})" for r, v in skipped[:5]) if skipped else ""))
+            return
+
+        vol_inherit = 0
+        for dr, kids in children.items():
+            pvol = (parents.get(dr) or {}).get("vol")
+            if pvol is None and dr in parents:
+                pvol = parents[dr].get("vol")
+            for k in kids:
+                if k.get("vol") is None and pvol is not None:
+                    k["vol"] = pvol        # 스톡 공통 부피 상속
+                    vol_inherit += 1
+
+        for dr, v in parents.items():
+            r = self._rows[dr]
+            r.name = v["name"]
+            r.cas = v["cas"]
+            r.smiles = v["smiles"]
+            r.mw = v["mw"] or 0.0
+            r.density = v["density"]
+            r.ml = v["vol"]
+            r.g = v["mass"]
+            r.conc = v["conc"]
+        for dr in set(list(parents.keys()) + list(children.keys())):
+            kids = children.get(dr)
+            if kids:
+                self._port_children[dr] = [dict(k) for k in kids]
+            else:
+                self._port_children.pop(dr, None)
+
+        self._refresh_calc_grid()
+        QTimer.singleShot(300, self._grid_recalc_all)
+        msg = (f"반영: 포트 {len(parents)}개"
+               + (f" · 다성분 자동 승격 {promoted}건" if promoted else "")
+               + (f" · 추가 성분 {sum(len(v) for v in children.values())}행" if children else "")
+               + (f" · 스톡 부피 상속 {vol_inherit}건" if vol_inherit else ""))
+        if c_grp is None:
+            msg += f"\nGroup 열 없음 → 포트 리셋 기준으로 {', '.join(letters[:gi + 1])} 순 자동 배정"
+        if skipped:
+            msg += f"\n무시 {len(skipped)}건:\n" + "\n".join(
+                f"  · {r}: {v}" for r, v in skipped[:8])
+            if len(skipped) > 8:
+                msg += f"\n  … 외 {len(skipped) - 8}건"
+        QMessageBox.information(self, "Excel 가져오기 결과", msg)
+        if hasattr(self.app, 'signals'):
+            self.app.signals.sig_log.emit(f"계산기: Excel 가져오기 — {msg.splitlines()[0]}")
+
+    def _arm_calc_excel_watcher(self):
+        """temp 의 계산기 Excel 감시 (재)무장.
+
+        @codesyncer-decision(2026-08-25, 무반영 결함): 워처는 버튼을 누른 앱
+        인스턴스에만 살았음 — 앱 재시작 후 Excel 에서 저장해도 조용히 무반영.
+        ①탭 생성 시 temp 파일이 있으면 자동 무장 ②'이미 열려 있음' 조기
+        반환 경로에서도 무장. 무장은 감시만 하고 즉시 반영하지 않음 —
+        반영 트리거는 언제나 '저장(파일 변경)'."""
+        path = self._calc_excel_file()
+        if not os.path.exists(path):
+            return
+        self._calc_excel_path = path
+        if self._calc_excel_watcher is None:
+            self._calc_excel_watcher = QFileSystemWatcher()
+            self._calc_excel_watcher.fileChanged.connect(self._on_calc_excel_changed)
+        if path not in self._calc_excel_watcher.files():
+            self._calc_excel_watcher.addPath(path)
+
     def _open_calc_excel(self):
         """계산기 표 전체를 Excel 로 열어 편집 (저장 시 자동 반영)."""
         try:
@@ -1017,6 +1212,7 @@ class CalculatorTab(QWidget):
                 with open(path, 'a'):
                     pass
             except PermissionError:
+                self._arm_calc_excel_watcher()   # 재시작 후에도 저장→반영 고리 복구
                 QMessageBox.information(self, "Excel 편집",
                     "이미 Excel에서 열려 있습니다.\n저장하면 자동 반영됩니다.")
                 return
@@ -1066,13 +1262,7 @@ class CalculatorTab(QWidget):
             QMessageBox.information(self, "Excel 편집",
                 "이미 Excel에서 열려 있습니다.\n저장하면 자동 반영됩니다.")
             return
-        self._calc_excel_path = path
-
-        if self._calc_excel_watcher is None:
-            self._calc_excel_watcher = QFileSystemWatcher()
-            self._calc_excel_watcher.fileChanged.connect(self._on_calc_excel_changed)
-        if path not in self._calc_excel_watcher.files():
-            self._calc_excel_watcher.addPath(path)
+        self._arm_calc_excel_watcher()
         os.startfile(path)   # Windows 전용 (reagent_excel 과 동일 전제)
 
     def _on_calc_excel_changed(self, path):

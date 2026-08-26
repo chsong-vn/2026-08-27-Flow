@@ -275,6 +275,18 @@ class HardwareManager:
             else:
                 self.pumps[p_name] = MockPump(p_name)
 
+            # 세척 분리(2026-08-20 사용자 요청): 초기(스텝1)/스텝간 세척 오버라이드.
+            # 그룹 settings 에 키가 있을 때만 속성 부착 — 없으면(None) 엔진이
+            # 공통 wash_count/wash_volume 으로 폴백 (완전 하위호환).
+            for _k in ("initial_wash_count", "interstep_wash_count"):
+                _v = settings.get(_k)
+                setattr(self.pumps[p_name], _k,
+                        int(_v) if _v is not None else None)
+            for _k in ("initial_wash_volume", "interstep_wash_volume"):
+                _v = settings.get(_k)
+                setattr(self.pumps[p_name], _k,
+                        float(_v) if _v is not None else None)
+
             self._safe_connect(self.pumps[p_name], p_name)
 
         # @codesyncer(2026-08-13, 오배정 사고 가드): 공유 RS-485 버스에서 두 그룹이

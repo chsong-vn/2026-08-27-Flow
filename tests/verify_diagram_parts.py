@@ -342,9 +342,40 @@ check("Q12b 스파인 tj 없음 + tj[2] 런파이프", not [p for p in wc.spine 
 ws.update_realtime({"Group_B": {"running": True}}, outlet_valve_pos=1)
 check("Q12c A/D형: D만 구동 → tj[1] 무흐름", not ws.spine[0].flowing)
 
-# Q11 quad 네 케이스 bbox 비중첩 + 씬 포함 (레거시 콤보와 동일 기준)
+# Q13 실구성 재현 (2026-08-20 겹침 수정): 2그룹 A/D + push + N2 —
+# K2 push 코리도어(ys[0]-62)와 N2 실린더(구 y_run-190)가 같은 우상단을
+# 점유해 HPLC 박스·리턴 파이프와 정면 충돌하던 조합. 수정 = N2 하단 미러.
+from ui.visual_diagram_parts import PartCylinder, PartHplc, Pipe
+cfg_x = Cfg(["external_valve"] * 2, n2=True)
+cfg_x.tjunction_entry_map = {"Group_A": 1, "Group_B": 2}
+wx = FlowDiagramWidget(pump_configs=[], active_pumps=cfg_x.ACTIVE_PUMPS, inventory=[])
+wx.configure(cfg_x, App(cfg_x, 1, 1))
+_cylx = next(x for x in wx.scene().items() if isinstance(x, PartCylinder))
+_hpx = next(x for x in wx.scene().items() if isinstance(x, PartHplc))
+_y_runx = wx.reactor.pos().y()
+check("Q13 K2+push+N2 → 실린더 런 하단 미러", _cylx.pos().y() > _y_runx,
+      f"cyl y={_cylx.pos().y():.0f} vs run y={_y_runx:.0f}")
+check("Q13b 실린더×HPLC 비중첩",
+      not _cylx.sceneBoundingRect().intersects(_hpx.sceneBoundingRect()),
+      f"cyl={_cylx.sceneBoundingRect()} hp={_hpx.sceneBoundingRect()}")
+# 코리도어/N2 파이프 세그먼트가 실린더 몸통을 관통하지 않는지 (구 결함 2호)
+_cylr = _cylx.sceneBoundingRect().adjusted(4, 4, -4, -4)
+_bad_x = []
+for _pl in (x for x in wx.scene().items() if isinstance(x, Pipe)):
+    for _a, _b in zip(_pl.pts, _pl.pts[1:]):
+        _sr = QRectF(min(_a.x(), _b.x()) - 1, min(_a.y(), _b.y()) - 1,
+                     abs(_b.x() - _a.x()) + 2, abs(_b.y() - _a.y()) + 2)
+        if _sr.intersects(_cylr) and not (_cylr.contains(_a) or _cylr.contains(_b)):
+            _bad_x.append(f"({_a.x():.0f},{_a.y():.0f})→({_b.x():.0f},{_b.y():.0f})")
+check("Q13c 파이프 실린더 관통 없음", not _bad_x, "; ".join(_bad_x[:3]))
+# 상단 배치 유지 확인 (push 없는 2그룹 — 기존 우상단 규칙 회귀 방지)
+_cyls = next(x for x in ws.scene().items() if isinstance(x, PartCylinder))
+check("Q13d push 무 → 실린더 상단 유지",
+      _cyls.pos().y() < ws.reactor.pos().y(), f"cyl y={_cyls.pos().y():.0f}")
+
+# Q11 quad 다섯 케이스 bbox 비중첩 + 씬 포함 (레거시 콤보와 동일 기준)
 for _nm, _w in (("quad", wq), ("quad_push", wqp), ("quad_2p_AD", ws),
-                ("quad_2p_CD", wc)):
+                ("quad_2p_CD", wc), ("quad_2p_push_n2", wx)):
     parts_q = [x for x in _w.scene().items() if isinstance(x, Part)]
     bad_q = []
     for x, y2 in itertools.combinations(parts_q, 2):
@@ -357,9 +388,10 @@ for _nm, _w in (("quad", wq), ("quad_push", wqp), ("quad_2p_AD", ws),
     check(f"Q11b {_nm} 씬 포함",
           all(sr_q.contains(x.sceneBoundingRect()) for x in parts_q))
 
-# 렌더 (육안 검토용) — 기본 quad + push(solvent→QUAD-1) 두 장
+# 렌더 (육안 검토용) — 기본 quad + push(solvent→QUAD-1) + 실구성(2그룹 N2 하단)
 for _nm, _w, _st in (("quad_topology", wq, {}),
-                     ("quad_push", wqp, {"push_running": True})):
+                     ("quad_push", wqp, {"push_running": True}),
+                     ("quad_2p_push_n2", wx, {"push_running": True})):
     _w.update_realtime({"Group_A": {"running": True}},
                        outlet_valve_pos=2, gas_flowing=False, **_st)
     sr = _w.scene().sceneRect()

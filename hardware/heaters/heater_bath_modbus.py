@@ -91,6 +91,7 @@ class BathModbusHeater:
             raise ConnectionError(f"[BathModbus] Connection failed on {self.settings.port}")
 
         self._connected = True
+        self.is_connected = True   # 대시보드 상태 패널용 공개 플래그 (2026-08-25)
         print(f"   [BathModbus] Connected")
 
         # 폴링 스레드 시작
@@ -169,6 +170,10 @@ class BathModbusHeater:
             pass
 
     def _poll_loop(self):
+        # @codesyncer-decision(2026-08-25, 끊김 가시화): 폴링이 조용히 실패하면
+        #   _current_temp 가 마지막 값에 동결된 채 '연결됨'처럼 보임 — 연속 3회
+        #   실패 시 is_connected=False 로 자백(대시보드 OFFLINE), 성공 시 자가 회복.
+        _fail_streak = 0
         while not self._stop_evt.is_set():
             if self._client and self._connected:
                 acquired = self._lock.acquire(blocking=False)
@@ -189,11 +194,18 @@ class BathModbusHeater:
                             )
                             pv = dec.decode_64bit_float()
                             self._current_temp = float(pv)
+                            _fail_streak = 0
+                            self.is_connected = True
+                        else:
+                            _fail_streak += 1
                     except Exception:
-                        pass
+                        _fail_streak += 1
                     finally:
                         self._lock.release()
-            
+                    if _fail_streak == 3:
+                        self.is_connected = False
+                        print("[BathModbus] 폴링 연속 3회 실패 — 연결 끊김 의심 (OFFLINE 표시)")
+
             time.sleep(self.settings.poll_interval_s)
 
             

@@ -784,16 +784,31 @@ class MarkerCollectGate(threading.Thread):
     """
 
     MODES = ("off", "observe", "gate")
+    # 표시 용어 (2026-08-24 사용자 확정): 위치 기준 전단센서=반응기 앞(INLET),
+    # 후단센서=반응기 뒤(OUTLET). 내부 키(reactor_in/collect)는 불변 — 표시만.
+    SENSOR_DISP = {"reactor_in": "전단센서", "collect": "후단센서"}
 
     def __init__(self, engine, sensor, key, timer, t_exp_front_sec, slug_sec,
                  window_sec, mode="observe", valve_lag_sec=0.0,
                  confirm_sec=1.0, max_early_sec=10.0, poll=0.1,
                  style="bracket", offset_sec=0.0, min_gas_sec=2.0,
-                 rear_key=None):
+                 rear_key=None, front_key=None, s1s2_transit_sec=0.0):
         super().__init__(daemon=True, name="MarkerCollectGate")
         self.engine = engine
         self.sensor = sensor
         self.key = key
+        # @codesyncer-decision(2026-08-24 사용자 확정 — 전단도 센서1): 실런 2회에서
+        #   전단 마커가 센서1에선 온전(기체 2.3s)했으나 반응기 코일 2.4mL 통과 중
+        #   0.1s 파편 열차로 쪼개져 센서2 검출이 전부 기각됨(두 런 모두 244.7s 재현,
+        #   모델 304.5s 대비 -59.8s = 기포 슬립 ~20%). front_key 로 전단 감시 센서를
+        #   분리 — 센서1(reactor_in)이면 파편화·슬립 구간이 트리거 경로에서 빠진다.
+        #   호출부 t_exp 도 해당 센서 기준으로 계산해 전달. 미지정 = key(기존 동작).
+        self.front_key = str(front_key) if front_key else key
+        # front 를 센서1에서 실측하면 front_el−offset 은 가스T→센서1(~수 초)이라
+        #   후단 절단의 S2 수송 근거로 쓸 수 없다 → 호출부가 준 모델 수송(액체 기준,
+        #   S1→S2 부피/F)으로 폴백. 방향은 '수 초~수십 초 늦은 절단'(기포 슬립분)
+        #   = push 용매 소량 포함, 제품 유실 없음 (docstring 정책과 동일 방향).
+        self.s1s2_transit = max(0.0, float(s1s2_transit_sec or 0.0))
         # parked 후단 1차 센서 (2026-08-19 사용자 확정): 후단 마커는 push(맥동)
         # 캐리어로 반응기를 5분간 통과하며 쪼개질 수 있으므로, 반응기 진입 '전' =
         # 센서1(가스T 직후)에서 갓 형성된 단일 플러그를 감지한다. 센서2는 크로스체크.
@@ -852,6 +867,10 @@ class MarkerCollectGate(threading.Thread):
         전단 감시 루프에서도 매 폴마다 이 소비기를 돌려 실시각으로 기록한다."""
         if not self.rear_key:
             return
+        # 전단을 같은 센서(센서1)에서 감시 중이면 전단 확정 전엔 큐를 건드리지
+        # 않는다 — 드레인이 전단 마커 에지를 삼키는 이중 소비 방지 (2026-08-24).
+        if self.rear_key == self.front_key and self.front_el is None:
+            return
         try:
             if self.r1_el is not None or self.rear_depart_el is None:
                 # 확보 완료 or 발사 전 — 큐만 비움 (스테일 방지)
@@ -873,13 +892,13 @@ class MarkerCollectGate(threading.Thread):
                 if dur < self.min_gas:
                     self.spurious += 1
                     self.engine._log(
-                        f"  [MarkerGate] 센서1 잡기포 기각 @ {el:.1f}s "
+                        f"  [MarkerGate] 전단센서 잡기포 기각 @ {el:.1f}s "
                         f"(기체 {dur:.1f}s < {self.min_gas:.1f}s)")
                     continue
                 self.r1_el = el
                 self._r1_shift = self.applied_shift
                 self.engine._log(
-                    f"  [MarkerGate] 후단마커 센서1 실측 @ {el:.1f}s "
+                    f"  [MarkerGate] 후단마커 전단센서 실측 @ {el:.1f}s "
                     f"(기체 {dur:.1f}s) — 반응기 진입 전 단일 플러그")
         except Exception:
             pass
@@ -919,9 +938,9 @@ class MarkerCollectGate(threading.Thread):
         except Exception:
             return False
 
-    def _is_liquid(self):
+    def _is_liquid(self, key=None):
         try:
-            return self.sensor.read_phase(self.key) != "GAS"
+            return self.sensor.read_phase(key or self.key) != "GAS"
         except Exception:
             return False
 
@@ -930,6 +949,8 @@ class MarkerCollectGate(threading.Thread):
             return
         try:
             self.sensor.monitor(self.key, "always")
+            if self.front_key != self.key:
+                self.sensor.monitor(self.front_key, "always")
         except Exception as e:
             self.engine._log(f"  [MarkerGate] 모니터 무장 실패 — 시간제 폴백: {e}")
             return
@@ -937,14 +958,16 @@ class MarkerCollectGate(threading.Thread):
             try:
                 self.sensor.monitor(self.rear_key, "always")
             except Exception as e:
-                self.engine._log(f"  [MarkerGate] 센서1 무장 실패({e}) — "
-                                 "후단은 센서2 단독으로 진행")
+                self.engine._log(f"  [MarkerGate] 전단센서 무장 실패({e}) — "
+                                 "후단은 후단센서 단독으로 진행")
                 self.rear_key = None
         _st = (f", 오프셋 {self.offset:.1f}s, 마커 최소기체 {self.min_gas:.1f}s"
-               + (f", 후단 1차 센서 '{self.rear_key}'" if self.rear_key else "")
+               + (f", 후단마커 1차={self.SENSOR_DISP.get(self.rear_key, self.rear_key)}"
+                  if self.rear_key else "")
                if self.style == "parked" else "")
         self.engine._log(
-            f"  [MarkerGate] {self.mode}/{self.style} 무장 — 센서 '{self.key}' "
+            f"  [MarkerGate] {self.mode}/{self.style} 무장 — "
+            f"전단마커 감시={self.SENSOR_DISP.get(self.front_key, self.front_key)}, "
             f"선두 예상 {self.t_exp:.1f}s (창 ±{self.w:.0f}s), "
             f"슬러그 {self.slug_sec:.1f}s, 조기클램프 {self.max_early:.0f}s{_st}")
         try:
@@ -955,7 +978,7 @@ class MarkerCollectGate(threading.Thread):
             else:
                 self._rear_stage()
         finally:
-            for k in (self.key, self.rear_key):
+            for k in (self.key, self.rear_key, self.front_key):
                 if k:
                     try:
                         self.sensor.monitor(k, "never")
@@ -999,14 +1022,14 @@ class MarkerCollectGate(threading.Thread):
                 drained = True
                 try:
                     for _ in range(100):
-                        if self.sensor.read_event(self.key) is None:
+                        if self.sensor.read_event(self.front_key) is None:
                             break
                         self.spurious += 1
                 except Exception:
                     pass
                 continue
             if pend is not None:
-                if not self._is_liquid():
+                if not self._is_liquid(self.front_key):
                     self.spurious += 1       # 꼬리 직후 재기체 = 채터 — 기각
                     pend = None
                     continue
@@ -1015,7 +1038,7 @@ class MarkerCollectGate(threading.Thread):
                     return True
                 continue
             try:
-                ev = self.sensor.read_event(self.key)
+                ev = self.sensor.read_event(self.front_key)
             except Exception as e:
                 self.engine._log(f"  [MarkerGate] ⚠ 센서 오류 — 시간제 폴백: {e}")
                 return False
@@ -1059,9 +1082,13 @@ class MarkerCollectGate(threading.Thread):
             #   도달 시각(+라인 18.7s 보정)에 수행. 타이머 HEAD 의 밸브 재발화는
             #   같은 위치 재설정이라 무해(idempotent).
             _pre_sw = ""
+            # 센서1 전단(2026-08-24): 검출 시점이 도달보다 반응기 수송(~5분)만큼
+            # 앞선다 — 도달 임박(60s 이내)일 때만 선전환하고, 원거리 검출은
+            # 재앵커된 타이머의 선헹굼/HEAD 이벤트에 밸브를 위임한다.
             try:
-                if self.engine._outlet_set_safe(2, "MarkerGate 마커도달 선전환"):
-                    _pre_sw = " | Outlet→COLLECT 선전환(라인 선충전, 니들=폐기좌표)"
+                if (el - self._elapsed()) <= 60.0:
+                    if self.engine._outlet_set_safe(2, "MarkerGate 마커도달 선전환"):
+                        _pre_sw = " | Outlet→COLLECT 선전환(라인 선충전, 니들=폐기좌표)"
             except Exception:
                 pass
             try:
@@ -1094,10 +1121,22 @@ class MarkerCollectGate(threading.Thread):
     #   (가스T→센서1 소구간은 무시 = 수 초 늦은 절단 → push 용매 소량 포함, 유실 없음)
     def _rear_stage_parked_s1(self):
         _anchor = self.front_el - self.applied_shift
-        self.transit_s2 = self.front_el - self.offset   # 전단: 출발 el=0 → 꼬리 el=수송
-        t_exp2 = _anchor + self.slug_sec
+        if self.front_key != self.key and self.s1s2_transit > 0:
+            # 전단을 센서1에서 실측(2026-08-24) — front_el−offset 은 가스T→센서1
+            # (~수 초)이라 S2 수송 근거가 못 됨 → 모델 수송(S1→S2 부피/F, 액체
+            # 기준)으로 대체. 기포 슬립분(~20%)만큼 늦은 절단 = push 용매 소량
+            # 포함 방향이라 제품 유실 없음.
+            self.transit_s2 = self.s1s2_transit
+        else:
+            self.transit_s2 = self.front_el - self.offset   # 전단: 출발 el=0 → 꼬리 el=수송
+        # 전단이 센서1 실측이면 anchor 는 S1 프레임 — 센서2 크로스체크/백업 창은
+        # S1→S2 수송을 더해 S2 프레임으로 환산 (안 하면 창이 ~수송시간만큼 일찍
+        # 열려 수집 중 잡슬러그가 '백업 승격'으로 조기 절단할 수 있음, 2026-08-24).
+        _s2f = (self.s1s2_transit
+                if (self.front_key != self.key and self.s1s2_transit > 0) else 0.0)
+        t_exp2 = _anchor + _s2f + self.slug_sec
         t_c2 = t_exp2 - self.offset
-        t_open2 = max(0.0, _anchor + 0.5 * self.slug_sec - self.offset)
+        t_open2 = max(0.0, _anchor + _s2f + 0.5 * self.slug_sec - self.offset)
         t_close2 = t_c2 + self.w
         self.cut_el = None
         gas2 = None
@@ -1114,7 +1153,7 @@ class MarkerCollectGate(threading.Thread):
                 self.rear_source = "S1"
                 self.engine._log(
                     f"  [MarkerGate] 후단 절단 예약 @ {self.cut_el:.1f}s = "
-                    f"센서1 {self.r1_el:.1f} + pre {self.offset:.1f} + "
+                    f"전단센서 {self.r1_el:.1f} + pre {self.offset:.1f} + "
                     f"전단실측수송 {self.transit_s2:.1f} + 밸브 {self.valve_lag:.1f}")
             if self._paused():
                 gas2 = None
@@ -1142,7 +1181,7 @@ class MarkerCollectGate(threading.Thread):
                         if self.cut_el is not None:
                             _d = (el + self.offset + self.valve_lag) - self.cut_el
                             self.engine._log(
-                                f"  [MarkerGate] 센서2 크로스체크 @ {el:.1f}s — "
+                                f"  [MarkerGate] 후단센서 크로스체크 @ {el:.1f}s — "
                                 f"S1 계산 대비 Δ{_d:+.1f}s"
                                 + (" ⚠ 재현 시 수송/오프셋 재보정"
                                    if abs(_d) > 5.0 else ""))
@@ -1150,7 +1189,7 @@ class MarkerCollectGate(threading.Thread):
                             self.cut_el = el + self.offset + self.valve_lag
                             self.rear_source = "S2크로스"
                             self.engine._log(
-                                f"  [MarkerGate] 센서1 미확보 — 센서2 백업 승격, "
+                                f"  [MarkerGate] 전단센서 미확보 — 후단센서 백업 승격, "
                                 f"절단 예약 @ {self.cut_el:.1f}s")
                 except Exception as e:
                     self.engine._log(f"  [MarkerGate] ⚠ 센서 오류 — terminal 폴백: {e}")
@@ -1195,7 +1234,7 @@ class MarkerCollectGate(threading.Thread):
             if self.cut_el is None and el > t_close2:
                 self.missed_rear = True
                 self.engine._log(
-                    f"  [MarkerGate] ⚠ 후단 미검출 (센서1·2 모두, 에지 예상 "
+                    f"  [MarkerGate] ⚠ 후단 미검출 (전단·후단센서 모두, 에지 예상 "
                     f"{t_c2:.1f}±{self.w:.0f}s) — terminal WASTE 시간제 폴백")
                 return
         return
@@ -2790,7 +2829,9 @@ class StrictSequenceEngine(FlowEngine):
                 # Step 2: wash
                 if self._should_run_mode(self.wash_mode, idx, ports_changed):
                     self._emit_status(f"Step {exp_id}/{total_steps}: washing")
-                    self._execute_system_wash(flows)
+                    # 세척 분리(2026-08-20): 스텝1 = 초기 세척(initial_wash_*),
+                    # 스텝2+ 포트변경 세척 = 스텝간(interstep_wash_*) 파라미터
+                    self._execute_system_wash(flows, initial=(idx == 0))
                 else:
                     self._log(f"Step {exp_id}: wash skipped (mode={self.wash_mode})")
 
@@ -2881,7 +2922,17 @@ class StrictSequenceEngine(FlowEngine):
                 #   - wash tube 별도 이동 없음 (마지막 tube가 10% 여유분 흡수)
                 push_pump_active = self.push_pump is not None
                 if push_pump_active:
-                    _collect_vol_total = target_vol + 0.1 * float(self.vol_reactor)
+                    # @codesyncer-decision(2026-08-24 사용자 관찰 — 실런 16:16에서
+                    #   수집 종료 후 생성물 꼬리가 소량 잔류): 분산 꼬리 여유를
+                    #   하드코딩 10%×reactor 에 더해 config 로 가감할 수 있게 함.
+                    #   collect_sec 가 늘면 push_sec(일반식)·terminal WASTE 도
+                    #   자동 연장 — 부피수지 항등 유지. ceil 로 웰이 1개 늘 수 있음.
+                    _tail_extra = float(sp_cfg.get("collect_tail_extra_ml", 0.0) or 0.0)
+                    _collect_vol_total = (target_vol + 0.1 * float(self.vol_reactor)
+                                          + _tail_extra)
+                    if _tail_extra > 0:
+                        self._log(f"  [Timer] 수집 꼬리 여유 +{_tail_extra:.2f}mL "
+                                  f"(collect_tail_extra_ml) — 분산 꼬리 회수용")
                     _num_collect_tubes = max(1, math.ceil(_collect_vol_total / vol_per_tube))
                     _collect_flush_vol = 0.0  # 별도 wash tube 없음
                 else:
@@ -2952,6 +3003,7 @@ class StrictSequenceEngine(FlowEngine):
                         if not ok:
                             msg = ret[1] if isinstance(ret, tuple) and len(ret) > 1 else ret
                             self._log(f"  [Timer] ⚠ collector move {_well_name(num)} 미확인: {msg}")
+                            self._collector_alarm(f"웰 이동({_well_name(num)}) 미확인", msg)
                         if self.tab_collection:
                             try:
                                 self.tab_collection.update_position_display()
@@ -2959,6 +3011,7 @@ class StrictSequenceEngine(FlowEngine):
                                 pass
                     except Exception as exc:
                         self._log(f"  [Timer] collector move {_well_name(num)} error: {exc}")
+                        self._collector_alarm(f"웰 이동({_well_name(num)})", exc)
 
                 def _move_wash():
                     """전용 WASH 좌표로 이동 (compensated 라인 flush 배출/파킹)."""
@@ -2971,10 +3024,12 @@ class StrictSequenceEngine(FlowEngine):
                             if not ok:
                                 msg = ret[1] if isinstance(ret, tuple) and len(ret) > 1 else ret
                                 self._log(f"  [Timer] ⚠ WASH 이동 미확인: {msg}")
+                                self._collector_alarm("WASH 이동 미확인", msg)
                         else:
                             self._log("  [Timer] ⚠ move_to_wash 미지원 — WASH 이동 생략")
                     except Exception as exc:
                         self._log(f"  [Timer] WASH 이동 error: {exc}")
+                        self._collector_alarm("WASH 이동", exc)
 
                 # @codesyncer(P1): 이벤트에 lane/meta 부여 — valve(Outlet, COM7)와
                 #   collector(plate96, COM15)는 물리 버스가 달라 병렬 집행이 안전.
@@ -3147,7 +3202,24 @@ class StrictSequenceEngine(FlowEngine):
                 if _gm in ("observe", "gate"):
                     _g_s2o = float(sp_cfg.get("sensor_to_outlet_vol_ml", 0.0) or 0.0)
                     _g_vlag = (_g_s2o / total_flow) * 60.0
-                    _g_texp = max(0.0, float(t_head_sec) - _g_vlag)
+                    # @codesyncer-decision(2026-08-24 사용자 확정 — 전단도 센서1):
+                    #   실런 2회에서 전단 마커가 반응기 통과 중 파편화(센서2 전부
+                    #   기각, 244.7s 재현·슬립 -59.8s) — 전단 감시를 센서1
+                    #   (reactor_in, 반응기 진입 전 온전 플러그)로 이동. 'collect'
+                    #   설정 시 구(센서2 직측) 동작으로 복귀.
+                    #   (코드 기본 = 'collect' 하위호환 — 실기 JSON 이 'reactor_in' 지정)
+                    _g_front = str(sp_cfg.get("marker_gate_front_sensor_key",
+                                              "collect") or "collect")
+                    _g_tjs1 = float(sp_cfg.get("tjunction_to_sensor1_vol_ml", 0.0583) or 0.0)
+                    if _g_front == "collect":
+                        _g_texp = max(0.0, float(t_head_sec) - _g_vlag)
+                        _g_s1s2 = 0.0
+                    else:
+                        # 센서1 기준 선두 예상 = 주입경로 pre + 가스T→센서1 수송
+                        _g_texp = float(pre_sec) + (_g_tjs1 / total_flow) * 60.0
+                        # S1→S2 모델 수송(액체 기준) = (t_head − pre) − (tjS1+s2o)/F
+                        _g_s1s2 = max(0.0, (float(t_head_sec) - float(pre_sec))
+                                      - ((_g_tjs1 + _g_s2o) / total_flow) * 60.0)
                     try:
                         self._marker_gate = MarkerCollectGate(
                             self, self.phase_sensor,
@@ -3170,6 +3242,8 @@ class StrictSequenceEngine(FlowEngine):
                             rear_key=str(
                                 sp_cfg.get("marker_gate_rear_sensor_key",
                                            "reactor_in") or "reactor_in"),
+                            front_key=_g_front,
+                            s1s2_transit_sec=_g_s1s2,
                         )
                         self._marker_gate.start()
                     except Exception as _ge:
@@ -3255,7 +3329,7 @@ class StrictSequenceEngine(FlowEngine):
                         threading.Thread(
                             target=self._fire_n2_marker,
                             args=(_errs, "front(t0)",
-                                  f"센서2 마커꼬리 + pre {_pre:.1f}s = 시약 선단"),
+                                  f"후단센서 마커꼬리 + pre {_pre:.1f}s = 시약 선단"),
                             daemon=True, name="InjMarker").start()
 
                 # parked 전단마커 — 주입 직전 '정지선' 발사: 장전 완료로 전 펌프
@@ -3292,7 +3366,7 @@ class StrictSequenceEngine(FlowEngine):
                 if _mk_mode == "parked":
                     self._fire_n2_marker(
                         _mk_errs, "rear(parked)",
-                        f"갭 주차 — 1차 판독 = 센서1 + pre {pre_sec:.1f}s + 전단실측수송",
+                        f"갭 주차 — 1차 판독 = 전단센서 + pre {pre_sec:.1f}s + 전단실측수송",
                         rear=True)
                     _mg_now = getattr(self, "_marker_gate", None)
                     if _mg_now is not None:
@@ -3752,6 +3826,26 @@ class StrictSequenceEngine(FlowEngine):
     #   hte_gas_sccm(MFC 설정치, 기본=equiv 값) / hte_wash_solvent_vol_ml(0.5) /
     #   hte_wash_gas_vol_ml(0.3) / hte_wash_port(1=공용매)
 
+    def _collector_alarm(self, what, detail):
+        """분취기 이동 실패 경보 (2026-08-26) — 강조 로그 + 경고음 3회.
+
+        @codesyncer-decision: EXP_008 사고(08-25)에서 이동 실패가 로그 한 줄로만
+        남아 3.4h 수집 전량이 폐기로 유실됨. 무인 런에서도 인지되도록 가청 경보
+        추가. 시퀀스는 중단하지 않음(타이머는 폴백으로 계속) — 밸브 수집 자체는
+        정상일 수 있고, 여기서 멈추면 이후 웰까지 전부 잃는다.
+        """
+        self._log(f"  ⚠⚠⚠ [분취기 경보] {what} 실패 — 수집이 잘못된 위치(폐기/이전 웰)로 갈 수 있음! ({str(detail)[:100]})")
+
+        def _beep():
+            try:
+                import winsound
+                for _ in range(3):
+                    winsound.Beep(1500, 400)
+                    time.sleep(0.15)
+            except Exception:
+                pass
+        threading.Thread(target=_beep, daemon=True, name="collector-alarm").start()
+
     def _log_phase_transition(self, key, old, new, adc):
         """OPB 상전이(0↔1) 로그 훅 — 드라이버 리더 스레드에서 호출됨.
 
@@ -3759,8 +3853,8 @@ class StrictSequenceEngine(FlowEngine):
         CSV Time_s + [T+] prefix 포함)와 Perfetto('PhaseEdge' 트랙)에 남긴다.
         예외는 전부 삼킨다 — 로그 훅이 센서 리더를 죽이면 안 됨."""
         try:
-            name = {"reactor_in": "센서1 INLET",
-                    "collect": "센서2 OUTLET"}.get(key, key)
+            name = {"reactor_in": "전단센서 INLET",
+                    "collect": "후단센서 OUTLET"}.get(key, key)
             desc = "0→1 (기체→액체)" if new == 1 else "1→0 (액체→기체)"
             self._log(f"  [PhaseEdge] {name} {desc}  ADC={int(adc)}")
             self.trace.instant("PhaseEdge", f"{key} {int(old)}→{int(new)}",
@@ -4945,6 +5039,16 @@ class StrictSequenceEngine(FlowEngine):
                     pass
 
     def _push_parallel_wash(self, flows: Dict[str, float], errors: list):
+        # 세척 분리(2026-08-20): push 병행 세척은 매 스텝 = 스텝간 세척으로 분류
+        # → interstep_wash_count/_volume 오버라이드 적용 (미설정 시 공통값).
+        # 이 래퍼는 push 스레드 안에서 실행 — 시스템 세척과 시간상 비중첩.
+        saved = self._wash_override(flows, "interstep")
+        try:
+            self._push_parallel_wash_run(flows, errors)
+        finally:
+            self._wash_restore(saved)
+
+    def _push_parallel_wash_run(self, flows: Dict[str, float], errors: list):
         """HPLC push 병행 시린지 세척 — push 창 동안 백그라운드 스레드로 실행.
 
         @codesyncer-decision(2026-08-15, 사용자 확정): push(Reaxus)가 반응기를
@@ -5005,7 +5109,53 @@ class StrictSequenceEngine(FlowEngine):
             errors.append(str(e))
             self._log(f"  [PushWash] ⚠ 오류: {e}")
 
-    def _execute_system_wash(self, flows: Dict[str, float]):
+    # ── 세척 파라미터 분리 (2026-08-20 사용자 요청) ────────────────────
+    #   초기(시퀀스 시작=스텝1) 세척과 스텝간 세척(스텝2+ 시스템 세척, push 병행
+    #   세척)의 횟수/용량을 그룹 설정으로 분리:
+    #     initial_wash_count / initial_wash_volume     — 스텝1 시스템 세척
+    #     interstep_wash_count / interstep_wash_volume — 그 외 전부
+    #   미설정(None) = 기존 공통값(wash_count/wash_volume) 폴백 → 완전 하위호환.
+    #   용량은 스마트펌프가 wash_volume 속성으로 소비하므로 일시 교체 후 복원.
+    def _wash_override(self, flows: Dict[str, float], kind: str):
+        saved = []
+        applied = []
+        for p_name in flows.keys():
+            pump = self.pumps.get(p_name)
+            if not _is_smart_pump(pump):
+                continue
+            c = getattr(pump, f"{kind}_wash_count", None)
+            v = getattr(pump, f"{kind}_wash_volume", None)
+            if c is None and v is None:
+                continue
+            saved.append((pump, getattr(pump, "wash_count", 0),
+                          getattr(pump, "wash_volume", None)))
+            if c is not None:
+                pump.wash_count = int(c)
+            if v is not None:
+                pump.wash_volume = float(v)
+            applied.append(f"{p_name}={int(pump.wash_count)}회"
+                           f"×{float(pump.wash_volume or 0):.1f}mL")
+        if applied:
+            self._log(f"  [Wash] {'초기(스텝1)' if kind == 'initial' else '스텝간'} "
+                      f"세척 파라미터: {', '.join(applied)}")
+        return saved
+
+    @staticmethod
+    def _wash_restore(saved):
+        for pump, c, v in saved:
+            pump.wash_count = c
+            if v is not None:
+                pump.wash_volume = v
+
+    def _execute_system_wash(self, flows: Dict[str, float],
+                             initial: bool = False):
+        saved = self._wash_override(flows, "initial" if initial else "interstep")
+        try:
+            self._system_wash_run(flows)
+        finally:
+            self._wash_restore(saved)
+
+    def _system_wash_run(self, flows: Dict[str, float]):
         # @codesyncer-decision: 순차 명령 + 병렬 대기 — RS-485 버스 경쟁 방지
         # wash_cycle은 infuse+withdraw 2단계 → 각 단계를 순차begin + 병렬complete
         max_count = 0

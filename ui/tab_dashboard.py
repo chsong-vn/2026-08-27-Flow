@@ -234,8 +234,8 @@ class DashboardTab(QWidget):
         #   트랙. 캐노니컬 2키 고정 생성(실물 리그 = 정확히 2센서), 그 외 키는
         #   미차트. 축은 사용자 요청대로 0(GAS)/1(LIQ) 눈금.
         self.PHASE_KEYS = ("reactor_in", "collect")     # 센서1, 센서2 순
-        self.PHASE_CARD_TITLE = {"reactor_in": "Phase Sensor 1 · INLET",
-                                 "collect": "Phase Sensor 2 · OUTLET"}
+        self.PHASE_CARD_TITLE = {"reactor_in": "전단센서 · INLET",
+                                 "collect": "후단센서 · OUTLET"}
         self.PHASE_LANE_COLORS = {"collect": "ACCENT_CYAN", "reactor_in": "ACCENT_PURPLE"}
         self.plot_phases = {}     # key -> PlotWidget
         self.crv_phases = {}      # key -> PlotDataItem (테마 재도색 루프가 이 이름 소비)
@@ -350,22 +350,63 @@ class DashboardTab(QWidget):
             seen.add(key)
             status_groups.append(name)
 
-        for idx, p_name in enumerate(status_groups):
+        # @codesyncer-decision(2026-08-25 사용자 요청): 그룹 행 아래에 구성 장비
+        #   (모터·12way·3way)의 연결/유휴 상태 도트를, 그 아래에 보조 장비 전체
+        #   (Outlet·MFC·Push·분취기·히터·위상·레벨)의 상태 행을 추가.
+        #   상태 3값: RUN / IDLE / OFFLINE (미연결·Mock 폴백 = OFFLINE).
+        self.group_dev_labels = {}
+        self._pump_state = {}
+        grow = 0
+        for p_name in status_groups:
             lbl_n = QLabel(p_name)
             lbl_s = QLabel("IDLE")
             lbl_s.setAlignment(Qt.AlignCenter)
-            lbl_n.setMinimumHeight(30)
-            lbl_s.setMinimumHeight(30)
-
+            lbl_n.setMinimumHeight(26)
+            lbl_s.setMinimumHeight(26)
             self.pump_status_labels[p_name] = lbl_s
             self._pump_running[p_name] = False
-            status_grid.addWidget(lbl_n, idx, 0)
-            status_grid.addWidget(lbl_s, idx, 1)
+            status_grid.addWidget(lbl_n, grow, 0)
+            status_grid.addWidget(lbl_s, grow, 1)
+            grow += 1
+            # 2026-08-25 사용자 요청: 하위 장비도 다른 장비 행과 동일한 배지 UI 통일
+            subdevs = {}
+            for dv in ("모터", "12way", "3way"):
+                ln = QLabel(dv)
+                ln.setMinimumHeight(22)
+                lb = QLabel("--")
+                lb.setAlignment(Qt.AlignCenter)
+                lb.setMinimumHeight(22)
+                subdevs[dv] = (ln, lb)
+                status_grid.addWidget(ln, grow, 0)
+                status_grid.addWidget(lb, grow, 1)
+                grow += 1
+            self.group_dev_labels[p_name] = subdevs
+
+        self._status_sep = QFrame()
+        self._status_sep.setFrameShape(QFrame.HLine)
+        self._status_sep.setFixedHeight(1)
+        status_grid.addWidget(self._status_sep, grow, 0, 1, 2)
+        grow += 1
+
+        self.device_status_labels = {}
+        for disp, key in (("Outlet 밸브", "valve:Outlet"), ("N2 MFC", "mfc"),
+                          ("Push Pump", "push_pump"), ("분취기", "collector"),
+                          ("히터", "heater"), ("위상센서", "phase_sensor"),
+                          ("레벨센서", "level_sensor")):
+            lbl_n = QLabel(disp)
+            lbl_s = QLabel("--")
+            lbl_s.setAlignment(Qt.AlignCenter)
+            lbl_n.setMinimumHeight(24)
+            lbl_s.setMinimumHeight(24)
+            self.device_status_labels[key] = lbl_s
+            status_grid.addWidget(lbl_n, grow, 0)
+            status_grid.addWidget(lbl_s, grow, 1)
+            grow += 1
 
         status_grid.setColumnStretch(0, 2)
         status_grid.setColumnStretch(1, 1)
-        status_rows = max(1, len(self.pump_status_labels))
-        status_frame_h = min(178, 16 + status_rows * 38)
+        n_grp = max(1, len(self.pump_status_labels))
+        status_frame_h = min(780, 24 + n_grp * 122 + 9 + len(self.device_status_labels) * 31)
         self.status_frame.setMinimumHeight(status_frame_h)
         self.status_frame.setMaximumHeight(status_frame_h)
         self.status_frame.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Fixed)
@@ -555,6 +596,89 @@ class DashboardTab(QWidget):
                 f"background:{idle_bg}; color:{idle_fg}; border:1px solid {idle_bd}; border-radius: {T.R_MD}; padding: 3px 10px; font-size: {T.FS_XS}; font-weight: {T.FW_BOLD};"
             )
 
+    # ── 장비 상태 3값 (2026-08-25) ──────────────────────────────
+    @staticmethod
+    def _dev_status(obj, run_attr="running"):
+        """RUN / IDLE / OFFLINE — 미연결(is_connected=False)·None·Mock 폴백 = OFFLINE.
+
+        run_attr 는 truthy 판정(숫자 setpoint > 0 도 RUN 취급 — MFC _sp, 히터 target_temp).
+        """
+        if obj is None:
+            return "OFFLINE"
+        if type(obj).__name__.startswith("Mock"):
+            return "OFFLINE"
+        if getattr(obj, "is_connected", True) is False:
+            return "OFFLINE"
+        try:
+            if run_attr and getattr(obj, run_attr, False):
+                return "RUN"
+        except Exception:
+            pass
+        return "IDLE"
+
+    def _style_status_badge(self, label, status, is_dark):
+        """상태 배지 (2026-08-26 개편, 사용자 요청) — 텍스트는 RUN/IDLE 로 통일,
+        연결 여부는 색으로 구분: 연결=초록(RUN·IDLE 모두), 미연결=회색 IDLE.
+        내부 상태값 'OFFLINE' 은 유지하되 표시만 회색 IDLE 로 렌더."""
+        if status == "RUN":
+            self._style_pump_status_label(label, True, is_dark)
+            return
+        if is_dark:
+            grn = (DarkExtras.STATUS_RUN_BG, DarkExtras.STATUS_RUN, Dark.ACCENT_GREEN_DARK)
+            off = (DarkExtras.STATUS_IDLE_BG, DarkExtras.STATUS_IDLE, Dark.BORDER_LIGHT)
+        else:
+            grn = (LightExtras.STATUS_RUN_BG, LightExtras.STATUS_RUN, Light.ACCENT_GREEN_DARK)
+            off = (LightExtras.STATUS_IDLE_BG, LightExtras.STATUS_IDLE, Light.BORDER_PRIMARY)
+        bg, fg, bd = grn if status == "IDLE" else off
+        label.setText("IDLE")
+        label.setStyleSheet(
+            f"background:{bg}; color:{fg}; border:1px solid {bd}; "
+            f"border-radius: {T.R_MD}; padding: 3px 10px; "
+            f"font-size: {T.FS_XS}; font-weight: {T.FW_BOLD};")
+
+    def _find_group_obj(self, mapping, p_name, suffix=""):
+        tgt = self._norm_group(p_name)
+        for k, v in (mapping or {}).items():
+            base = k[:-len(suffix)] if (suffix and k.endswith(suffix)) else (k if not suffix else None)
+            if base is not None and self._norm_group(base) == tgt:
+                return v
+        return None
+
+    def _update_group_devices(self, is_dark):
+        """그룹 하단 구성 장비(모터·12way·3way) — 장비 행과 동일한 배지 UI (2026-08-25)."""
+        app = self.app
+        P = Dark if is_dark else Light
+        pumps = getattr(app, "pumps", {}) or {}
+        valves = getattr(app, "valves", {}) or {}
+        _name_ss = (f"font-size: {T.FS_XS}; padding-left: 16px; "
+                    f"color: {getattr(P, 'TEXT_SECONDARY', '#8b8d98')};")
+        for p_name, subdevs in getattr(self, "group_dev_labels", {}).items():
+            objs = {"모터": (self._find_group_obj(pumps, p_name), "running"),
+                    "12way": (self._find_group_obj(valves, p_name, "_Selector"), None),
+                    "3way": (self._find_group_obj(valves, p_name, "_Switcher"), None)}
+            for dv, (ln, lb) in subdevs.items():
+                obj, ra = objs[dv]
+                ln.setStyleSheet(_name_ss)
+                self._style_status_badge(lb, self._dev_status(obj, ra), is_dark)
+
+    def _update_device_statuses(self, is_dark):
+        """보조 장비 상태 행 갱신 (1Hz, 캐시된 속성만 읽음 — 시리얼 I/O 없음)."""
+        app = self.app
+        valves = getattr(app, "valves", {}) or {}
+        objs = {"valve:Outlet": valves.get("Outlet"),
+                "mfc": getattr(app, "mfc", None),
+                "push_pump": getattr(app, "push_pump", None),
+                "collector": getattr(app, "collector", None),
+                "heater": getattr(app, "heater", None),
+                "phase_sensor": getattr(app, "phase_sensor", None),
+                "level_sensor": getattr(app, "level_sensor", None)}
+        run_attrs = {"mfc": "_sp", "heater": "target_temp",
+                     "valve:Outlet": None, "phase_sensor": None,
+                     "level_sensor": None, "collector": None}
+        for key, lbl in getattr(self, "device_status_labels", {}).items():
+            st = self._dev_status(objs.get(key), run_attrs.get(key, "running"))
+            self._style_status_badge(lbl, st, is_dark)
+
     def apply_theme(self, is_dark: bool, palette=None):
         p = palette
         if p:
@@ -705,7 +829,15 @@ class DashboardTab(QWidget):
                 self.crv_p[p_name].setPen(pg.mkPen(chart_pressure[idx % len(chart_pressure)], width=2.2))
 
         for p_name, lbl in self.pump_status_labels.items():
-            self._style_pump_status_label(lbl, self._pump_running.get(p_name, False), is_dark)
+            _st = getattr(self, "_pump_state", {}).get(
+                p_name, "RUN" if self._pump_running.get(p_name, False) else "IDLE")
+            self._style_status_badge(lbl, _st, is_dark)
+        self._update_group_devices(is_dark)
+        self._update_device_statuses(is_dark)
+        if getattr(self, "_status_sep", None) is not None:
+            _P = Dark if is_dark else Light
+            self._status_sep.setStyleSheet(
+                f"background:{getattr(_P, 'BORDER_LIGHT', '#3a3a3a')}; border:none;")
 
         self._set_plot_theme(is_dark, p)
 
@@ -801,7 +933,16 @@ class DashboardTab(QWidget):
         for p_name, lbl in self.pump_status_labels.items():
             running = status_lookup.get(self._norm_group(p_name), False)
             self._pump_running[p_name] = running
-            self._style_pump_status_label(lbl, running, is_dark)
+            # 미연결 모터는 RUN/IDLE 이전에 OFFLINE 으로 명시 (2026-08-25)
+            if running:
+                st = "RUN"
+            else:
+                motor = self._find_group_obj(getattr(self.app, "pumps", {}), p_name)
+                st = "OFFLINE" if self._dev_status(motor, run_attr=None) == "OFFLINE" else "IDLE"
+            self._pump_state[p_name] = st
+            self._style_status_badge(lbl, st, is_dark)
+        self._update_group_devices(is_dark)
+        self._update_device_statuses(is_dark)
 
         # @codesyncer(B): 데이터 신선도 하트비트 — lbl_clock 이 상수 "LIVE"라 폴링 스레드가
         #   죽어도 라이브처럼 보이는 위험(ISA-101: stale 값은 명시돼야 함). 갱신마다 시각을

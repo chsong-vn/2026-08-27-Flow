@@ -303,7 +303,7 @@ _s5 = next((re.search(r"재앵커 \+([0-9.]+)s", m) for m in l5 if "재앵커 +"
 check("P5 재앵커 ≈ +4s", _s5 is not None and abs(float(_s5.group(1)) - 4.0) <= 1.5,
       _s5.group(0) if _s5 else "없음")
 # 센서1 1차 후단 (2026-08-19): 반응기 진입 전 실측 → 절단 = S1+pre+전단실측수송
-check("P5 센서1 후단마커 실측", any("후단마커 센서1 실측" in m for m in l5))
+check("P5 전단센서 후단마커 실측", any("후단마커 전단센서 실측" in m for m in l5))
 check("P5 절단 예약(S1 기반)", any("후단 절단 예약" in m for m in l5))
 _xc = next((re.search(r"크로스체크 @ [0-9.]+s — S1 계산 대비 Δ([+-][0-9.]+)s", m)
             for m in l5 if "크로스체크" in m), None)

@@ -79,10 +79,87 @@ def probe_reaxus(com: str, timeout: float = 1.2) -> bool:
         return False
 
 
+def probe_opb(com: str, timeout: float = 0.5, boot_wait: float = 3.2) -> bool:
+    """OPB 위상센서 리그 응답 확인 — 수신 전용(listen-only), 바이트 전송 없음.
+
+    @codesyncer-decision(2026-08-24, USB 재열거로 OPB/MFC 사망 재발 방지):
+      보드는 포트 오픈(DTR 리셋) 후 스케치 부팅 ~2s 를 거쳐 라벨포맷
+      'S1:adc,판정 | S2:adc,판정' (구 펌웨어는 CSV 숫자,숫자,...) 를 상시
+      스트림한다 → 열고 기다렸다 읽기만 하면 판별 가능. Chemyx/Runze/MKP 는
+      무전송 시 침묵이므로 오탐 없음. boot_wait 미만 대기는 부팅 전이라
+      0 byte 로 오판(실측: 1.2s 실패 / 3.5s 성공, 19.8Hz 스트림).
+    """
+    try:
+        with serial.Serial(com, 115200, timeout=timeout) as ser:
+            time.sleep(boot_wait)          # CH340 DTR 리셋 → 스케치 부팅 대기
+            ser.reset_input_buffer()
+            time.sleep(0.5)
+            data = ser.read(ser.in_waiting or 64).decode(errors="ignore")
+            if "S1:" in data or "S2:" in data:
+                return True
+            # 구 CSV 펌웨어 폴백: '숫자,숫자' 로 시작하는 라인 스트림
+            for line in data.splitlines():
+                head = line.split(",", 1)[0].strip()
+                if "," in line and head.isdigit():
+                    return True
+            return False
+    except Exception:
+        return False
+
+
+def probe_mkp(com: str, timeout: float = 0.6) -> bool:
+    """MKP MFC 응답 확인. Read Set Point(0x02) 조회만 보냄 → 기계 미동작.
+
+    프레임 ':'+Addr(2)+Cmd(2)+DataType(2)+Checksum(2)+'\\r' (Hex-ASCII),
+    9600/8/ODD/1 (mfc_korea_mkp.py 와 동일 규격). 응답 검증 3중
+    (':' 정렬 + XOR 체크섬 + 응답 Cmd&0x7F==0x02) 이라 이종 장치 오탐 없음.
+    현장 slave_addr 기본 0, 벤더 기본 1 — 둘 다 시도.
+    """
+    def _frame(addr, cmd):
+        body = b":" + f"{addr & 0xFF:02X}{cmd & 0xFF:02X}00".encode("ascii")
+        chk = 0
+        for b in body:
+            chk ^= b
+        return body + f"{chk & 0xFF:02X}".encode("ascii") + b"\r"
+
+    try:
+        with serial.Serial(com, 9600, bytesize=serial.EIGHTBITS,
+                           parity=serial.PARITY_ODD,
+                           stopbits=serial.STOPBITS_ONE, timeout=timeout) as ser:
+            time.sleep(0.15)
+            for addr in (0, 1):
+                ser.reset_input_buffer()
+                ser.reset_output_buffer()
+                ser.write(_frame(addr, 0x02))
+                resp = ser.read_until(b"\r", 64)
+                si = resp.find(b":")
+                if si < 0 or not resp.endswith(b"\r"):
+                    continue
+                buf = resp[si:-1]
+                if len(buf) < 9:
+                    continue
+                payload, rx_chk = buf[:-2], buf[-2:]
+                chk = 0
+                for b in payload:
+                    chk ^= b
+                try:
+                    resp_cmd = int(payload[3:5], 16)
+                except ValueError:
+                    continue
+                if (f"{chk:02X}".encode("ascii") == rx_chk.upper()
+                        and (resp_cmd & 0x7F) == 0x02):
+                    return True
+            return False
+    except Exception:
+        return False
+
+
 _PROBE_REGISTRY = {
     "chemyx": probe_chemyx,
     "runze": probe_runze,
     "reaxus": probe_reaxus,
+    "opb": probe_opb,
+    "mkp": probe_mkp,
 }
 
 

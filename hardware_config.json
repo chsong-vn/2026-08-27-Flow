@@ -29,6 +29,9 @@
             "name": "3-way valve1 (ETH)",
             "driver": "3방향 밸브 (ESP32 이더넷)",
             "port": "COM7",
+            "vid": "303A",
+            "pid": "1001",
+            "serial": "E8:F6:0A:B9:47:70",
             "channel": 1
         },
         {
@@ -36,6 +39,9 @@
             "name": "3-way valve2 (ETH)",
             "driver": "3방향 밸브 (ESP32 이더넷)",
             "port": "COM7",
+            "vid": "303A",
+            "pid": "1001",
+            "serial": "E8:F6:0A:B9:47:70",
             "channel": 2
         },
         {
@@ -43,6 +49,9 @@
             "name": "3-way valve3 (ETH)",
             "driver": "3방향 밸브 (ESP32 이더넷)",
             "port": "COM7",
+            "vid": "303A",
+            "pid": "1001",
+            "serial": "E8:F6:0A:B9:47:70",
             "channel": 3
         },
         {
@@ -50,6 +59,9 @@
             "name": "3-way valve4 (ETH)",
             "driver": "3방향 밸브 (ESP32 이더넷)",
             "port": "COM7",
+            "vid": "303A",
+            "pid": "1001",
+            "serial": "E8:F6:0A:B9:47:70",
             "channel": 4
         },
         {
@@ -57,6 +69,9 @@
             "name": "3-way outlet (ETH)",
             "driver": "3방향 밸브 (ESP32 이더넷)",
             "port": "COM7",
+            "vid": "303A",
+            "pid": "1001",
+            "serial": "E8:F6:0A:B9:47:70",
             "channel": 5,
             "invert": true
         },
@@ -126,6 +141,9 @@
             "name": "96well 분취기",
             "driver": "96-well 분취기 (Plate96)",
             "port": "COM11",
+            "vid": "0403",
+            "pid": "6001",
+            "serial": "A106ZZPGA",
             "settings": {
                 "rack_type": "plate96"
             }
@@ -134,7 +152,7 @@
             "id": "dev_reaxus_1",
             "name": "Reaxus 펌프",
             "driver": "연동 펌프 (Reaxus)",
-            "port": "COM16",
+            "port": "COM26",
             "vid": "067B",
             "pid": "2303",
             "probe": "reaxus"
@@ -185,7 +203,7 @@
         },
         {
             "id": "dev_6bc9c51a",
-            "name": "펌프_17",
+            "name": "NRG pump",
             "driver": "시린지 펌프 (NRG)",
             "port": "Mock_Port"
         },
@@ -196,6 +214,7 @@
             "port": "COM3",
             "vid": "2341",
             "pid": "0043",
+            "serial": "14101",
             "settings": {
                 "baudrate": 9600
             }
@@ -204,7 +223,10 @@
             "id": "dev_mfc_mkp_1",
             "name": "N2 MFC (MKP VIC/CAF-K)",
             "driver": "질소 MFC (MKP RS485)",
-            "port": "COM15",
+            "port": "COM24",
+            "vid": "1A86",
+            "pid": "7523",
+            "probe": "mkp",
             "settings": {
                 "slave_addr": 0,
                 "baudrate": 9600,
@@ -215,7 +237,10 @@
             "id": "dev_opb_1",
             "name": "OPB 위상센서 2ch",
             "driver": "위상센서 (OPB ADC 2ch)",
-            "port": "COM19",
+            "port": "COM25",
+            "vid": "1A86",
+            "pid": "7523",
+            "probe": "opb",
             "settings": {
                 "baudrate": 115200,
                 "sensors": {
@@ -249,8 +274,8 @@
                     "wash_speed": 5.0,
                     "wash_count": 2,
                     "wash_volume": 3.0,
-                    "tube_vol_solvent": 0.9362,
-                    "tube_vol_reagent": 0.5843,
+                    "tube_vol_solvent": 0.7607,
+                    "tube_vol_reagent": 0.4088,
                     "level_policy": "reagent",
                     "level_cal_slope": 1.06776,
                     "level_cal_intercept": -9.2382,
@@ -261,12 +286,74 @@
                     "tube_vol_switcher": 0.0507,
                     "tube_vol_inlet": 0.0754,
                     "tube_vol_valve_pump": 0.0597,
+                    "tube_vol_pump_merge": 0.2262,
+                    "initial_wash_count": 1,
+                    "initial_wash_volume": 4.0,
+                    "interstep_wash_count": 3,
+                    "interstep_wash_volume": 3.0
+                },
+                "position": "inlet"
+            },
+            {
+                "name": "Group B",
+                "drivers": {
+                    "motor": "dev_8ff42ede",
+                    "selector": "dev_7513a334",
+                    "switcher": "dev_esp32v_2",
+                    "sampler": null
+                },
+                "settings": {
+                    "pump_id": 4,
+                    "diameter": 12.45,
+                    "capacity": 6.0,
+                    "tube_vol_solvent": 0.7607,
+                    "tube_vol_reagent": 0.4088,
+                    "wash_speed": 5.0,
+                    "wash_count": 2,
+                    "wash_volume": 3.0,
+                    "tube_vol_selector": 0.0224,
+                    "tube_vol_switcher": 0.0507,
+                    "tube_vol_inlet": 0.0754,
+                    "tube_vol_valve_pump": 0.0597,
+                    "tube_vol_pump_merge": 0.2262,
+                    "initial_wash_count": 1,
+                    "initial_wash_volume": 4.0,
+                    "interstep_wash_count": 3,
+                    "interstep_wash_volume": 3.0
+                },
+                "position": "inlet"
+            },
+            {
+                "name": "Group C",
+                "drivers": {
+                    "motor": "dev_438b3a93",
+                    "selector": "dev_4715d181",
+                    "switcher": "dev_esp32v_3",
+                    "sampler": null
+                },
+                "settings": {
+                    "pump_id": 3,
+                    "diameter": 12.45,
+                    "capacity": 6.0,
+                    "tube_vol_solvent": 0.7607,
+                    "tube_vol_reagent": 0.4088,
+                    "wash_speed": 5.0,
+                    "wash_count": 2,
+                    "wash_volume": 5.0,
+                    "initial_wash_count": 1,
+                    "initial_wash_volume": 4.0,
+                    "interstep_wash_count": 3,
+                    "interstep_wash_volume": 3.0,
+                    "tube_vol_inlet": 0.0754,
+                    "tube_vol_selector": 0.0224,
+                    "tube_vol_valve_pump": 0.0597,
+                    "tube_vol_switcher": 0.0507,
                     "tube_vol_pump_merge": 0.2262
                 },
                 "position": "inlet"
             },
             {
-                "name": "Group_D",
+                "name": "Group D",
                 "drivers": {
                     "motor": "dev_c97364b0",
                     "selector": "dev_runze_d4",
@@ -277,22 +364,26 @@
                     "pump_id": 4,
                     "diameter": 12.45,
                     "capacity": 6.0,
-                    "tube_vol_solvent": 0.9362,
-                    "tube_vol_reagent": 0.5843,
+                    "tube_vol_solvent": 0.7607,
+                    "tube_vol_reagent": 0.4088,
                     "wash_speed": 5.0,
                     "wash_count": 2,
-                    "wash_volume": 3.0,
-                    "tube_vol_selector": 0.0224,
-                    "tube_vol_switcher": 0.0507,
+                    "wash_volume": 5.0,
+                    "initial_wash_count": 1,
+                    "initial_wash_volume": 4.0,
+                    "interstep_wash_count": 3,
+                    "interstep_wash_volume": 3.0,
                     "tube_vol_inlet": 0.0754,
+                    "tube_vol_selector": 0.0224,
                     "tube_vol_valve_pump": 0.0597,
+                    "tube_vol_switcher": 0.0507,
                     "tube_vol_pump_merge": 0.2262
                 },
                 "position": "inlet"
             }
         ],
         "heater": {
-            "driver_id": null
+            "driver_id": "dev_6b175206"
         },
         "outlet": {
             "driver_id": "dev_esp32v_5"
@@ -303,12 +394,8 @@
         "push_pump": {
             "driver_id": "dev_reaxus_1"
         },
-        "manual_pumps": [
-            "dev_nrg_sp_1"
-        ],
-        "samplers": [
-            "dev_grbl_sampler_1"
-        ],
+        "manual_pumps": [],
+        "samplers": [],
         "gas": {
             "driver_id": "dev_mfc_mkp_1"
         },
@@ -338,8 +425,8 @@
         "refill_min_vol_ml": 0.05,
         "mixing_line_id_mm": 1.5,
         "mixing_line_len_cm": 5.4,
-        "priming_rate_ml_min": 2.0,
-        "syringe_refill_rate": 4.0,
+        "priming_rate_ml_min": 1.7,
+        "syringe_refill_rate": 1.7,
         "temp_tolerance_c": 0.3,
         "heater_reach_timeout_sec": 900.0,
         "max_temp_c": 120.0,
@@ -376,23 +463,26 @@
         },
         "tjunction_entry_map": {
             "Group A": 1,
-            "Group_B": 1,
-            "Group_C": 2,
-            "Group_D": 2
+            "Group B": 1,
+            "Group C": 2,
+            "Group D": 2
         },
         "prime_phase1_vol_ml": 0.0,
-        "collect_preflush_vol_ml": 0.0,
+        "collect_preflush_vol_ml": 0.5,
         "push_line_prime_vol_ml": 0.5,
         "push_line_prime_rate_ml_min": 2.0,
         "n2_precal_auto_cal": false,
-        "inj_marker_enabled": false,
+        "collect_tail_extra_ml": 0.3,
+        "inj_marker_enabled": true,
         "inj_marker_mode": "parked",
-        "inj_marker_sec": 2.5,
-        "inj_marker_sccm": 3.0,
+        "inj_marker_sec": 3.5,
+        "inj_marker_sccm": 6.0,
         "inj_marker_rear_sccm": 0.0,
         "inj_marker_rear_sec": 0.0,
-        "marker_gate_mode": "observe",
-        "marker_gate_window_sec": 60.0,
+        "marker_gate_mode": "gate",
+        "marker_gate_front_sensor_key": "reactor_in",
+        "tjunction_to_sensor1_vol_ml": 0.0583,
+        "marker_gate_window_sec": 120.0,
         "marker_gate_max_early_sec": 15.0,
         "marker_gate_min_gas_sec": 2.0,
         "marker_gate_rear_sensor_key": "reactor_in",

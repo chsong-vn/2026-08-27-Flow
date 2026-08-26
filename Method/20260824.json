@@ -1,0 +1,1133 @@
+{
+    "version": "8.1",
+    "timestamp": "2026-08-24 14:55:57.836250",
+    "hardware_config": {
+        "inventory": [
+            {
+                "id": "dev_chemyx_2",
+                "name": "시린지펌프1",
+                "driver": "시린지 펌프 (Chemyx)",
+                "port": "COM9",
+                "vid": "1A86",
+                "pid": "7523",
+                "probe": "chemyx",
+                "settings": {
+                    "pump_id": 1
+                }
+            },
+            {
+                "id": "dev_8ff42ede",
+                "name": "시린지펌프2",
+                "driver": "시린지 펌프 (Chemyx)",
+                "port": "COM9",
+                "vid": "1A86",
+                "pid": "7523",
+                "probe": "chemyx",
+                "settings": {
+                    "pump_id": 2
+                }
+            },
+            {
+                "id": "dev_esp32v_1",
+                "name": "3-way valve1 (ETH)",
+                "driver": "3방향 밸브 (ESP32 이더넷)",
+                "port": "COM7",
+                "channel": 1
+            },
+            {
+                "id": "dev_esp32v_2",
+                "name": "3-way valve2 (ETH)",
+                "driver": "3방향 밸브 (ESP32 이더넷)",
+                "port": "COM7",
+                "channel": 2
+            },
+            {
+                "id": "dev_esp32v_3",
+                "name": "3-way valve3 (ETH)",
+                "driver": "3방향 밸브 (ESP32 이더넷)",
+                "port": "COM7",
+                "channel": 3
+            },
+            {
+                "id": "dev_esp32v_4",
+                "name": "3-way valve4 (ETH)",
+                "driver": "3방향 밸브 (ESP32 이더넷)",
+                "port": "COM7",
+                "channel": 4
+            },
+            {
+                "id": "dev_esp32v_5",
+                "name": "3-way outlet (ETH)",
+                "driver": "3방향 밸브 (ESP32 이더넷)",
+                "port": "COM7",
+                "channel": 5,
+                "invert": true
+            },
+            {
+                "id": "dev_65ba215c",
+                "name": "12-way valve 1 ",
+                "driver": "12방향 밸브 (Runze)",
+                "port": "COM14",
+                "address": 1,
+                "vid": "1A86",
+                "pid": "7523",
+                "probe": "runze"
+            },
+            {
+                "id": "dev_7513a334",
+                "name": "12-way valve 2",
+                "driver": "12방향 밸브 (Runze)",
+                "port": "COM14",
+                "address": 2,
+                "vid": "1A86",
+                "pid": "7523",
+                "probe": "runze"
+            },
+            {
+                "id": "dev_4715d181",
+                "name": "12-way valve3",
+                "driver": "12방향 밸브 (Runze)",
+                "port": "COM14",
+                "address": 3,
+                "vid": "1A86",
+                "pid": "7523",
+                "probe": "runze"
+            },
+            {
+                "id": "dev_runze_d4",
+                "name": "12-way valve 4 (Group_D)",
+                "driver": "12방향 밸브 (Runze)",
+                "port": "COM14",
+                "address": 0,
+                "vid": "1A86",
+                "pid": "7523",
+                "probe": "runze"
+            },
+            {
+                "id": "dev_6b175206",
+                "name": "히터",
+                "driver": "항온조 히터",
+                "port": "COM5",
+                "vid": "067B",
+                "pid": "23A3",
+                "serial": "AWATB147612"
+            },
+            {
+                "id": "dev_438b3a93",
+                "name": "시린지펌프3",
+                "driver": "시린지 펌프 (Chemyx)",
+                "port": "COM9",
+                "vid": "1A86",
+                "pid": "7523",
+                "probe": "chemyx",
+                "settings": {
+                    "pump_id": 3
+                }
+            },
+            {
+                "id": "dev_plate96_1",
+                "name": "96well 분취기",
+                "driver": "96-well 분취기 (Plate96)",
+                "port": "COM11",
+                "settings": {
+                    "rack_type": "plate96"
+                }
+            },
+            {
+                "id": "dev_reaxus_1",
+                "name": "Reaxus 펌프",
+                "driver": "연동 펌프 (Reaxus)",
+                "port": "COM16",
+                "vid": "067B",
+                "pid": "2303",
+                "probe": "reaxus"
+            },
+            {
+                "id": "dev_nrg_sp_1",
+                "name": "NRG 시린지펌프1",
+                "driver": "시린지 펌프 (NRG)",
+                "port": "COM22",
+                "settings": {
+                    "baudrate": 9600,
+                    "syringe_diameter_mm": 4.6066,
+                    "syringe_volume_ul": 1000.0,
+                    "max_flowrate_ml_min": 5.0,
+                    "pump_id": 0,
+                    "use_encoder": true,
+                    "main_valve_enabled": false,
+                    "aux_valve_enabled": false
+                }
+            },
+            {
+                "id": "dev_grbl_sampler_1",
+                "name": "Cartesian 샘플러",
+                "driver": "Cartesian 샘플러 (Grbl)",
+                "port": "COM23",
+                "settings": {
+                    "positions_file": null,
+                    "safe_z": -2.0,
+                    "vials_top_z": -25.0,
+                    "needle_depth_mm": 20.0,
+                    "feedrate_xy": 2000.0,
+                    "feedrate_z": 600.0,
+                    "aux_needle_on_code": "M3",
+                    "aux_needle_off_code": "M5"
+                }
+            },
+            {
+                "id": "dev_c97364b0",
+                "name": "시린지펌프4",
+                "driver": "시린지 펌프 (Chemyx)",
+                "port": "COM9",
+                "vid": "1A86",
+                "pid": "7523",
+                "probe": "chemyx",
+                "settings": {
+                    "pump_id": 4
+                }
+            },
+            {
+                "id": "dev_6bc9c51a",
+                "name": "펌프_17",
+                "driver": "시린지 펌프 (NRG)",
+                "port": "Mock_Port"
+            },
+            {
+                "id": "dev_level_hcsr04_1",
+                "name": "레벨센서 4ch (UNO)",
+                "driver": "초음파 레벨센서 (HC-SR04)",
+                "port": "COM3",
+                "vid": "2341",
+                "pid": "0043",
+                "settings": {
+                    "baudrate": 9600
+                }
+            },
+            {
+                "id": "dev_mfc_mkp_1",
+                "name": "N2 MFC (MKP VIC/CAF-K)",
+                "driver": "질소 MFC (MKP RS485)",
+                "port": "COM15",
+                "settings": {
+                    "slave_addr": 0,
+                    "baudrate": 9600,
+                    "max_sccm": 10.0
+                }
+            },
+            {
+                "id": "dev_opb_1",
+                "name": "OPB 위상센서 2ch",
+                "driver": "위상센서 (OPB ADC 2ch)",
+                "port": "COM19",
+                "settings": {
+                    "baudrate": 115200,
+                    "sensors": {
+                        "reactor_in": 0,
+                        "collect": 1
+                    },
+                    "thresholds": {
+                        "reactor_in": 690,
+                        "collect": 750
+                    }
+                }
+            }
+        ],
+        "roles": {
+            "pumps": [
+                {
+                    "name": "Group A",
+                    "drivers": {
+                        "motor": "dev_chemyx_2",
+                        "selector": "dev_65ba215c",
+                        "switcher": "dev_esp32v_1",
+                        "level": "dev_level_hcsr04_1",
+                        "sampler": null
+                    },
+                    "settings": {
+                        "pump_id": 1,
+                        "diameter": 12.45,
+                        "capacity": 6.0,
+                        "tube_len": 0.0,
+                        "tube_id": 0.0,
+                        "wash_speed": 5.0,
+                        "wash_count": 2,
+                        "wash_volume": 3.0,
+                        "tube_vol_solvent": 0.94,
+                        "tube_vol_reagent": 0.58,
+                        "level_policy": "reagent",
+                        "level_cal_slope": 1.06776,
+                        "level_cal_intercept": -9.2382,
+                        "level_empty_gate_ul": 100.0,
+                        "level_samples": 20,
+                        "level_channel_index": 0,
+                        "tube_vol_selector": 0.0224,
+                        "tube_vol_switcher": 0.0507,
+                        "tube_vol_inlet": 0.0754,
+                        "tube_vol_valve_pump": 0.0597,
+                        "tube_vol_pump_merge": 0.2262,
+                        "initial_wash_count": 1,
+                        "initial_wash_volume": 4.0,
+                        "interstep_wash_count": 3,
+                        "interstep_wash_volume": 3.0
+                    },
+                    "position": "inlet"
+                },
+                {
+                    "name": "Group B",
+                    "drivers": {
+                        "motor": "dev_8ff42ede",
+                        "selector": "dev_7513a334",
+                        "switcher": "dev_esp32v_2",
+                        "sampler": null
+                    },
+                    "settings": {
+                        "pump_id": 4,
+                        "diameter": 12.45,
+                        "capacity": 6.0,
+                        "tube_vol_solvent": 0.94,
+                        "tube_vol_reagent": 0.58,
+                        "wash_speed": 5.0,
+                        "wash_count": 2,
+                        "wash_volume": 3.0,
+                        "tube_vol_selector": 0.0224,
+                        "tube_vol_switcher": 0.0507,
+                        "tube_vol_inlet": 0.0754,
+                        "tube_vol_valve_pump": 0.0597,
+                        "tube_vol_pump_merge": 0.2262,
+                        "initial_wash_count": 1,
+                        "initial_wash_volume": 4.0,
+                        "interstep_wash_count": 3,
+                        "interstep_wash_volume": 3.0
+                    },
+                    "position": "inlet"
+                },
+                {
+                    "name": "Group C",
+                    "drivers": {
+                        "motor": "dev_438b3a93",
+                        "selector": "dev_4715d181",
+                        "switcher": "dev_esp32v_3",
+                        "sampler": null
+                    },
+                    "settings": {
+                        "pump_id": 3,
+                        "diameter": 12.45,
+                        "capacity": 6.0,
+                        "tube_vol_solvent": 0.0,
+                        "tube_vol_reagent": 0.0,
+                        "wash_speed": 1.7,
+                        "wash_count": 2,
+                        "wash_volume": 5.0,
+                        "initial_wash_count": 1,
+                        "initial_wash_volume": 4.0,
+                        "interstep_wash_count": 3,
+                        "interstep_wash_volume": 3.0
+                    },
+                    "position": "inlet"
+                },
+                {
+                    "name": "Group D",
+                    "drivers": {
+                        "motor": "dev_c97364b0",
+                        "selector": "dev_runze_d4",
+                        "switcher": "dev_esp32v_4",
+                        "sampler": null
+                    },
+                    "settings": {
+                        "pump_id": 4,
+                        "diameter": 12.45,
+                        "capacity": 6.0,
+                        "tube_vol_solvent": 0.0,
+                        "tube_vol_reagent": 0.0,
+                        "wash_speed": 1.7,
+                        "wash_count": 2,
+                        "wash_volume": 5.0,
+                        "initial_wash_count": 1,
+                        "initial_wash_volume": 4.0,
+                        "interstep_wash_count": 3,
+                        "interstep_wash_volume": 3.0
+                    },
+                    "position": "inlet"
+                }
+            ],
+            "heater": {
+                "driver_id": "dev_6b175206"
+            },
+            "outlet": {
+                "driver_id": "dev_esp32v_5"
+            },
+            "collector": {
+                "driver_id": "dev_plate96_1"
+            },
+            "push_pump": {
+                "driver_id": "dev_reaxus_1"
+            },
+            "manual_pumps": [
+                "dev_nrg_sp_1"
+            ],
+            "samplers": [
+                "dev_grbl_sampler_1"
+            ],
+            "gas": {
+                "driver_id": "dev_mfc_mkp_1"
+            },
+            "phase": {
+                "driver_id": "dev_opb_1"
+            }
+        }
+    },
+    "hardware_status": {
+        "connected_devices": [
+            {
+                "id": "dev_chemyx_2",
+                "name": "시린지펌프1",
+                "driver": "시린지 펌프 (Chemyx)",
+                "driver_type": "Chemyx",
+                "port": "COM23",
+                "address": null,
+                "channel": null
+            },
+            {
+                "id": "dev_65ba215c",
+                "name": "12-way valve 1 ",
+                "driver": "12방향 밸브 (Runze)",
+                "driver_type": "RunzeSV07Valve",
+                "port": "COM22",
+                "address": 1,
+                "channel": null
+            },
+            {
+                "id": "dev_esp32v_1",
+                "name": "3-way valve1 (ETH)",
+                "driver": "3방향 밸브 (ESP32 이더넷)",
+                "driver_type": "ESP32EthValve",
+                "port": "COM7",
+                "address": null,
+                "channel": 1
+            },
+            {
+                "id": "dev_8ff42ede",
+                "name": "시린지펌프2",
+                "driver": "시린지 펌프 (Chemyx)",
+                "driver_type": "Chemyx",
+                "port": "COM23",
+                "address": null,
+                "channel": null
+            },
+            {
+                "id": "dev_7513a334",
+                "name": "12-way valve 2",
+                "driver": "12방향 밸브 (Runze)",
+                "driver_type": "RunzeSV07Valve",
+                "port": "COM22",
+                "address": 2,
+                "channel": null
+            },
+            {
+                "id": "dev_esp32v_2",
+                "name": "3-way valve2 (ETH)",
+                "driver": "3방향 밸브 (ESP32 이더넷)",
+                "driver_type": "ESP32EthValve",
+                "port": "COM7",
+                "address": null,
+                "channel": 2
+            },
+            {
+                "id": "dev_438b3a93",
+                "name": "시린지펌프3",
+                "driver": "시린지 펌프 (Chemyx)",
+                "driver_type": "Chemyx",
+                "port": "COM23",
+                "address": null,
+                "channel": null
+            },
+            {
+                "id": "dev_4715d181",
+                "name": "12-way valve3",
+                "driver": "12방향 밸브 (Runze)",
+                "driver_type": "RunzeSV07Valve",
+                "port": "COM22",
+                "address": 3,
+                "channel": null
+            },
+            {
+                "id": "dev_esp32v_3",
+                "name": "3-way valve3 (ETH)",
+                "driver": "3방향 밸브 (ESP32 이더넷)",
+                "driver_type": "ESP32EthValve",
+                "port": "COM7",
+                "address": null,
+                "channel": 3
+            },
+            {
+                "id": "dev_c97364b0",
+                "name": "시린지펌프4",
+                "driver": "시린지 펌프 (Chemyx)",
+                "driver_type": "Chemyx",
+                "port": "COM23",
+                "address": null,
+                "channel": null
+            },
+            {
+                "id": "dev_runze_d4",
+                "name": "12-way valve 4 (Group_D)",
+                "driver": "12방향 밸브 (Runze)",
+                "driver_type": "RunzeSV07Valve",
+                "port": "COM22",
+                "address": 0,
+                "channel": null
+            },
+            {
+                "id": "dev_esp32v_4",
+                "name": "3-way valve4 (ETH)",
+                "driver": "3방향 밸브 (ESP32 이더넷)",
+                "driver_type": "ESP32EthValve",
+                "port": "COM7",
+                "address": null,
+                "channel": 4
+            },
+            {
+                "id": "dev_6b175206",
+                "name": "히터",
+                "driver": "항온조 히터",
+                "driver_type": "BathModbusHeater",
+                "port": "COM5",
+                "address": null,
+                "channel": null
+            },
+            {
+                "id": "dev_esp32v_5",
+                "name": "3-way outlet (ETH)",
+                "driver": "3방향 밸브 (ESP32 이더넷)",
+                "driver_type": "ESP32EthValve",
+                "port": "COM7",
+                "address": null,
+                "channel": 5
+            },
+            {
+                "id": "dev_plate96_1",
+                "name": "96well 분취기",
+                "driver": "96-well 분취기 (Plate96)",
+                "driver_type": "Plate96Collector",
+                "port": "COM11",
+                "address": null,
+                "channel": null
+            }
+        ],
+        "pump_mapping": [
+            {
+                "group_name": "Group A",
+                "position": "inlet",
+                "motor": {
+                    "device": {
+                        "id": "dev_chemyx_2",
+                        "name": "시린지펌프1",
+                        "driver": "시린지 펌프 (Chemyx)",
+                        "driver_type": "Chemyx",
+                        "port": "COM23",
+                        "address": null,
+                        "channel": null
+                    },
+                    "connected": true,
+                    "actual_class": "ChemyxSmartPump"
+                },
+                "selector": {
+                    "device": {
+                        "id": "dev_65ba215c",
+                        "name": "12-way valve 1 ",
+                        "driver": "12방향 밸브 (Runze)",
+                        "driver_type": "RunzeSV07Valve",
+                        "port": "COM22",
+                        "address": 1,
+                        "channel": null
+                    },
+                    "connected": true,
+                    "actual_class": "RunzeSV07Valve"
+                },
+                "switcher": {
+                    "device": {
+                        "id": "dev_esp32v_1",
+                        "name": "3-way valve1 (ETH)",
+                        "driver": "3방향 밸브 (ESP32 이더넷)",
+                        "driver_type": "ESP32EthValve",
+                        "port": "COM7",
+                        "address": null,
+                        "channel": 1
+                    },
+                    "connected": true,
+                    "actual_class": "ESP32EthValve"
+                },
+                "settings": {
+                    "pump_id": 1,
+                    "diameter": 12.45,
+                    "capacity": 6.0,
+                    "tube_vol_solvent": 0.94,
+                    "tube_vol_reagent": 0.58
+                }
+            },
+            {
+                "group_name": "Group B",
+                "position": "inlet",
+                "motor": {
+                    "device": {
+                        "id": "dev_8ff42ede",
+                        "name": "시린지펌프2",
+                        "driver": "시린지 펌프 (Chemyx)",
+                        "driver_type": "Chemyx",
+                        "port": "COM23",
+                        "address": null,
+                        "channel": null
+                    },
+                    "connected": true,
+                    "actual_class": "ChemyxSmartPump"
+                },
+                "selector": {
+                    "device": {
+                        "id": "dev_7513a334",
+                        "name": "12-way valve 2",
+                        "driver": "12방향 밸브 (Runze)",
+                        "driver_type": "RunzeSV07Valve",
+                        "port": "COM22",
+                        "address": 2,
+                        "channel": null
+                    },
+                    "connected": true,
+                    "actual_class": "RunzeSV07Valve"
+                },
+                "switcher": {
+                    "device": {
+                        "id": "dev_esp32v_2",
+                        "name": "3-way valve2 (ETH)",
+                        "driver": "3방향 밸브 (ESP32 이더넷)",
+                        "driver_type": "ESP32EthValve",
+                        "port": "COM7",
+                        "address": null,
+                        "channel": 2
+                    },
+                    "connected": true,
+                    "actual_class": "ESP32EthValve"
+                },
+                "settings": {
+                    "pump_id": 4,
+                    "diameter": 12.45,
+                    "capacity": 6.0,
+                    "tube_vol_solvent": 0.94,
+                    "tube_vol_reagent": 0.58
+                }
+            },
+            {
+                "group_name": "Group C",
+                "position": "inlet",
+                "motor": {
+                    "device": {
+                        "id": "dev_438b3a93",
+                        "name": "시린지펌프3",
+                        "driver": "시린지 펌프 (Chemyx)",
+                        "driver_type": "Chemyx",
+                        "port": "COM23",
+                        "address": null,
+                        "channel": null
+                    },
+                    "connected": true,
+                    "actual_class": "ChemyxSmartPump"
+                },
+                "selector": {
+                    "device": {
+                        "id": "dev_4715d181",
+                        "name": "12-way valve3",
+                        "driver": "12방향 밸브 (Runze)",
+                        "driver_type": "RunzeSV07Valve",
+                        "port": "COM22",
+                        "address": 3,
+                        "channel": null
+                    },
+                    "connected": true,
+                    "actual_class": "RunzeSV07Valve"
+                },
+                "switcher": {
+                    "device": {
+                        "id": "dev_esp32v_3",
+                        "name": "3-way valve3 (ETH)",
+                        "driver": "3방향 밸브 (ESP32 이더넷)",
+                        "driver_type": "ESP32EthValve",
+                        "port": "COM7",
+                        "address": null,
+                        "channel": 3
+                    },
+                    "connected": true,
+                    "actual_class": "ESP32EthValve"
+                },
+                "settings": {
+                    "pump_id": 3,
+                    "diameter": 12.45,
+                    "capacity": 6.0,
+                    "tube_vol_solvent": 0.0,
+                    "tube_vol_reagent": 0.0
+                }
+            },
+            {
+                "group_name": "Group D",
+                "position": "inlet",
+                "motor": {
+                    "device": {
+                        "id": "dev_c97364b0",
+                        "name": "시린지펌프4",
+                        "driver": "시린지 펌프 (Chemyx)",
+                        "driver_type": "Chemyx",
+                        "port": "COM23",
+                        "address": null,
+                        "channel": null
+                    },
+                    "connected": true,
+                    "actual_class": "ChemyxSmartPump"
+                },
+                "selector": {
+                    "device": {
+                        "id": "dev_runze_d4",
+                        "name": "12-way valve 4 (Group_D)",
+                        "driver": "12방향 밸브 (Runze)",
+                        "driver_type": "RunzeSV07Valve",
+                        "port": "COM22",
+                        "address": 0,
+                        "channel": null
+                    },
+                    "connected": true,
+                    "actual_class": "RunzeSV07Valve"
+                },
+                "switcher": {
+                    "device": {
+                        "id": "dev_esp32v_4",
+                        "name": "3-way valve4 (ETH)",
+                        "driver": "3방향 밸브 (ESP32 이더넷)",
+                        "driver_type": "ESP32EthValve",
+                        "port": "COM7",
+                        "address": null,
+                        "channel": 4
+                    },
+                    "connected": true,
+                    "actual_class": "ESP32EthValve"
+                },
+                "settings": {
+                    "pump_id": 4,
+                    "diameter": 12.45,
+                    "capacity": 6.0,
+                    "tube_vol_solvent": 0.0,
+                    "tube_vol_reagent": 0.0
+                }
+            }
+        ],
+        "heater": {
+            "device": {
+                "id": "dev_6b175206",
+                "name": "히터",
+                "driver": "항온조 히터",
+                "driver_type": "BathModbusHeater",
+                "port": "COM5",
+                "address": null,
+                "channel": null
+            },
+            "connected": true,
+            "actual_class": "BathModbusHeater"
+        },
+        "outlet_valve": {
+            "device": {
+                "id": "dev_esp32v_5",
+                "name": "3-way outlet (ETH)",
+                "driver": "3방향 밸브 (ESP32 이더넷)",
+                "driver_type": "ESP32EthValve",
+                "port": "COM7",
+                "address": null,
+                "channel": 5
+            },
+            "connected": true,
+            "actual_class": "ESP32EthValve"
+        },
+        "collector": {
+            "device": {
+                "id": "dev_plate96_1",
+                "name": "96well 분취기",
+                "driver": "96-well 분취기 (Plate96)",
+                "driver_type": "Plate96Collector",
+                "port": "COM11",
+                "address": null,
+                "channel": null
+            },
+            "connected": true,
+            "actual_class": "Plate96Collector"
+        },
+        "summary": {
+            "total_devices_configured": 22,
+            "total_devices_connected": 15,
+            "pump_groups": 4,
+            "active_pumps": [
+                "Group A",
+                "Group B",
+                "Group C",
+                "Group D"
+            ]
+        }
+    },
+    "system_params": {
+        "reactor_len_m": 3.056,
+        "reactor_id_mm": 1.0,
+        "post_reactor_vol_ml": 0.2066,
+        "collection_line_vol_ml": 0.25,
+        "head_probe_mode": "off",
+        "head_probe_window_sec": 150.0,
+        "head_probe_adc_delta": 0.0,
+        "head_probe_sensor_key": "collect",
+        "head_probe_confirm_sec": 1.0,
+        "sensor_to_outlet_vol_ml": 0.0382,
+        "n2_precal_enabled": true,
+        "n2_precal_sccm": 10.0,
+        "n2_precal_timeout_sec": 120.0,
+        "n2_precal_settle_sec": 3.0,
+        "n2_precal_sample_sec": 2.0,
+        "bubble_purge_enabled": true,
+        "bubble_purge_waste_port": 12,
+        "bubble_purge_factor": 2.86,
+        "refill_min_vol_ml": 0.05,
+        "mixing_line_id_mm": 1.5,
+        "mixing_line_len_cm": 5.4,
+        "priming_rate_ml_min": 1.7,
+        "syringe_refill_rate": 1.7,
+        "temp_tolerance_c": 0.3,
+        "heater_reach_timeout_sec": 900.0,
+        "max_temp_c": 120.0,
+        "max_pressure_bar": 20.0,
+        "max_sensor_fails": 5,
+        "max_total_flow_ml_min": 100.0,
+        "max_step_volume_ml": 500.0,
+        "wash_mode": "port_change",
+        "prefill_mode": "port_change",
+        "purge_order": "lifo",
+        "syringe_wash_rate": 15.0,
+        "syringe_wash_count": 2,
+        "hte_mode": false,
+        "nitrogen_line": true,
+        "hte_spacer_vol_ml": 0.2,
+        "hte_gas_sccm": 20.0,
+        "hte_wash_solvent_vol_ml": 0.5,
+        "hte_wash_gas_vol_ml": 0.3,
+        "hte_gas_equiv_flow_ml_min": 20.0,
+        "tjunction_line_vols": {
+            "1": 0.0905,
+            "2": 0.0452
+        },
+        "hte_interwash_vol_ml": 0.0,
+        "dosing_autostop_grace_sec": 6.0,
+        "collector_move_lead_sec": 0.0,
+        "collector_move_waste_guard": false,
+        "collect_line_mode": "compensated",
+        "level_verify_points": {
+            "wash": "purge",
+            "post_inject": "purge",
+            "push_end": "purge",
+            "seq_end": "log"
+        },
+        "tjunction_entry_map": {
+            "Group A": 1,
+            "Group_B": 1,
+            "Group_C": 2,
+            "Group_D": 2
+        },
+        "prime_phase1_vol_ml": 0.0,
+        "collect_preflush_vol_ml": 0.0,
+        "push_line_prime_vol_ml": 0.5,
+        "push_line_prime_rate_ml_min": 2.0,
+        "n2_precal_auto_cal": false,
+        "inj_marker_enabled": false,
+        "inj_marker_mode": "parked",
+        "inj_marker_sec": 2.5,
+        "inj_marker_sccm": 3.0,
+        "inj_marker_rear_sccm": 0.0,
+        "inj_marker_rear_sec": 0.0,
+        "marker_gate_mode": "observe",
+        "marker_gate_window_sec": 60.0,
+        "marker_gate_max_early_sec": 15.0,
+        "marker_gate_min_gas_sec": 2.0,
+        "marker_gate_rear_sensor_key": "reactor_in",
+        "reactor_dark_inlet_ml": 0.15,
+        "reactor_dark_outlet_ml": 0.15
+    },
+    "reagents": {
+        "Group A": {
+            "1": {
+                "name": "세척 용매 (Solvent)",
+                "conc": 0.0,
+                "smiles": ""
+            },
+            "2": {
+                "name": "비어있음",
+                "conc": 1.0,
+                "smiles": ""
+            },
+            "3": {
+                "name": "비어있음",
+                "conc": 1.0,
+                "smiles": ""
+            },
+            "4": {
+                "name": "비어있음",
+                "conc": 1.0,
+                "smiles": ""
+            },
+            "5": {
+                "name": "비어있음",
+                "conc": 1.0,
+                "smiles": ""
+            },
+            "6": {
+                "name": "비어있음",
+                "conc": 1.0,
+                "smiles": ""
+            },
+            "7": {
+                "name": "비어있음",
+                "conc": 1.0,
+                "smiles": ""
+            },
+            "8": {
+                "name": "비어있음",
+                "conc": 1.0,
+                "smiles": ""
+            },
+            "9": {
+                "name": "비어있음",
+                "conc": 1.0,
+                "smiles": ""
+            },
+            "10": {
+                "name": "비어있음",
+                "conc": 1.0,
+                "smiles": ""
+            },
+            "11": {
+                "name": "비어있음",
+                "conc": 1.0,
+                "smiles": ""
+            },
+            "12": {
+                "name": "폐기 (Waste)",
+                "conc": 0.0,
+                "smiles": ""
+            }
+        },
+        "Group B": {
+            "1": {
+                "name": "세척 용매 (Solvent)",
+                "conc": 0.0,
+                "smiles": ""
+            },
+            "2": {
+                "name": "비어있음",
+                "conc": 1.0,
+                "smiles": ""
+            },
+            "3": {
+                "name": "비어있음",
+                "conc": 1.0,
+                "smiles": ""
+            },
+            "4": {
+                "name": "비어있음",
+                "conc": 1.0,
+                "smiles": ""
+            },
+            "5": {
+                "name": "비어있음",
+                "conc": 1.0,
+                "smiles": ""
+            },
+            "6": {
+                "name": "비어있음",
+                "conc": 1.0,
+                "smiles": ""
+            },
+            "7": {
+                "name": "비어있음",
+                "conc": 1.0,
+                "smiles": ""
+            },
+            "8": {
+                "name": "비어있음",
+                "conc": 1.0,
+                "smiles": ""
+            },
+            "9": {
+                "name": "비어있음",
+                "conc": 1.0,
+                "smiles": ""
+            },
+            "10": {
+                "name": "비어있음",
+                "conc": 1.0,
+                "smiles": ""
+            },
+            "11": {
+                "name": "비어있음",
+                "conc": 1.0,
+                "smiles": ""
+            },
+            "12": {
+                "name": "폐기 (Waste)",
+                "conc": 0.0,
+                "smiles": ""
+            }
+        },
+        "Group C": {
+            "1": {
+                "name": "세척 용매 (Solvent)",
+                "conc": 0.0,
+                "smiles": ""
+            },
+            "2": {
+                "name": "비어있음",
+                "conc": 1.0,
+                "smiles": ""
+            },
+            "3": {
+                "name": "비어있음",
+                "conc": 1.0,
+                "smiles": ""
+            },
+            "4": {
+                "name": "비어있음",
+                "conc": 1.0,
+                "smiles": ""
+            },
+            "5": {
+                "name": "비어있음",
+                "conc": 1.0,
+                "smiles": ""
+            },
+            "6": {
+                "name": "비어있음",
+                "conc": 1.0,
+                "smiles": ""
+            },
+            "7": {
+                "name": "비어있음",
+                "conc": 1.0,
+                "smiles": ""
+            },
+            "8": {
+                "name": "비어있음",
+                "conc": 1.0,
+                "smiles": ""
+            },
+            "9": {
+                "name": "비어있음",
+                "conc": 1.0,
+                "smiles": ""
+            },
+            "10": {
+                "name": "비어있음",
+                "conc": 1.0,
+                "smiles": ""
+            },
+            "11": {
+                "name": "비어있음",
+                "conc": 1.0,
+                "smiles": ""
+            },
+            "12": {
+                "name": "폐기 (Waste)",
+                "conc": 0.0,
+                "smiles": ""
+            }
+        },
+        "Group D": {
+            "1": {
+                "name": "세척 용매 (Solvent)",
+                "conc": 0.0,
+                "smiles": ""
+            },
+            "2": {
+                "name": "비어있음",
+                "conc": 1.0,
+                "smiles": ""
+            },
+            "3": {
+                "name": "비어있음",
+                "conc": 1.0,
+                "smiles": ""
+            },
+            "4": {
+                "name": "비어있음",
+                "conc": 1.0,
+                "smiles": ""
+            },
+            "5": {
+                "name": "비어있음",
+                "conc": 1.0,
+                "smiles": ""
+            },
+            "6": {
+                "name": "비어있음",
+                "conc": 1.0,
+                "smiles": ""
+            },
+            "7": {
+                "name": "비어있음",
+                "conc": 1.0,
+                "smiles": ""
+            },
+            "8": {
+                "name": "비어있음",
+                "conc": 1.0,
+                "smiles": ""
+            },
+            "9": {
+                "name": "비어있음",
+                "conc": 1.0,
+                "smiles": ""
+            },
+            "10": {
+                "name": "비어있음",
+                "conc": 1.0,
+                "smiles": ""
+            },
+            "11": {
+                "name": "비어있음",
+                "conc": 1.0,
+                "smiles": ""
+            },
+            "12": {
+                "name": "폐기 (Waste)",
+                "conc": 0.0,
+                "smiles": ""
+            }
+        }
+    },
+    "sequence": [
+        {
+            "temp": 25.0,
+            "rt": 3.0,
+            "target_vol": 6.0,
+            "vol_per_tube": 1.5,
+            "pump_settings": {
+                "Group A": {
+                    "port": 2,
+                    "eq": 1.0,
+                    "flow": "0.17501473227855022"
+                },
+                "Group B": {
+                    "port": 2,
+                    "eq": 1.0,
+                    "flow": "0.17501473227855022"
+                },
+                "Group C": {
+                    "port": 2,
+                    "eq": 1.0,
+                    "flow": "0.17501473227855022"
+                },
+                "Group D": {
+                    "port": 2,
+                    "eq": 1.0,
+                    "flow": "0.17501473227855022"
+                }
+            }
+        }
+    ]
+}

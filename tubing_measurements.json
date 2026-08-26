@@ -51,7 +51,7 @@
      "tube_vol_valve_pump": {
       "current_config_ml": 0.0,
       "measured_ml": 0.0,
-      "leg_ml_info": 0.4268,
+      "leg_ml_info": 0.2513,
       "length_cm": null,
       "id_mm": 0.8,
       "components": [
@@ -71,7 +71,7 @@
         "src": "길이계산: 110 mm × ID 0.8 mm → π×0.4²×110 = 55.29 µL (2026-08-13 110 mm 실측 갱신 — 구 90 mm, 그 전 93 mm)"
        }
       ],
-      "note": "2026-08-14 재정의: 시린지↔3way 왕복 레그(🔴2026-08-18 배관 단축: 849 mm × ID 0.8 mm = 0.4268 mL — 구 1.83 mL 을 대체, solvent/reagent 합산도 0.9362/0.5843 으로 재계산)는 흡입·주입이 같은 관을 왕복해 자기보상되므로 퍼지 창(line_src) 과충전에서 제외(measured_ml=0.0). 편도 12way→3way 구간만 components 합산(59.7 µL). 구 방식(1.83 포함)은 2 mL 세팅에 2.99 mL 흡입 + 주입후 잔량 2 mL가 타이머 무계상으로 반응기에 밀려 제품 유실(2026-08-14 실런 사고)의 원인. 레그 실측치는 세척 부피(tube_vol_solvent/reagent 합산)에는 계속 포함됨"
+      "note": "🔴2026-08-24 배관 교체: 시린지↔3way 왕복 레그 500 mm × ID 0.8 mm → π×0.4²×500 = 0.2513 mL (구 2026-08-18 849 mm=0.4268 mL 대체, solvent/reagent 합산도 0.7607/0.4088 로 재계산). 2026-08-14 재정의 유지: 왕복 레그는 흡입·주입이 같은 관을 왕복해 자기보상 → 퍼지 창(line_src) 과충전에서 제외(measured_ml=0.0), 편도 12way→3way 구간만 components 합산(59.7 µL). 구 방식(1.83 포함)은 2 mL 세팅에 2.99 mL 흡입 + 주입후 잔량 2 mL가 타이머 무계상으로 반응기에 밀려 제품 유실(2026-08-14 실런 사고)의 원인. 레그 실측치는 세척 부피(tube_vol_solvent/reagent 합산)에는 계속 포함됨"
      },
      "tube_vol_switcher": {
       "current_config_ml": 0.0,
@@ -89,20 +89,20 @@
      },
      "tube_vol_solvent": {
       "current_config_ml": 1.35,
-      "measured_ml": 0.9362,
+      "measured_ml": 0.7607,
       "length_cm": null,
       "id_mm": null,
-      "note": "2026-08-13 구간합산(12way→3way 110 mm 갱신): 포트1 세척액 라인 0.8 mm × 850 mm = 427.3 µL (시약 포트 150 mm 와 다름; 포트12 폐기 라인도 동일 850 mm — 전 그룹 공통) + 12way 내부 22.4 + 12way→3way→시린지 1889.7 = 2.3394 mL"
+      "note": "2026-08-24 재합산(시린지↔3way 레그 500 mm 교체): 포트1 세척액 라인 0.8 mm × 850 mm = 427.3 µL (시약 포트 150 mm 와 다름; 포트12 폐기 라인도 동일 850 mm — 전 그룹 공통) + 12way 내부 22.4 + 12way→3way 편도(피팅 포함) 59.7 + 시린지↔3way 레그 251.3 = 0.7607 mL (구 849 mm 레그 기준 0.9362 를 대체)"
      },
      "tube_vol_reagent": {
       "current_config_ml": 0.95,
-      "measured_ml": 0.5843,
+      "measured_ml": 0.4088,
       "length_cm": null,
       "id_mm": null,
-      "note": "2026-08-13 구간합산(12way→3way 110 mm 갱신): 시약 인렛 0.8 mm × 150 mm = 75.4 µL + 12way 내부 22.4 + 12way→3way→시린지 1889.7 = 1.9875 mL"
+      "note": "2026-08-24 재합산(시린지↔3way 레그 500 mm 교체): 시약 인렛 0.8 mm × 150 mm = 75.4 µL + 12way 내부 22.4 + 12way→3way 편도(피팅 포함) 59.7 + 시린지↔3way 레그 251.3 = 0.4088 mL (구 849 mm 레그 기준 0.5843 을 대체)"
      }
     },
-    "Group_B": {
+    "Group B": {
      "tube_vol_inlet": {
       "current_config_ml": 0.0,
       "measured_ml": null,
@@ -120,7 +120,7 @@
      "tube_vol_valve_pump": {
       "current_config_ml": 0.0,
       "measured_ml": 0.0,
-      "leg_ml_info": 0.4268,
+      "leg_ml_info": 0.2513,
       "length_cm": null,
       "id_mm": 0.8,
       "components": [
@@ -140,7 +140,7 @@
         "src": "길이계산: 110 mm × ID 0.8 mm → π×0.4²×110 = 55.29 µL (2026-08-13 110 mm 실측 갱신 — 구 90 mm, 그 전 93 mm)"
        }
       ],
-      "note": "2026-08-14 재정의: 시린지↔3way 왕복 레그(🔴2026-08-18 배관 단축: 849 mm × ID 0.8 mm = 0.4268 mL — 구 1.83 mL 을 대체, solvent/reagent 합산도 0.9362/0.5843 으로 재계산)는 흡입·주입이 같은 관을 왕복해 자기보상되므로 퍼지 창(line_src) 과충전에서 제외(measured_ml=0.0). 편도 12way→3way 구간만 components 합산(59.7 µL). 구 방식(1.83 포함)은 2 mL 세팅에 2.99 mL 흡입 + 주입후 잔량 2 mL가 타이머 무계상으로 반응기에 밀려 제품 유실(2026-08-14 실런 사고)의 원인. 레그 실측치는 세척 부피(tube_vol_solvent/reagent 합산)에는 계속 포함됨"
+      "note": "🔴2026-08-24 배관 교체: 시린지↔3way 왕복 레그 500 mm × ID 0.8 mm → π×0.4²×500 = 0.2513 mL (구 2026-08-18 849 mm=0.4268 mL 대체, solvent/reagent 합산도 0.7607/0.4088 로 재계산). 2026-08-14 재정의 유지: 왕복 레그는 흡입·주입이 같은 관을 왕복해 자기보상 → 퍼지 창(line_src) 과충전에서 제외(measured_ml=0.0), 편도 12way→3way 구간만 components 합산(59.7 µL). 구 방식(1.83 포함)은 2 mL 세팅에 2.99 mL 흡입 + 주입후 잔량 2 mL가 타이머 무계상으로 반응기에 밀려 제품 유실(2026-08-14 실런 사고)의 원인. 레그 실측치는 세척 부피(tube_vol_solvent/reagent 합산)에는 계속 포함됨"
      },
      "tube_vol_switcher": {
       "current_config_ml": 0.0,
@@ -158,20 +158,20 @@
      },
      "tube_vol_solvent": {
       "current_config_ml": 0.95,
-      "measured_ml": 0.9362,
+      "measured_ml": 0.7607,
       "length_cm": null,
       "id_mm": null,
-      "note": "2026-08-13 구간합산(12way→3way 110 mm 갱신): 포트1 세척액 라인 0.8 mm × 850 mm = 427.3 µL (시약 포트 150 mm 와 다름; 포트12 폐기 라인도 동일 850 mm — 전 그룹 공통) + 12way 내부 22.4 + 12way→3way→시린지 1889.7 = 2.3394 mL"
+      "note": "2026-08-24 재합산(시린지↔3way 레그 500 mm 교체): 포트1 세척액 라인 0.8 mm × 850 mm = 427.3 µL (시약 포트 150 mm 와 다름; 포트12 폐기 라인도 동일 850 mm — 전 그룹 공통) + 12way 내부 22.4 + 12way→3way 편도(피팅 포함) 59.7 + 시린지↔3way 레그 251.3 = 0.7607 mL (구 849 mm 레그 기준 0.9362 를 대체)"
      },
      "tube_vol_reagent": {
       "current_config_ml": 0.5,
-      "measured_ml": 0.5843,
+      "measured_ml": 0.4088,
       "length_cm": null,
       "id_mm": null,
-      "note": "2026-08-13 구간합산(12way→3way 110 mm 갱신): 시약 인렛 0.8 mm × 150 mm = 75.4 µL + 12way 내부 22.4 + 12way→3way→시린지 1889.7 = 1.9875 mL"
+      "note": "2026-08-24 재합산(시린지↔3way 레그 500 mm 교체): 시약 인렛 0.8 mm × 150 mm = 75.4 µL + 12way 내부 22.4 + 12way→3way 편도(피팅 포함) 59.7 + 시린지↔3way 레그 251.3 = 0.4088 mL (구 849 mm 레그 기준 0.5843 을 대체)"
      }
     },
-    "Group_C": {
+    "Group C": {
      "tube_vol_inlet": {
       "current_config_ml": 0.0,
       "measured_ml": null,
@@ -189,7 +189,7 @@
      "tube_vol_valve_pump": {
       "current_config_ml": 0.0,
       "measured_ml": 0.0,
-      "leg_ml_info": 0.4268,
+      "leg_ml_info": 0.2513,
       "length_cm": null,
       "id_mm": 0.8,
       "components": [
@@ -209,7 +209,7 @@
         "src": "길이계산: 110 mm × ID 0.8 mm → π×0.4²×110 = 55.29 µL (2026-08-13 110 mm 실측 갱신 — 구 90 mm, 그 전 93 mm)"
        }
       ],
-      "note": "2026-08-14 재정의: 시린지↔3way 왕복 레그(🔴2026-08-18 배관 단축: 849 mm × ID 0.8 mm = 0.4268 mL — 구 1.83 mL 을 대체, solvent/reagent 합산도 0.9362/0.5843 으로 재계산)는 흡입·주입이 같은 관을 왕복해 자기보상되므로 퍼지 창(line_src) 과충전에서 제외(measured_ml=0.0). 편도 12way→3way 구간만 components 합산(59.7 µL). 구 방식(1.83 포함)은 2 mL 세팅에 2.99 mL 흡입 + 주입후 잔량 2 mL가 타이머 무계상으로 반응기에 밀려 제품 유실(2026-08-14 실런 사고)의 원인. 레그 실측치는 세척 부피(tube_vol_solvent/reagent 합산)에는 계속 포함됨"
+      "note": "🔴2026-08-24 배관 교체: 시린지↔3way 왕복 레그 500 mm × ID 0.8 mm → π×0.4²×500 = 0.2513 mL (구 2026-08-18 849 mm=0.4268 mL 대체, solvent/reagent 합산도 0.7607/0.4088 로 재계산). 2026-08-14 재정의 유지: 왕복 레그는 흡입·주입이 같은 관을 왕복해 자기보상 → 퍼지 창(line_src) 과충전에서 제외(measured_ml=0.0), 편도 12way→3way 구간만 components 합산(59.7 µL). 구 방식(1.83 포함)은 2 mL 세팅에 2.99 mL 흡입 + 주입후 잔량 2 mL가 타이머 무계상으로 반응기에 밀려 제품 유실(2026-08-14 실런 사고)의 원인. 레그 실측치는 세척 부피(tube_vol_solvent/reagent 합산)에는 계속 포함됨"
      },
      "tube_vol_switcher": {
       "current_config_ml": 0.0,
@@ -227,20 +227,20 @@
      },
      "tube_vol_solvent": {
       "current_config_ml": 0.0,
-      "measured_ml": 0.9362,
+      "measured_ml": 0.7607,
       "length_cm": null,
       "id_mm": null,
-      "note": "2026-08-13 구간합산(12way→3way 110 mm 갱신): 포트1 세척액 라인 0.8 mm × 850 mm = 427.3 µL (시약 포트 150 mm 와 다름; 포트12 폐기 라인도 동일 850 mm — 전 그룹 공통) + 12way 내부 22.4 + 12way→3way→시린지 1889.7 = 2.3394 mL"
+      "note": "2026-08-24 재합산(시린지↔3way 레그 500 mm 교체): 포트1 세척액 라인 0.8 mm × 850 mm = 427.3 µL (시약 포트 150 mm 와 다름; 포트12 폐기 라인도 동일 850 mm — 전 그룹 공통) + 12way 내부 22.4 + 12way→3way 편도(피팅 포함) 59.7 + 시린지↔3way 레그 251.3 = 0.7607 mL (구 849 mm 레그 기준 0.9362 를 대체)"
      },
      "tube_vol_reagent": {
       "current_config_ml": 0.0,
-      "measured_ml": 0.5843,
+      "measured_ml": 0.4088,
       "length_cm": null,
       "id_mm": null,
-      "note": "2026-08-13 구간합산(12way→3way 110 mm 갱신): 시약 인렛 0.8 mm × 150 mm = 75.4 µL + 12way 내부 22.4 + 12way→3way→시린지 1889.7 = 1.9875 mL"
+      "note": "2026-08-24 재합산(시린지↔3way 레그 500 mm 교체): 시약 인렛 0.8 mm × 150 mm = 75.4 µL + 12way 내부 22.4 + 12way→3way 편도(피팅 포함) 59.7 + 시린지↔3way 레그 251.3 = 0.4088 mL (구 849 mm 레그 기준 0.5843 을 대체)"
      }
     },
-    "Group_D": {
+    "Group D": {
      "tube_vol_inlet": {
       "current_config_ml": 0.0,
       "measured_ml": null,
@@ -258,7 +258,7 @@
      "tube_vol_valve_pump": {
       "current_config_ml": 0.0,
       "measured_ml": 0.0,
-      "leg_ml_info": 0.4268,
+      "leg_ml_info": 0.2513,
       "length_cm": null,
       "id_mm": 0.8,
       "components": [
@@ -278,7 +278,7 @@
         "src": "길이계산: 110 mm × ID 0.8 mm → π×0.4²×110 = 55.29 µL (2026-08-13 110 mm 실측 갱신 — 구 90 mm, 그 전 93 mm)"
        }
       ],
-      "note": "2026-08-14 재정의: 시린지↔3way 왕복 레그(🔴2026-08-18 배관 단축: 849 mm × ID 0.8 mm = 0.4268 mL — 구 1.83 mL 을 대체, solvent/reagent 합산도 0.9362/0.5843 으로 재계산)는 흡입·주입이 같은 관을 왕복해 자기보상되므로 퍼지 창(line_src) 과충전에서 제외(measured_ml=0.0). 편도 12way→3way 구간만 components 합산(59.7 µL). 구 방식(1.83 포함)은 2 mL 세팅에 2.99 mL 흡입 + 주입후 잔량 2 mL가 타이머 무계상으로 반응기에 밀려 제품 유실(2026-08-14 실런 사고)의 원인. 레그 실측치는 세척 부피(tube_vol_solvent/reagent 합산)에는 계속 포함됨"
+      "note": "🔴2026-08-24 배관 교체: 시린지↔3way 왕복 레그 500 mm × ID 0.8 mm → π×0.4²×500 = 0.2513 mL (구 2026-08-18 849 mm=0.4268 mL 대체, solvent/reagent 합산도 0.7607/0.4088 로 재계산). 2026-08-14 재정의 유지: 왕복 레그는 흡입·주입이 같은 관을 왕복해 자기보상 → 퍼지 창(line_src) 과충전에서 제외(measured_ml=0.0), 편도 12way→3way 구간만 components 합산(59.7 µL). 구 방식(1.83 포함)은 2 mL 세팅에 2.99 mL 흡입 + 주입후 잔량 2 mL가 타이머 무계상으로 반응기에 밀려 제품 유실(2026-08-14 실런 사고)의 원인. 레그 실측치는 세척 부피(tube_vol_solvent/reagent 합산)에는 계속 포함됨"
      },
      "tube_vol_switcher": {
       "current_config_ml": 0.0,
@@ -296,17 +296,17 @@
      },
      "tube_vol_solvent": {
       "current_config_ml": 0.0,
-      "measured_ml": 0.9362,
+      "measured_ml": 0.7607,
       "length_cm": null,
       "id_mm": null,
-      "note": "2026-08-13 구간합산(12way→3way 110 mm 갱신): 포트1 세척액 라인 0.8 mm × 850 mm = 427.3 µL (시약 포트 150 mm 와 다름; 포트12 폐기 라인도 동일 850 mm — 전 그룹 공통) + 12way 내부 22.4 + 12way→3way→시린지 1889.7 = 2.3394 mL"
+      "note": "2026-08-24 재합산(시린지↔3way 레그 500 mm 교체): 포트1 세척액 라인 0.8 mm × 850 mm = 427.3 µL (시약 포트 150 mm 와 다름; 포트12 폐기 라인도 동일 850 mm — 전 그룹 공통) + 12way 내부 22.4 + 12way→3way 편도(피팅 포함) 59.7 + 시린지↔3way 레그 251.3 = 0.7607 mL (구 849 mm 레그 기준 0.9362 를 대체)"
      },
      "tube_vol_reagent": {
       "current_config_ml": 0.0,
-      "measured_ml": 0.5843,
+      "measured_ml": 0.4088,
       "length_cm": null,
       "id_mm": null,
-      "note": "2026-08-13 구간합산(12way→3way 110 mm 갱신): 시약 인렛 0.8 mm × 150 mm = 75.4 µL + 12way 내부 22.4 + 12way→3way→시린지 1889.7 = 1.9875 mL"
+      "note": "2026-08-24 재합산(시린지↔3way 레그 500 mm 교체): 시약 인렛 0.8 mm × 150 mm = 75.4 µL + 12way 내부 22.4 + 12way→3way 편도(피팅 포함) 59.7 + 시린지↔3way 레그 251.3 = 0.4088 mL (구 849 mm 레그 기준 0.5843 을 대체)"
      }
     }
    },
